@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="Peter Rodgers, P.J.Rodgers@kent.ac.uk" />
+    <title>
+      Euler Diagrams Drawn with Ellipses Area-Proportionally (Edeap)
+    </title>
+    <link rel="stylesheet" type="text/css" href="/src/edeap.css" />
+    <link rel="stylesheet" type="text/css" href="/src/tooltip.css" />
+  </head>
+
+  <body>
+    <h2 class="header">
+      Euler Diagrams Drawn with Ellipses Area-Proportionally (Edeap)
+    </h2>
+
+    <noscript
+      >&lt;h3&gt;Your browser has JavaScript disabled.&lt;/h3&gt;&lt;h3&gt;You
+      must enable Javascript to be able to see this page
+      properly.&lt;/h3&gt;&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;</noscript
+    >
+
+    <div class="dialog" id="browserError" style="display: none">
+      <span class="critical"
+        ><img
+          src="/src/critical.png"
+          alt="Critical Error"
+          height="48"
+          width="48"
+        />
+        <em>Incompatible Browser</em>
+        <p>
+          Internet Explorer is not supported. Please use a modern browser such
+          as Google Chrome, Apple Safari or Microsoft Edge.
+        </p>
+        <p></p>
+      </span>
+    </div>
+
+    <div id="ellipsesSVG">
+      <svg></svg>
+    </div>
+
+    <div id="resultsInfo">
+      <div id="resultsInfoContent">
+        <div id="instructions">
+          <h3>
+            Download diagram:<a
+              class="tooltip leftoftable"
+              style="float: right"
+              href="#"
+              ><b>← Help</b
+              ><span class="custom help"
+                ><img src="/src/help.png" alt="Help" height="48" width="48" />
+                <em>Download SVG</em>
+                <p>
+                  Click on the button to download the image file
+                  <b id="downloadName"></b>. This can be edited using an SVG
+                  editor such as Inkscape. Inkscape will also allow the diagram
+                  to be saved as GIF, PNG, EPS and other formats.
+                </p>
+                <p>
+                  This download facility only works with modern browers. If it
+                  fails for you, try using Google Chrome.
+                </p>
+              </span></a
+            >
+          </h3>
+          <input
+            id="svgDownload"
+            type="button"
+            name="Download diagram as SVG"
+            value="Download diagram as SVG"
+            onclick="saveSVG();"
+          />
+
+          <div id="textLengthMeasure"></div>
+        </div>
+        <div id="instructions">
+          <h3>
+            Diagram quality:<a
+              class="tooltip leftoftable"
+              style="float: right"
+              href="#"
+              ><b>← Help</b
+              ><span class="custom help"
+                ><img src="/src/help.png" alt="Help" height="48" width="48" />
+                <em>Diagram quality</em>
+                <p>
+                  The table lists each region that is desired or present in the
+                  current diagram along with the desired and actual proportion
+                  of the total non-empty region area. The table updates during
+                  the layout process.
+                </p>
+                <p>Table rows are one of three cases:</p>
+                <ul>
+                  <li>Black: Desired, present regions.</li>
+                  <li>Orange: Desired, missing regions.</li>
+                  <li>Red: Undesired, present regions.</li>
+                </ul>
+                <p>
+                  The total area difference is a measure of diagram quality. The
+                  lower the value, the better the diagram matches the area
+                  specification. A value of zero means the diagram exactly
+                  matches the area specification. Note: This value is built by
+                  summing proportion differences but it can be larger than 100
+                  due to counting both missing, desired regions and present,
+                  undesired regions.
+                </p>
+
+                <p>
+                  The stress value is another measure of diagram quality, used
+                  previously by the venneuler system. The lower the value the
+                  better the diagram matches the area specification. A value of
+                  zero means the diagram exactly matches the area specification.
+                </p>
+              </span></a
+            >
+          </h3>
+          <div id="resultsTableContent">
+            <table id="areaTable" class="areaTable">
+              <thead>
+                <tr>
+                  <th width="49%"></th>
+                  <th colspan="3" width="51%">Area proportion (%)</th>
+                </tr>
+                <tr>
+                  <th width="49%">Region</th>
+                  <th width="17%">Desired</th>
+                  <th width="17%">Actual</th>
+                  <th width="17%">Diff</th>
+                </tr>
+              </thead>
+              <tbody id="areaTableBody"></tbody>
+            </table>
+            <pre id="debugTimes"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="controls">
+      <form method="get" target="_self" style="clear: both">
+        <table cellspacing="10px" class="controlpanels">
+          <tbody>
+            <tr>
+              <td class="panel">
+                <h3>
+                  Area specification:
+                  <a class="tooltip abovecenter" style="float: right" href="#"
+                    >← Help<span class="custom help"
+                      ><img
+                        src="/src/help.png"
+                        alt="Help"
+                        height="48"
+                        width="48"
+                      />
+                      <em>Area specification</em>
+                      <p>
+                        Enter the sets that intersect on each line, separated by
+                        spaces. The last entry on the line should be a number
+                        indicating the size of the intersection.
+                      </p>
+                      <p>
+                        The area specification can be downloaded as a text file,
+                        or loaded from a text file in the same format.
+                      </p>
+                    </span></a
+                  >
+                </h3>
+                <textarea
+                  name="areaSpecification"
+                  id="areaSpecification"
+                  cols="40"
+                  rows="7"
+                >
+                </textarea>
+                <br />
+                <input
+                  id="areaSpecDownload"
+                  type="button"
+                  name="Download area specification"
+                  value="Download to file"
+                  onclick="saveAreaSpecification();"
+                />
+                <input
+                  id="areaSpecFilePicker"
+                  type="file"
+                  style="display: none"
+                />
+                <input
+                  id="areaSpecLoad"
+                  type="button"
+                  name="Load area specification"
+                  value="Load from file"
+                  onclick="document.getElementById('areaSpecFilePicker').click();"
+                />
+                <span class="developer">
+                  <input
+                    type="button"
+                    value="Random Area Specification"
+                    onclick="generateRandomDiagram();"
+                  />
+                </span>
+              </td>
+              <td class="panel" width="270px;">
+                <h3>Edeap controls:</h3>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Diagram size:</td>
+                      <td>
+                        <input
+                          type="text"
+                          id="widthEntry"
+                          name="width"
+                          size="5"
+                          value=""
+                          placeholder="500"
+                        />
+                        x
+                        <input
+                          type="text"
+                          id="heightEntry"
+                          name="height"
+                          size="5"
+                          value=""
+                          placeholder="500"
+                        />
+                        px
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Colour palette:</td>
+                      <td><select name="palette" id="palette"></select></td>
+                    </tr>
+                    <tr>
+                      <td style="height: 5px"></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td>Set labels:</td>
+                      <td>
+                        <input
+                          type="text"
+                          id="setLabelSizeEntry"
+                          name="setLabelSize"
+                          size="3"
+                          value=""
+                          placeholder="12"
+                        />
+                        pt &nbsp; (0 for none)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Intersection labels:</td>
+                      <td>
+                        <input
+                          type="text"
+                          id="intersectionLabelSizeEntry"
+                          name="intersectionLabelSize"
+                          size="3"
+                          value=""
+                          placeholder="12"
+                        />
+                        pt &nbsp; (0 for none)
+                      </td>
+                    </tr>
+                    <tr class="developer">
+                      <td>[DEV] Optimization method:</td>
+                      <td>
+                        <input
+                          type="radio"
+                          id="optimizationHill"
+                          name="optimizationMethod"
+                          value="1"
+                          checked="checked"
+                        /><label for="optimizationHill"> Hill Climbing</label>
+                        &nbsp;
+                        <input
+                          type="radio"
+                          id="optimizationSE"
+                          name="optimizationMethod"
+                          value="2"
+                        /><label for="optimizationSE">
+                          Simulated Annealing</label
+                        >
+                      </td>
+                    </tr>
+                    <tr class="developer">
+                      <td>[DEV] Starting diagram:</td>
+                      <td>
+                        <input
+                          type="radio"
+                          id="startingDefault"
+                          name="startingDiagram"
+                          value="default"
+                          checked="checked"
+                        /><label for="startingDefault"> Default</label> &nbsp;
+                        <input
+                          type="radio"
+                          id="startingRandom"
+                          name="startingDiagram"
+                          value="random"
+                        /><label for="startingRandom"> Random Layout</label>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="height: 5px"></td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <input type="submit" value="Draw Diagram" />
+              </td>
+              <td class="panel">
+                <h3>About:</h3>
+                <div class="scrollablecontent">
+                  <small>
+                    <p>Edeap is a collaboration between</p>
+                    <ul>
+                      <li>
+                        <a href="http://www.cs.kent.ac.uk/people/staff/pjr/"
+                          >Peter Rodgers</a
+                        >
+                        (University of Kent, UK),
+                      </li>
+                      <li>
+                        <a href="http://users.monash.edu/~mwybrow/"
+                          >Michael Wybrow</a
+                        >
+                        (Monash University, Australia)
+                      </li>
+                      <li>
+                        <a
+                          href="https://www.gust.edu.kw/content/faculty_publication?name=Deeb.F#/"
+                          >Fadi Dib</a
+                        >
+                        (Gulf University for Science and Technology, Kuwait)
+                      </li>
+                    </ul>
+                    <p>
+                      Contact:
+                      <a href="mailto:P.J.Rodgers@kent.ac.uk">Peter Rodgers</a>
+                    </p>
+
+                    <p>
+                      <a href="https://github.com/mjwybrow/edeap"
+                        >Edeap GitHub repository</a
+                      >.
+                    </p>
+
+                    <p><b>Acknowledgements:</b></p>
+                    <p>
+                      The genesis and planning of this work took place at the
+                      Dagstuhl Seminar #17332, &quot;Scalable Set
+                      Visualizations&quot; held in August 2017.
+                    </p>
+                    <p>
+                      Michael Wybrow was supported by the Australian Research
+                      Council Discovery Project grant DP140100077.
+                    </p>
+
+                    <p><b>Licence:</b></p>
+                    <p>
+                      This tool is free software: you can redistribute it and/or
+                      modify it under the terms of the GNU General Public
+                      License as published by the Free Software Foundation,
+                      either version 3 of the License, or (at your option) any
+                      later version.
+                    </p>
+                    <p>
+                      This program is distributed in the hope that it will be
+                      useful, but WITHOUT ANY WARRANTY; without even the implied
+                      warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+                      PURPOSE. See the
+                      <a href="http://www.gnu.org/licenses/gpl.html"
+                        >GNU General Public License v3 or later as published by
+                        the Free Software Foundation</a
+                      >. A local copy of <a href="COPYING.txt">the licence</a>.
+                    </p>
+                  </small>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+
+    <script type="text/javascript" src="/src/venneulerstress.js"></script>
+    <script type="text/javascript" src="/src/ellipses.js"></script>
+    <script type="text/javascript" src="/src/utils.js"></script>
+    <script type="text/javascript" src="/src/optimizer.js"></script>
+    <script type="text/javascript" src="/src/main.js"></script>
+
+    <!-- <script type="module" src="/src/main.js"></script> -->
+  </body>
+</html>
