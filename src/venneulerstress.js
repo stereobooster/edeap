@@ -210,35 +210,34 @@ class VennEulerAreas {
         }
       }
       /*
+      // Number of points in the radius of this circle.
+      int r = (int) (di * size / 2.);
 
-            // Number of points in the radius of this circle.
-            int r = (int) (di * size / 2.);
+      // Take the square of the radius.  This saves us from
+      // calculating the sqrt() of the distance calculated below,
+      // by comparing the sqare of the distance with the square of
+      // the radius, to see if the sampled point is within radius
+      // distance from the centre.
+      int r2 = r * r;
 
-            // Take the square of the radius.  This saves us from
-            // calculating the sqrt() of the distance calculated below,
-            // by comparing the sqare of the distance with the square of
-            // the radius, to see if the sampled point is within radius
-            // distance from the centre.
-            int r2 = r * r;
+      // Circle position in sampled space.
+      int cx = (int) (xi * size);
+      // Y is inverted (size - y1).  Weird, shouldn't make any difference.
+      int cy = (int) (size - yi * size);
 
-            // Circle position in sampled space.
-            int cx = (int) (xi * size);
-            // Y is inverted (size - y1).  Weird, shouldn't make any difference.
-            int cy = (int) (size - yi * size);
+      // For each point in sampled space
+      for (int x = 0; x < size; x++) {
+          for (int y = 0; y < size; y++) {
 
-            // For each point in sampled space
-            for (int x = 0; x < size; x++) {
-                for (int y = 0; y < size; y++) {
-
-                    // Compute the distance between two points squared and
-                    // see if this is less than the squared radius to see if
-                    // the point is within the circle.  If so, mark it as
-                    // such.
-                    if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < r2)
-                        bis[i][x][y] = 1;
-                }
-            }
-            */
+              // Compute the distance between two points squared and
+              // see if this is less than the squared radius to see if
+              // the point is within the circle.  If so, mark it as
+              // such.
+              if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < r2)
+                  bis[i][x][y] = 1;
+          }
+      }
+      */
     }
 
     // For each point in sampled space
