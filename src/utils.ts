@@ -333,15 +333,15 @@ function ellipseBoundaryPosition(eA, eB, eR, angleRad) {
 
 // generate svg from ellipses
 function generateSVG(
-  width,
-  height,
-  setLabels,
-  intersectionValues,
-  translateX,
-  translateY,
-  scaling,
+  width: number,
+  height: number,
+  setLabels: boolean,
+  intersectionValues: boolean,
+  translateX: number,
+  translateY: number,
+  scaling: number,
   areas,
-  forDownload
+  forDownload?: boolean
 ) {
   if (typeof areas === "undefined") {
     areas = new EdeapAreas();
