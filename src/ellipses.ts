@@ -3,15 +3,28 @@
 // Author:  Michael Wybrow <Michael.Wybrow@monash.edu>
 //
 
+export type Point = {
+  x: number;
+  y: number;
+};
+
+export type EllipseParams = {
+  A: number;
+  B: number;
+  R: number;
+  X: number;
+  Y: number;
+};
+
 // An array of ellipse parameters.  Each an opject with the following props:
 //   X     X centre
 //   Y     Y centre
 //   A     X radius
 //   B     Y radius
 //   R     rotation in radians
-var ellipseParams = [];
-var ellipseLabel = []; // set associated with ellipse, should be unique
-var ellipseArea = [];
+var ellipseParams: EllipseParams[] = [];
+var ellipseLabel: string[] = []; // set associated with ellipse, should be unique
+var ellipseArea: number[] = [];
 
 // Bit masks for different types of logging.
 // Each should have a value of "2 ** n" where n is next value.
@@ -25,26 +38,26 @@ let ellipseMap = new Map();
 
 let gridSize = 0.026;
 
-function prevGridValue(value) {
+function prevGridValue(value: number) {
   let number = value / gridSize;
   let multiples = number < 0 ? Math.ceil(number) : Math.floor(number);
   return gridSize * multiples;
 }
 
-function nextGridValue(value) {
+function nextGridValue(value: number) {
   let number = value / gridSize;
   let multiples = number < 0 ? Math.floor(number) : Math.ceil(number);
   return gridSize * multiples;
 }
 
-function prevGridPoint(point) {
+function prevGridPoint(point: Point) {
   return {
     x: prevGridValue(point.x),
     y: prevGridValue(point.y),
   };
 }
 
-function nextGridPoint(point) {
+function nextGridPoint(point: Point) {
   return {
     x: nextGridValue(point.x),
     y: nextGridValue(point.y),
@@ -58,26 +71,12 @@ function nextGridPoint(point) {
 var showLogTypes = logReproducability;
 
 // Function to be able to disable fitness logging.
-function logMessage(type, message) {
+function logMessage(type: number, message: any) {
   if (showLogTypes & type) {
     var args = Array.prototype.slice.call(arguments);
     args.shift();
     console.log.apply(console, args);
   }
-}
-
-// Extend Number object with method to convert from degrees to radians.
-if (Number.prototype.toRadians === undefined) {
-  Number.prototype.toRadians = function () {
-    return (this * Math.PI) / 180;
-  };
-}
-
-// Extend Number object with method to convert from radians to (signed) degrees.
-if (Number.prototype.toDegrees === undefined) {
-  Number.prototype.toDegrees = function () {
-    return (this * 180) / Math.PI;
-  };
 }
 
 // Given an x and y position and an ellipse, this function returns
@@ -95,7 +94,15 @@ if (Number.prototype.toDegrees === undefined) {
 // Based on mathematics described on this page:
 //   https://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
 //
-function isInEllipse(x, y, cx, cy, rx, ry, rot) {
+function isInEllipse(
+  x: number,
+  y: number,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  rot: number
+) {
   var bigR = Math.max(rx, ry);
   if (x < cx - bigR || x > cx + bigR || y < cy - bigR || y > cy + bigR) {
     // Outside bounding box estimation.
@@ -135,7 +142,13 @@ function isInEllipse(x, y, cx, cy, rx, ry, rot) {
 // Based on mathematics described on this page:
 //   https://math.stackexchange.com/questions/91132/how-to-get-the-limits-of-rotated-ellipse
 //
-function ellipseBoundingBox(cx, cy, rx, ry, rot) {
+function ellipseBoundingBox(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  rot: number
+) {
   var acos = rx * Math.cos(rot);
   var bsin = ry * Math.sin(rot);
   var xRes = Math.sqrt(acos * acos + bsin * bsin);
@@ -157,7 +170,7 @@ function ellipseBoundingBox(cx, cy, rx, ry, rot) {
 }
 
 // Compute the distance between two points in the plane.
-function distanceBetween(x1, y1, x2, y2) {
+function distanceBetween(x1: number, y1: number, x2: number, y2: number) {
   // Pythagoras: A^2 = B^2 + C^2
   return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
@@ -169,7 +182,14 @@ function distanceBetween(x1, y1, x2, y2) {
 // ### AREA TEST DEBUG END
 
 class EdeapAreas {
-  constructor(globalArrays) {
+  areaSampleStep: number;
+  maxTotalAreaDiff: number;
+  ellipseParams: EllipseParams[];
+  ellipseLabel: string[];
+  globalZoneStrings: string[];
+  globalProportions: number[];
+
+  constructor(globalArrays: string[]) {
     if (typeof globalArrays === "undefined") {
       globalArrays = [
         "globalZoneStrings",
@@ -195,7 +215,7 @@ class EdeapAreas {
     }
   }
 
-  useEllipseParams(ellipseParams) {
+  useEllipseParams(ellipseParams: EllipseParams[]) {
     this["ellipseParams"] = ellipseParams.slice();
   }
 
@@ -223,7 +243,7 @@ class EdeapAreas {
   //    zoneLabelPositions    Ideal label position for each zone.  Only
   //                          generated if generateLabelPositions is true.
   //
-  computeAreasAndBoundingBoxesFromEllipses(generateLabelPositions) {
+  computeAreasAndBoundingBoxesFromEllipses(generateLabelPositions?: boolean) {
     if (generateLabelPositions === undefined) {
       generateLabelPositions = false;
     }
@@ -616,6 +636,8 @@ class EdeapAreas {
       // ### AREA TEST DEBUG START
       splitZoneAreaProportions: splitZoneAreaProportions,
       expandedZoneAreaProportions: expandedZoneProportions,
+      zoneLabelPositions: undefined,
+      zoneAveragePositions: undefined,
     };
 
     // Return the point in each zone with the widest x and y coord.
@@ -1151,7 +1173,7 @@ class EdeapAreas {
     var fitnessData = this.computeAreasAndBoundingBoxesFromEllipses();
 
     // Build up a set of all desired and actual zones.
-    var allZones = new Set();
+    var allZones = new Set<string>();
     for (var zone in fitnessData.zoneAreaProportions) {
       allZones.add(zone);
     }
@@ -1225,7 +1247,7 @@ class EdeapAreas {
       }
     }
 
-    var fullyContainedPairs = [];
+    var fullyContainedPairs: string[] = [];
     // Compute ellipses that are fully contained in other ellipses (which
     // we don't want to have unnecessarily overlapping borders).
     for (var i = 0; i < this.ellipseLabel.length; i++) {
@@ -1354,7 +1376,7 @@ class EdeapAreas {
     var closureGlobalZoneStrings = this.globalZoneStrings;
     var closureGlobalProportions = this.globalProportions;
     var zonesArray = Array.from(allZones);
-    zonesArray.sort(function (a, b) {
+    zonesArray.sort(function (a: string, b: string) {
       var desiredAreaProportionA = 0;
       var zoneIndex = closureGlobalZoneStrings.indexOf(a);
       if (zoneIndex !== -1) {

@@ -2,15 +2,22 @@
 // Author:  Fadi Dib <deeb.f@gust.edu.kw>
 //
 
+export type EllipseParams = {
+  A: number;
+  B: number;
+  R: number;
+  X: number;
+  Y: number;
+};
+var ellipseParams: EllipseParams[] = [];
+var ellipseLabel: string[];
+
 const PI = Math.PI;
 
-var ellipseEquivilenceSet = [];
-var duplicatedEllipseIndexes = [];
-// if set fo an index, indicates the number of this ellipse as a duplicate.
-var ellipseDuplication = [];
+var duplicatedEllipseIndexes: number[] = [];
 
-var move = []; // array to track the fitness value computed at each move
-var currentFitness; // the value of the current computed fitness
+var move: number[] = []; // array to track the fitness value computed at each move
+var currentFitness: number; // the value of the current computed fitness
 
 // values used in the movements of ellipse
 const centerShift = 0.13; // previous value = 0.035  value of shifting the center point of the ellipse up, down, left, right
@@ -58,6 +65,8 @@ var HCEvalSolutions = 0; // a counter that stores number of solutions evaluated 
 var SAEvalSolutions = 0; // a counter that stores number of solutions evaluated by Simulated Annealing optimizer
 
 var completionHandlerFunc = null;
+
+var selectedMove: number
 
 // the optimization method
 
@@ -372,7 +381,7 @@ function printEllipseInfo(elp) {
 // This method takes ellipse number (elp) as a parameter, and checks which move gives the best fitness. it returns the fitness value along with the ID
 // of the move returned in the global variable selectedMove
 
-function selectBestCostMove(elp) {
+function selectBestCostMove(elp: number) {
   // select the best move of a given ellipse (elp)
   move = [];
   move[1] = centerX(elp, centerShift); // use positive and negative values to move right and left
@@ -454,20 +463,20 @@ function applyMove(elp, index) {
 // This method is used for Simulated annealing optimizer. It takes ellipse number (elp) as a parameter, and selects a random move (between 1 and 10).
 // it returns the fitness value along with the ID of the move returned in the global variable selectedMove
 
-function selectRandomMove(elp) {
+function selectRandomMove(elp: number) {
   // select the best move of a given ellipse (elp)
-  var fit;
-  var randIndex;
+  var fit: number;
+  var randIndex: number;
 
   if (!changeSearchSpace)
     // first search space
     randIndex =
       1 +
-      parseInt(
+      Math.floor(
         Math.random() * (8 - 1 + 1)
       ); // generate a random number between 1 and 8
   // second search space
-  else randIndex = 1 + parseInt(Math.random() * (12 - 1 + 1)); // generate a random number between 1 and 12
+  else randIndex = 1 + Math.floor(Math.random() * (12 - 1 + 1)); // generate a random number between 1 and 12
 
   switch (randIndex) {
     case 1:
@@ -572,13 +581,13 @@ function equalizeEffect(i, normalizedMeasures) {
   return 0;
 }
 
-function fixNumberPrecision(value) {
+function fixNumberPrecision(value: any) {
   return Number(parseFloat(value).toPrecision(13));
 }
 
 // computes the fitness value when we move the center point horizontally
 
-function centerX(elp, centerShift) {
+function centerX(elp: number, centerShift: number) {
   let oldX = ellipseParams[elp].X;
   ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
   var fit = computeFitness();
@@ -589,7 +598,7 @@ function centerX(elp, centerShift) {
 
 // computes the fitness value when we move the center point vertically
 
-function centerY(elp, centerShift) {
+function centerY(elp: number, centerShift: number) {
   let oldY = ellipseParams[elp].Y;
   ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
   var fit = computeFitness();
@@ -600,7 +609,7 @@ function centerY(elp, centerShift) {
 
 // computes the fitness value when we increase/decrease the radius A
 
-function radiusA(elp, radiusLength) {
+function radiusA(elp: number, radiusLength: number) {
   var oldA = ellipseParams[elp].A;
   var oldB = ellipseParams[elp].B;
 
@@ -658,13 +667,13 @@ function changeCenterX(elp, centerShift) {
 }
 
 // apply the move on the center point of the ellipse elp vertically
-function changeCenterY(elp, centerShift) {
+function changeCenterY(elp: number, centerShift: number) {
   let oldY = ellipseParams[elp].Y;
   ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
 }
 
 // apply the move by increasing/decreasing radius A of ellipse elp
-function changeRadiusA(elp, radiusLength) {
+function changeRadiusA(elp: number, radiusLength: number) {
   ellipseParams[elp].A += radiusLength;
   ellipseParams[elp].B = ellipseArea[elp] / (Math.PI * ellipseParams[elp].A);
 }
@@ -690,7 +699,7 @@ var safetyValue = 0.000000000001; // a safety value to ensure that the normalize
 // a function that takes the value which we need to normalize measureValueBeforeNorm and the maximum value of the measure computed so far
 // we will get the maximum value we computed so far and we add a safety value to it
 // to ensure that we don't exceed the actual upper bound (which is unknown for us)
-function normalizeMeasure(measureValueBeforeNorm, maxMeasure) {
+function normalizeMeasure(measureValueBeforeNorm: number, maxMeasure: number) {
   var mNorm;
   if (measureValueBeforeNorm > maxMeasure[0])
     maxMeasure[0] = measureValueBeforeNorm; // update the maximum value of the measure if the new value is greater than the current max value
