@@ -30,14 +30,34 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+export type EllipseParams = {
+  A: number;
+  B: number;
+  R: number;
+  X: number;
+  Y: number;
+};
+
 class VennEulerAreas {
-  constructor(ellipseLabels, globalZoneStrings, globalProportions) {
+  ellipseLabels: string[];
+  globalZoneStrings: string[];
+  globalProportions: number[];
+  ellipseParamsCopy: EllipseParams[];
+  polyData: number[];
+  polyAreas: number[];
+  totalCount: number;
+
+  constructor(
+    ellipseLabels: string[],
+    globalZoneStrings: string[],
+    globalProportions: number[]
+  ) {
     this.ellipseLabels = ellipseLabels.slice();
     this.globalZoneStrings = globalZoneStrings.slice();
     this.globalProportions = globalProportions.slice();
   }
 
-  vennEulerAreasAndStress(ellipseParams) {
+  vennEulerAreasAndStress(ellipseParams: EllipseParams[]) {
     // Copy each element of ellipseParams, since we will recenter.
     this.ellipseParamsCopy = [];
     for (let i = 0; i < ellipseParams.length; ++i) {
@@ -94,7 +114,7 @@ class VennEulerAreas {
     return sse / sst;
   }
 
-  _decode(subsets) {
+  _decode(subsets: number[]) {
     let b = "";
     for (let j = 0; j < subsets.length; j++) {
       if (subsets[j] > 0) b += "1";
@@ -103,7 +123,7 @@ class VennEulerAreas {
     return parseInt(b, 2);
   }
 
-  _encodeLabelForEdeap(index) {
+  _encodeLabelForEdeap(index: number) {
     let s = index.toString(2);
 
     while (s.length < this.ellipseParamsCopy.length) {
@@ -121,7 +141,7 @@ class VennEulerAreas {
     return zone;
   }
 
-  _updatePixels(counts) {
+  _updatePixels(counts: number[]) {
     let index = this._decode(counts);
     this.polyAreas[index]++;
     this.totalCount++;

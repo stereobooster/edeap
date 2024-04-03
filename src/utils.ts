@@ -10,14 +10,14 @@ var translateY = 0;
 var scaling = 100;
 var showSetLabels = true;
 var showIntersectionValues = true;
-var colourPaletteName = "Tableau10";
+var colourPaletteName = "Tableau10" as const;
 var defaultLabelFontSize = 12;
 var defaultValueFontSize = 12;
 var labelFontSize = "12pt";
 var valueFontSize = "12pt";
 
 var globalContours = []; // size of number of ellipses
-var globalZones = []; // size of number of intersections
+var globalZones: string[][] = []; // size of number of intersections
 var globalZoneStrings = []; // size of number of intersections, string version of globalZones
 var globalOriginalProportions = []; // proportions before scaling, size of number of intersections
 var globalProportions = []; // proportions after scaling, size of number of intersections
@@ -32,7 +32,22 @@ var globalAbstractDescription;
 var globalZoneAreaTableBody = ""; // to access table output from updateZoneAreaTable, not terribly elegant
 var globalFinalFitness = -1; // access to fitness after optimizer has finished
 
-function setupGlobal(areaSpecificationText) {
+// if set fo an index, indicates the number of this ellipse as a duplicate.
+var ellipseDuplication = [];
+var ellipseEquivilenceSet = [];
+
+export type EllipseParams = {
+  A: number;
+  B: number;
+  R: number;
+  X: number;
+  Y: number;
+};
+var ellipseParams: EllipseParams[] = [];
+var ellipseLabel: string[] = []; // set associated with ellipse, should be unique
+var ellipseArea: number[] = [];
+
+function setupGlobal(areaSpecificationText: string) {
   globalContours = [];
   globalZones = [];
   globalZoneStrings = [];
@@ -130,7 +145,7 @@ function setupGlobal(areaSpecificationText) {
     totalArea = totalArea + globalProportions[i];
   }
 
-  scalingValue = 1 / totalArea;
+  let scalingValue = 1 / totalArea;
 
   globalOriginalProportions = new Array();
   for (var i = 0; i < globalProportions.length; i++) {
@@ -352,6 +367,7 @@ function generateSVG(
     height +
     '" xmlns="http://www.w3.org/2000/svg">\n';
 
+  let nextSVG = "";
   const N = areas.ellipseLabel.length;
   for (var i = 0; i < N; i++) {
     var color = findColor(i);
@@ -360,7 +376,7 @@ function generateSVG(
     var eA = areas.ellipseParams[i].A * scaling;
     var eB = areas.ellipseParams[i].B * scaling;
 
-    var eR = areas.ellipseParams[i].R.toDegrees();
+    var eR = toDegrees(areas.ellipseParams[i].R);
     nextSVG =
       '<ellipse cx="' +
       eX +
@@ -412,7 +428,7 @@ function generateSVG(
       var currentRange = null;
       ranges[i] = ellipseRanges;
       for (let angle = 0; angle < 360; angle += 10) {
-        let angleRad = angle.toRadians();
+        let angleRad = toRadians(angle);
         let { x, y } = ellipseBoundaryPosition(eA, eB, eR, angleRad);
 
         let isIn = 0;
@@ -433,7 +449,7 @@ function generateSVG(
           }
 
           for (let jAngle = 0; jAngle < 360; jAngle += 10) {
-            let jAngleRad = jAngle.toRadians();
+            let jAngleRad = toRadians(jAngle);
             let { x: jBX, y: jBY } = ellipseBoundaryPosition(
               jA,
               jB,
@@ -563,7 +579,7 @@ function generateSVG(
       eA += spacingFromEdge;
       eB += spacingFromEdge;
 
-      let angleRad = angle.toRadians();
+      let angleRad = toRadians(angle);
       let { x, y } = ellipseBoundaryPosition(eA, eB, eR, angleRad);
 
       var textWidth = areas.globalLabelWidths[i];
@@ -582,7 +598,7 @@ function generateSVG(
 
       let halfWidth = textWidth / 2;
       let halfHeight = textHeight / 2;
-      let finalLabelAngle = (angle + eR.toDegrees()) % 360;
+      let finalLabelAngle = (angle + toDegrees(eR)) % 360;
       let quarterAngle = finalLabelAngle % 90;
 
       // Shift the label to allow for the label length.
@@ -715,193 +731,6 @@ function findTransformationToFit(width, height, areas) {
   };
 }
 
-function generateRandomZones(maxContours, maxZones, maxZoneSize) {
-  var retZones = new Array();
-
-  var count = 0;
-  while (retZones.length < maxZones) {
-    var zoneCount = Math.floor(Math.random() * maxZoneSize + 1);
-
-    var zone = Array();
-    for (var i = 0; i < zoneCount; i++) {
-      var contourNumber = Math.floor(Math.random() * maxContours + 1);
-      var contourLabel = "e" + contourNumber;
-      zone[i] = contourLabel;
-    }
-    // check it is not already there
-    var notInAlready = true;
-    for (var i = 0; i < retZones.length; i++) {
-      if (closeness(retZones[i], zone) === 0) {
-        notInAlready = false;
-      }
-    }
-    if (notInAlready) {
-      retZones.push(zone);
-    }
-
-    count++;
-    if (count > maxZones * 1000) {
-      break;
-    }
-  }
-  return retZones;
-}
-
-function findDuplicateZoneString() {
-  var ret = "";
-  for (var i = 0; i < globalZones.length - 1; i++) {
-    var zone1 = globalZones[i];
-    for (var j = i + 1; j < globalZones.length; j++) {
-      var zone2 = globalZones[j];
-      var diff = contourDifference(zone1, zone2);
-      if (diff.length === 0) {
-        // if they are the same
-        for (var k = 0; k < zone1.length; k++) {
-          var contour = zone1[k];
-          ret = ret + contour + " ";
-        }
-        ret += "| ";
-      }
-    }
-  }
-  return ret;
-}
-
-/**
-	 returns a number indicating how close the candidate zone is to the
-	 existing, laid out, zone. Low numbers are better.
-	*/
-function closeness(existing, candidate) {
-  var shared = contourShared(existing, candidate).length;
-  var diff = contourDifference(existing, candidate).length;
-  return diff - shared;
-}
-
-// Array of contours appearing in both of the zones.
-function contourShared(zone1, zone2) {
-  var shared = new Array();
-  for (var i = 0; i < zone1.length; i++) {
-    var contour = zone1[i];
-    if (contains(zone2, contour)) {
-      shared.push(contour);
-    }
-  }
-  return shared;
-}
-
-// Array of contours appearing in only one of the zones.
-function contourDifference(zone1, zone2) {
-  var diff = new Array();
-  for (var i = 0; i < zone1.length; i++) {
-    var contour = zone1[i];
-    if (!contains(zone2, contour)) {
-      diff.push(contour);
-    }
-  }
-  for (var i = 0; i < zone2.length; i++) {
-    var contour = zone2[i];
-    if (!contains(zone1, contour)) {
-      diff.push(contour);
-    }
-  }
-  return diff;
-}
-
-function outputLog(
-  page,
-  abstractDescriptionField,
-  width,
-  height,
-  guides,
-  order,
-  line,
-  orientation,
-  strategy,
-  colour
-) {
-  var date = new Date();
-  var dateString = date.toUTCString();
-
-  var referrer = document.referrer;
-  if (referrer.length > 0) {
-    var index = referrer.indexOf("?");
-    if (index > 0) {
-      referrer = referrer.substring(0, index);
-    }
-  }
-
-  writelog(
-    dateString +
-      "%0D%0A" +
-      page +
-      "%0D%0Areferrer=" +
-      referrer +
-      "%0D%0Awidth=" +
-      width +
-      " height=" +
-      height +
-      " guides=" +
-      guides +
-      " order=" +
-      order +
-      " line=" +
-      line +
-      " orientation=" +
-      orientation +
-      " strategy=" +
-      strategy +
-      " colour=" +
-      colour +
-      "%0D%0A" +
-      abstractDescriptionField
-  );
-}
-
-function writelog(message) {
-  try {
-    var request;
-    if (window.XMLHttpRequest) {
-      // code for IE7+, Firefox, Chrome, Opera, Safari
-      xmlhttp = new XMLHttpRequest();
-    } else {
-      // code for IE6, IE5
-      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-
-    xmlhttp.onreadystatechange = function () {
-      if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-        return;
-      }
-    };
-
-    xmlhttp.open(
-      "GET",
-      "writelog.php?nocache=" + Math.random() + "&message=" + message,
-      false
-    );
-    xmlhttp.send(null);
-  } catch (err) {
-    if (window.XMLHttpRequest) {
-      try {
-        request = new ActiveXObject("Microsoft.XMLHTTP");
-        request.open(
-          "GET",
-          "writelog.php?nocache=" + Math.random() + "&message=" + message,
-          false
-        );
-        request.send();
-        if (request.readyState === 4 && request.status === 200) {
-          return;
-        }
-      } catch (err) {
-        return;
-      }
-    } else {
-      return errmsg;
-    }
-  }
-}
-
 function removeProportions(zones) {
   var ret = new Array();
   for (var i = 0; i < zones.length; i++) {
@@ -1005,7 +834,7 @@ let colourPalettes = {
   ],
 };
 
-function findColor(i) {
+function findColor(i: number) {
   let colourPalette = colourPalettes[colourPaletteName];
 
   if (i < colourPalette.length) {
@@ -1015,7 +844,7 @@ function findColor(i) {
   return get_random_color();
 }
 
-function findContours(abstractDescription) {
+function findContours(abstractDescription: string) {
   // prevent repeated processing
   if (globalContours.length > 0) {
     return globalContours;
@@ -1053,7 +882,7 @@ function findContours(abstractDescription) {
   return globalContours;
 }
 
-function sortContours(contours) {
+function sortContours<T>(contours: T[]) {
   contours.sort();
 
   return contours;
@@ -1068,7 +897,7 @@ function get_random_color() {
   return color;
 }
 
-function findZones(abstractDescription) {
+function findZones(abstractDescription: string) {
   // prevent repeated processing
   if (globalZones.length > 0) {
     return globalZones;
@@ -1079,7 +908,7 @@ function findZones(abstractDescription) {
   var adSplit = abstractDescription.split("\n");
 
   for (var i = 0; i < adSplit.length; i++) {
-    var zone = new Array();
+    var zone: string[] = [];
     var zoneIndex = 0;
     var line = adSplit[i];
     var lineSplit = line.split(" ");
@@ -1107,7 +936,7 @@ function findZones(abstractDescription) {
   return globalZones;
 }
 
-function decodeAbstractDescription(abstractDescriptionField) {
+function decodeAbstractDescription(abstractDescriptionField: string) {
   var abstractDescription = decodeURIComponent(abstractDescriptionField);
   while (abstractDescription.indexOf("+") != -1) {
     abstractDescription = abstractDescription.replace("+", " ");
@@ -1115,7 +944,7 @@ function decodeAbstractDescription(abstractDescriptionField) {
   return abstractDescription;
 }
 
-function encodeAbstractDescription(abstractDescriptionDecoded) {
+function encodeAbstractDescription(abstractDescriptionDecoded: string) {
   var abstractDescription = encodeURIComponent(abstractDescriptionDecoded);
   while (abstractDescription.indexOf(" ") != -1) {
     abstractDescription = abstractDescription.replace(" ", "+");
@@ -1123,7 +952,7 @@ function encodeAbstractDescription(abstractDescriptionDecoded) {
   return abstractDescription;
 }
 
-function contains(arr, e) {
+function contains<T>(arr: T[], e: T) {
   for (var i = 0; i < arr.length; i++) {
     var current = arr[i];
     if (e === current) {
@@ -1142,18 +971,18 @@ function arrayToString(arr) {
   return ret;
 }
 
-function isNumber(n) {
+function isNumber(n: any) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-function escapeHTML(string) {
+function escapeHTML(string: string) {
   var pre = document.createElement("pre");
   var text = document.createTextNode(string);
   pre.appendChild(text);
   return pre.innerHTML;
 }
 
-function gup(name) {
+function gup(name: string) {
   var regexS = "[\\?&]" + name + "=([^&#]*)";
   var regex = new RegExp(regexS);
   var tmpURL = window.location.href;
@@ -1165,7 +994,7 @@ function gup(name) {
   }
 }
 
-function randomDiagram(numberOfContours, chanceOfZoneAddition) {
+function randomDiagram(numberOfContours: number, chanceOfZoneAddition: number) {
   var zones = findAllZones(numberOfContours);
   var adZones = "";
   for (var i = 0; i < zones.length; i++) {
@@ -1186,7 +1015,7 @@ function randomDiagram(numberOfContours, chanceOfZoneAddition) {
  * the contours, contours labelled with a single letter starting at "a" (venn diagram).
  * Does not return the outside contour.
  */
-function findAllZones(numberOfContours) {
+function findAllZones(numberOfContours: number) {
   var zoneList = new Array();
 
   var numberOfZones = Math.pow(2, numberOfContours) - 1;
@@ -1206,7 +1035,7 @@ function findAllZones(numberOfContours) {
  * indicating whether each contour is in the zone.
  * Contours are assumed to be labelled from "a" onwards.
  */
-function findZone(zoneNumber) {
+function findZone(zoneNumber: number) {
   var zoneString = "";
   var current = zoneNumber;
   var i = 0;
@@ -1220,117 +1049,6 @@ function findZone(zoneNumber) {
   }
   zoneString = zoneString.trim();
   return zoneString;
-}
-
-function testPermutations(array, timeout) {
-  permutationsTried = 0;
-  var groupCount;
-  var mapping = new Array();
-
-  groupCount = array.length;
-  mapping = new Array();
-  for (var i = 0; i < groupCount; i++) {
-    mapping[i] = i;
-  }
-
-  var start = Date.now();
-  var currentTime = -1;
-  var lineBreaks = -1;
-
-  var bestLineBreaks = 9999999;
-  var bestOrder = new Array();
-
-  var loop = true;
-
-  while (loop) {
-    permutationsTried++;
-    lineBreaks = countLineBreaks(mapping);
-    if (lineBreaks < bestLineBreaks) {
-      bestLineBreaks = lineBreaks;
-      bestOrder = mappingToOrder(mapping, array);
-    }
-    loop = nextPerm(mapping);
-    currentTime = Date.now();
-    if (currentTime - start > timeout) {
-      console.log(
-        "timed out after " +
-          (currentTime - start) / 1000 +
-          " seconds. Permutation count: " +
-          permutationsTried
-      );
-      loop = false;
-    }
-  }
-  return bestOrder;
-}
-
-function mappingToOrder(mapping, array) {
-  var ret = new Array();
-  for (var i = 0; i < mapping.length; i++) {
-    ret[i] = array[mapping[i]];
-  }
-  return ret;
-}
-
-function nextPerm(p) {
-  var i;
-  for (i = p.length - 1; i-- > 0 && p[i] > p[i + 1]; );
-  if (i < 0) {
-    return false;
-  }
-
-  var j;
-  for (j = p.length; --j > i && p[j] < p[i]; );
-  swap(p, i, j);
-
-  for (j = p.length; --j > ++i; swap(p, i, j));
-  return true;
-}
-
-function swap(p, i, j) {
-  var t = p[i];
-  p[i] = p[j];
-  p[j] = t;
-}
-
-// the lines in the system, defined by pairs of start and stop data, this returns the notional x array of the lines
-function countLineBreaks(zones) {
-  var breaks = new Array(); // lines contains arrays that alternates between start and end positions of each line
-  var lineStatus = new Array();
-  for (var i = 0; i < globalContours.length; i++) {
-    lineStatus[i] = -1; // -1 for not currently drawing a line, 1 for drawing a line
-    breaks[i] = -1; // -1 because first occurence of a line will increment the breaks
-  }
-
-  for (var i = 0; i < globalContours.length; i++) {
-    var line = new Array();
-    var contour = globalContours[i];
-    for (var j = 0; j < zones.length; j++) {
-      var zone = zones[j];
-      if (contains(zone, contour) && lineStatus[i] === -1) {
-        // zone contains the contour, but was not in previous
-        breaks[i] = breaks[i] + 1;
-        lineStatus[i] = 1;
-      }
-      if (!contains(zone, contour) && lineStatus[i] === 1) {
-        // zone does not contain the contour, and was in previous
-        lineStatus[i] = -1;
-      }
-    }
-  }
-
-  var count = 0;
-  for (var i = 0; i < breaks.length; i++) {
-    count += breaks[i];
-  }
-
-  return count;
-}
-
-function factorial(num) {
-  var ret = 1;
-  for (var i = 2; i <= num; i++) ret = ret * i;
-  return ret;
 }
 
 function findLabelSizes() {
@@ -1395,4 +1113,12 @@ function findValueSizes() {
     lengths,
     heights,
   };
+}
+
+function toRadians(x: number) {
+  return (x * Math.PI) / 180;
+}
+
+function toDegrees(x: number) {
+  return (x * 180) / Math.PI;
 }
