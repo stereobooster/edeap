@@ -66,11 +66,12 @@ var SAEvalSolutions = 0; // a counter that stores number of solutions evaluated 
 
 var completionHandlerFunc = null;
 
-var selectedMove: number
+var selectedMove: number;
 
 // the optimization method
 
 function optimize(completionHandler) {
+  // @ts-expect-error
   ellipseMap = new Map();
 
   completionHandlerFunc = completionHandler;
@@ -470,11 +471,8 @@ function selectRandomMove(elp: number) {
 
   if (!changeSearchSpace)
     // first search space
-    randIndex =
-      1 +
-      Math.floor(
-        Math.random() * (8 - 1 + 1)
-      ); // generate a random number between 1 and 8
+    randIndex = 1 + Math.floor(Math.random() * (8 - 1 + 1));
+  // generate a random number between 1 and 8
   // second search space
   else randIndex = 1 + Math.floor(Math.random() * (12 - 1 + 1)); // generate a random number between 1 and 12
 

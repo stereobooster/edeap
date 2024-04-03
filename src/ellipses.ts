@@ -16,6 +16,13 @@ export type EllipseParams = {
   Y: number;
 };
 
+type HitInfo = {
+  smallHitArray: number[];
+  smallHitArraySizeX: number;
+  position: Point;
+  endPosition: Point;
+};
+
 // An array of ellipse parameters.  Each an opject with the following props:
 //   X     X centre
 //   Y     Y centre
@@ -34,7 +41,7 @@ const logOptimizerStep = 2 ** 1;
 const logOptimizerChoice = 2 ** 2;
 const logReproducability = 2 ** 3;
 
-let ellipseMap = new Map();
+let ellipseMap = new Map<string, HitInfo>();
 
 let gridSize = 0.026;
 
@@ -311,7 +318,7 @@ class EdeapAreas {
         let hitmapSizeY = Math.ceil(diffY / gridSize) + 1;
         let hitmapLength = hitmapSizeX * hitmapSizeY;
 
-        let hitInfo = {
+        let hitInfo: HitInfo = {
           smallHitArray: new Array(hitmapLength),
           smallHitArraySizeX: hitmapSizeX,
           position: prevGridPoint(oversizedBB.p1),
