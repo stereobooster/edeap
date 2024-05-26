@@ -944,44 +944,6 @@ function decodeAbstractDescription(abstractDescriptionField: string) {
   return abstractDescription;
 }
 
-function encodeAbstractDescription(abstractDescriptionDecoded: string) {
-  var abstractDescription = encodeURIComponent(abstractDescriptionDecoded);
-  while (abstractDescription.indexOf(" ") != -1) {
-    abstractDescription = abstractDescription.replace(" ", "+");
-  }
-  return abstractDescription;
-}
-
-function contains<T>(arr: T[], e: T) {
-  for (var i = 0; i < arr.length; i++) {
-    var current = arr[i];
-    if (e === current) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function arrayToString(arr) {
-  var ret = "";
-  for (var i = 0; i < arr.length - 1; i++) {
-    ret += arr[i] + " ";
-  }
-  ret += arr[arr.length - 1];
-  return ret;
-}
-
-function isNumber(n: any) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-function escapeHTML(string: string) {
-  var pre = document.createElement("pre");
-  var text = document.createTextNode(string);
-  pre.appendChild(text);
-  return pre.innerHTML;
-}
-
 function gup(name: string) {
   var regexS = "[\\?&]" + name + "=([^&#]*)";
   var regex = new RegExp(regexS);
@@ -992,22 +954,6 @@ function gup(name: string) {
   } else {
     return results[1];
   }
-}
-
-function randomDiagram(numberOfContours: number, chanceOfZoneAddition: number) {
-  var zones = findAllZones(numberOfContours);
-  var adZones = "";
-  for (var i = 0; i < zones.length; i++) {
-    var z = zones[i];
-    if (Math.random() < chanceOfZoneAddition) {
-      if (adZones != "") {
-        adZones += "\n";
-      }
-      adZones += z;
-    }
-  }
-
-  return adZones;
 }
 
 /**
@@ -1113,6 +1059,92 @@ function findValueSizes() {
     lengths,
     heights,
   };
+}
+
+// --------------- Pure functions --------------------
+
+function contains<T>(arr: T[], e: T) {
+  for (let i = 0; i < arr.length; i++) {
+    let current = arr[i];
+    if (e === current) return true;
+  }
+  return false;
+}
+
+// Array of contours appearing in only one of the zones.
+function contourDifference<T>(zone1: T[], zone2: T[]) {
+  const diff = new Array<T>();
+  for (let i = 0; i < zone1.length; i++) {
+    const contour = zone1[i];
+    if (!contains(zone2, contour)) {
+      diff.push(contour);
+    }
+  }
+  for (let i = 0; i < zone2.length; i++) {
+    const contour = zone2[i];
+    if (!contains(zone1, contour)) {
+      diff.push(contour);
+    }
+  }
+  return diff;
+}
+
+// Array of contours appearing in both of the zones.
+function contourShared<T>(zone1: T[], zone2: T[]) {
+  const shared = new Array<T>();
+  for (let i = 0; i < zone1.length; i++) {
+    const contour = zone1[i];
+    if (contains(zone2, contour)) {
+      shared.push(contour);
+    }
+  }
+  return shared;
+}
+
+/**
+  returns a number indicating how close the candidate zone is to the
+  existing, laid out, zone. Low numbers are better.
+*/
+function closeness<T>(existing: T[], candidate: T[]) {
+  const shared = contourShared(existing, candidate).length;
+  const diff = contourDifference(existing, candidate).length;
+  return diff - shared;
+}
+
+function generateRandomZones(
+  maxContours: number,
+  maxZones: number,
+  maxZoneSize: number
+) {
+  const retZones = new Array<string[]>();
+
+  let count = 0;
+  while (retZones.length < maxZones) {
+    const zoneCount = Math.floor(Math.random() * maxZoneSize + 1);
+
+    const zone = new Array<string>();
+    for (let i = 0; i < zoneCount; i++) {
+      const contourNumber = Math.floor(Math.random() * maxContours + 1);
+      const contourLabel = "e" + contourNumber;
+      zone[i] = contourLabel;
+    }
+    // check it is not already there
+    let notInAlready = true;
+    for (let i = 0; i < retZones.length; i++) {
+      if (closeness(retZones[i], zone) === 0) {
+        notInAlready = false;
+      }
+    }
+    if (notInAlready) {
+      retZones.push(zone);
+    }
+
+    count++;
+    if (count > maxZones * 1000) {
+      break;
+    }
+  }
+  return retZones;
 }
 
 function toRadians(x: number) {
