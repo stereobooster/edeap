@@ -141,10 +141,10 @@ function setupGlobal(areaSpecificationText: string) {
   }
 
   // remove zero zones and proportions
-  var removeList = new Array();
-  for (var i = 0; i < globalProportions.length; i++) {
-    var proportion = globalProportions[i];
-    var problem = false;
+  const removeList = [];
+  for (let i = 0; i < globalProportions.length; i++) {
+    const proportion = globalProportions[i];
+    let problem = false;
     let lineNum = i + 1;
 
     let globalZonesString = JSON.stringify(globalZones[i]);
@@ -157,7 +157,7 @@ function setupGlobal(areaSpecificationText: string) {
       console.log(`          ${globalZones[i].join(" ")} ${proportion}`);
     }
 
-    for (var j = 0; j < i; j++) {
+    for (let j = 0; j < i; j++) {
       if (globalZonesString == JSON.stringify(globalZones[j])) {
         if (globalProportions[i] != globalProportions[j]) {
           console.log(
@@ -180,8 +180,8 @@ function setupGlobal(areaSpecificationText: string) {
       continue;
     }
   }
-  for (var i = removeList.length - 1; i >= 0; i--) {
-    var index = removeList[i];
+  for (let i = removeList.length - 1; i >= 0; i--) {
+    const index = removeList[i];
     globalProportions.splice(index, 1);
     globalZones.splice(index, 1);
   }
@@ -195,15 +195,15 @@ function setupGlobal(areaSpecificationText: string) {
     globalProportions
   );
 
-  var totalArea = 0.0;
-  for (var i = 0; i < globalProportions.length; i++) {
+  let totalArea = 0.0;
+  for (let i = 0; i < globalProportions.length; i++) {
     totalArea = totalArea + globalProportions[i];
   }
 
   let scalingValue = 1 / totalArea;
 
   globalOriginalProportions = [];
-  for (var i = 0; i < globalProportions.length; i++) {
+  for (let i = 0; i < globalProportions.length; i++) {
     globalOriginalProportions[i] = globalProportions[i];
     globalProportions[i] = globalProportions[i] * scalingValue;
   }
@@ -217,31 +217,31 @@ function setupGlobal(areaSpecificationText: string) {
 
   // sort zone into order of ellipses as in the global ellipse list
   globalZoneStrings = [];
-  for (var j = 0; j < globalZones.length; j++) {
-    var zone = globalZones[j];
-    var sortedZone = new Array();
-    var zonePosition = 0;
-    for (var i = 0; i < globalContours.length; i++) {
-      var contour = globalContours[i];
+  for (let j = 0; j < globalZones.length; j++) {
+    const zone = globalZones[j];
+    const sortedZone = [];
+    let zonePosition = 0;
+    for (let i = 0; i < globalContours.length; i++) {
+      const contour = globalContours[i];
       if (zone.indexOf(contour) != -1) {
         sortedZone[zonePosition] = contour;
         zonePosition++;
       }
     }
     //			globalZones[j] = sortedZone;
-    var sortedZoneString = sortedZone.toString();
+    const sortedZoneString = sortedZone.toString();
     globalZoneStrings[j] = sortedZoneString;
   }
 }
 
 function generateInitialLayout() {
-  var x = 1;
-  var y = 1;
-  // var increment = 0.3;
+  let x = 1;
+  let y = 1;
+  // let increment = 0.3;
 
-  for (var i = 0; i < globalContourAreas.length; i++) {
-    var area = globalContourAreas[i];
-    var radius = Math.sqrt(area / Math.PI); // start as a circle
+  for (let i = 0; i < globalContourAreas.length; i++) {
+    const area = globalContourAreas[i];
+    const radius = Math.sqrt(area / Math.PI); // start as a circle
     ellipseParams[i] = {
       X: x,
       Y: y,
@@ -300,9 +300,9 @@ function generateInitialLayout() {
 }
 
 function generateInitialRandomLayout(maxX: number, maxY: number) {
-  // var x = 0;
-  // var y = 0;
-  // var increment = 0.3;
+  // let x = 0;
+  // let y = 0;
+  // let increment = 0.3;
 
   for (let i = 0; i < globalContourAreas.length; i++) {
     const area = globalContourAreas[i];
@@ -633,34 +633,34 @@ function findTransformationToFit(
   let idealWidth = canvasWidth - 15 - sizes.maxWidth * 2;
   let idealHeight = canvasHeight - 15 - sizes.maxHeight * 2;
 
-  var desiredCentreX = idealWidth / 2;
-  var desiredWidth = idealWidth;
+  let desiredCentreX = idealWidth / 2;
+  const desiredWidth = idealWidth;
 
-  var desiredCentreY = idealHeight / 2;
-  var desiredHeight = idealHeight;
+  let desiredCentreY = idealHeight / 2;
+  const desiredHeight = idealHeight;
 
-  var compute = areas.computeAreasAndBoundingBoxesFromEllipses();
+  const compute = areas.computeAreasAndBoundingBoxesFromEllipses();
 
-  var currentWidth =
+  const currentWidth =
     compute.overallBoundingBox.p2.x - compute.overallBoundingBox.p1.x;
-  var currentHeight =
+  const currentHeight =
     compute.overallBoundingBox.p2.y - compute.overallBoundingBox.p1.y;
-  var currentCentreX =
+  const currentCentreX =
     (compute.overallBoundingBox.p1.x + compute.overallBoundingBox.p2.x) / 2;
-  var currentCentreY =
+  const currentCentreY =
     (compute.overallBoundingBox.p1.y + compute.overallBoundingBox.p2.y) / 2;
 
-  var heightMultiplier = desiredHeight / currentHeight;
-  var widthMultiplier = desiredWidth / currentWidth;
+  const heightMultiplier = desiredHeight / currentHeight;
+  const widthMultiplier = desiredWidth / currentWidth;
 
-  var scaling = heightMultiplier;
+  let scaling = heightMultiplier;
   if (heightMultiplier > widthMultiplier) {
     scaling = widthMultiplier;
   }
-  var desiredCentreX = canvasWidth / 2 / scaling;
-  var desiredCentreY = canvasHeight / 2 / scaling;
-  var translateX = desiredCentreX - currentCentreX;
-  var translateY = desiredCentreY - currentCentreY;
+  desiredCentreX = canvasWidth / 2 / scaling;
+  desiredCentreY = canvasHeight / 2 / scaling;
+  const translateX = desiredCentreX - currentCentreX;
+  const translateY = desiredCentreY - currentCentreY;
 
   return {
     scaling: scaling,
@@ -733,10 +733,10 @@ const colourPalettes = {
 };
 
 function gup(name: string) {
-  var regexS = "[\\?&]" + name + "=([^&#]*)";
-  var regex = new RegExp(regexS);
-  var tmpURL = window.location.href;
-  var results = regex.exec(tmpURL);
+  const regexS = "[\\?&]" + name + "=([^&#]*)";
+  const regex = new RegExp(regexS);
+  const tmpURL = window.location.href;
+  const results = regex.exec(tmpURL);
   if (results === null) {
     return "";
   } else {
@@ -760,7 +760,7 @@ function findLabelSizes() {
   let heights: number[] = [];
   let maxHeight = 0;
   let maxWidth = 0;
-  for (var i = 0; i < ellipseLabel.length; i++) {
+  for (let i = 0; i < ellipseLabel.length; i++) {
     text.textContent = ellipseLabel[i];
     lengths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
@@ -985,7 +985,7 @@ function findContourAreas(
 
 function removeProportions(zones: string[][]) {
   const ret: string[][] = [];
-  for (var i = 0; i < zones.length; i++) {
+  for (let i = 0; i < zones.length; i++) {
     const zone = zones[i];
     const newZone: string[] = [];
     for (let j = 0; j < zone.length - 1; j++) {
@@ -1140,24 +1140,24 @@ function isInEllipse(
   ry: number,
   rot: number
 ) {
-  var bigR = Math.max(rx, ry);
+  const bigR = Math.max(rx, ry);
   if (x < cx - bigR || x > cx + bigR || y < cy - bigR || y > cy + bigR) {
     // Outside bounding box estimation.
     return false;
   }
 
-  var dx = x - cx;
-  var dy = y - cy;
+  const dx = x - cx;
+  const dy = y - cy;
 
-  var cos = Math.cos(rot);
-  var sin = Math.sin(rot);
-  var dd = rx * rx;
-  var DD = ry * ry;
+  const cos = Math.cos(rot);
+  const sin = Math.sin(rot);
+  const dd = rx * rx;
+  const DD = ry * ry;
 
-  var cosXsinY = cos * dx + sin * dy;
-  var sinXcosY = sin * dx - cos * dy;
+  const cosXsinY = cos * dx + sin * dy;
+  const sinXcosY = sin * dx - cos * dy;
 
-  var ellipse = (cosXsinY * cosXsinY) / dd + (sinXcosY * sinXcosY) / DD;
+  const ellipse = (cosXsinY * cosXsinY) / dd + (sinXcosY * sinXcosY) / DD;
 
   return ellipse <= 1;
 }
@@ -1186,13 +1186,13 @@ function ellipseBoundingBox(
   ry: number,
   rot: number
 ) {
-  var acos = rx * Math.cos(rot);
-  var bsin = ry * Math.sin(rot);
-  var xRes = Math.sqrt(acos * acos + bsin * bsin);
+  const acos = rx * Math.cos(rot);
+  const bsin = ry * Math.sin(rot);
+  const xRes = Math.sqrt(acos * acos + bsin * bsin);
 
-  var asin = rx * Math.sin(rot);
-  var bcos = ry * Math.cos(rot);
-  var yRes = Math.sqrt(asin * asin + bcos * bcos);
+  const asin = rx * Math.sin(rot);
+  const bcos = ry * Math.cos(rot);
+  const yRes = Math.sqrt(asin * asin + bcos * bcos);
 
   return {
     p1: {
@@ -1273,12 +1273,12 @@ function nextGridPoint(point: Point) {
 // of logging, assign this variable a value via options separated by
 // bitwise OR (|):
 //    showLogTypes = logReproducability | logOptimizerStep;
-var showLogTypes = logReproducability;
+const showLogTypes = logReproducability;
 
 // Function to be able to disable fitness logging.
 function logMessage(type: number, ..._messages: any[]) {
   if (showLogTypes & type) {
-    var args = Array.prototype.slice.call(arguments);
+    const args = Array.prototype.slice.call(arguments);
     args.shift();
     console.log.apply(console, args);
   }
@@ -1369,15 +1369,15 @@ class EdeapAreas {
     // !!! Now need this for computing split zones.
     //generateLabelPositions = true;
 
-    var maxAOrB = 0;
-    for (var i = 0; i < this.ellipseParams.length; i++) {
+    let maxAOrB = 0;
+    for (let i = 0; i < this.ellipseParams.length; i++) {
       maxAOrB = Math.max(this.ellipseParams[i].A, maxAOrB);
       maxAOrB = Math.max(this.ellipseParams[i].B, maxAOrB);
     }
-    var ellipseNonOverlapPadding = 0.15 * maxAOrB;
+    const ellipseNonOverlapPadding = 0.15 * maxAOrB;
 
     // Calculate the combined bounding box of all ellipses.
-    var totalBB = {
+    const totalBB = {
       p1: {
         x: Number.MAX_VALUE,
         y: Number.MAX_VALUE,
@@ -1388,12 +1388,12 @@ class EdeapAreas {
       },
     };
 
-    var ellipseBoundingBoxes = [];
-    for (var i = 0; i < this.ellipseParams.length; i++) {
+    const ellipseBoundingBoxes = [];
+    for (let i = 0; i < this.ellipseParams.length; i++) {
       // Expand the total bounding box edges to accomodate this
       // ellipse.
-      let ellipse = this.ellipseParams[i];
-      var bb = ellipseBoundingBox(
+      const ellipse = this.ellipseParams[i];
+      const bb = ellipseBoundingBox(
         ellipse.X,
         ellipse.Y,
         ellipse.A,
@@ -1407,7 +1407,7 @@ class EdeapAreas {
       totalBB.p2.y = Math.max(totalBB.p2.y, bb.p2.y);
     }
 
-    var oversizedBB = {
+    const oversizedBB = {
       p1: {
         x: totalBB.p1.x - ellipseNonOverlapPadding,
         y: totalBB.p1.y - ellipseNonOverlapPadding,
@@ -1418,14 +1418,14 @@ class EdeapAreas {
       },
     };
 
-    var diffX = oversizedBB.p2.x - oversizedBB.p1.x;
-    var diffY = oversizedBB.p2.y - oversizedBB.p1.y;
+    const diffX = oversizedBB.p2.x - oversizedBB.p1.x;
+    const diffY = oversizedBB.p2.y - oversizedBB.p1.y;
 
     if (this.areaSampleStep === 0) {
       // Work out step size so we sample at least MAX_DIM_SAMPLES
       // in the smaller of the two dimensions.
       //const MAX_DIM_SAMPLES = 50;
-      //var diffMin = Math.min(diffX, diffY);
+      //let diffMin = Math.min(diffX, diffY);
       //this.areaSampleStep = nextGridValue(diffMin / MAX_DIM_SAMPLES);
 
       // XXX: Use fixed grid size
@@ -1467,7 +1467,7 @@ class EdeapAreas {
     let ellipseKeys = [];
     // let expandedEllipseKeys = [];
 
-    for (var i = 0; i < this.ellipseParams.length; i++) {
+    for (let i = 0; i < this.ellipseParams.length; i++) {
       let ellipse = this.ellipseParams[i];
       // let label = this.ellipseLabel[i];
 
@@ -1581,7 +1581,7 @@ class EdeapAreas {
     // ### AREA TEST DEBUG END
 
     let yCounter = 0;
-    var xCounter = 0;
+    let xCounter = 0;
     for (let y = startY; y <= endY; y = y + areaSampleStep) {
       xCounter = 0;
       for (let x = startX; x <= endX; x = x + areaSampleStep) {
@@ -1894,8 +1894,8 @@ class EdeapAreas {
 
           // Move to the center in the x dimension.
 
-          var xMin = x;
-          var xMax = x;
+          let xMin = x;
+          let xMax = x;
 
           while (bitmap[y * bitmapSizeX + xMin] && xMin > 0) {
             xMin--;
@@ -1905,7 +1905,7 @@ class EdeapAreas {
             xMax++;
           }
 
-          var xMid = xMin + Math.floor((xMax - xMin) / 2);
+          const xMid = xMin + Math.floor((xMax - xMin) / 2);
           if (x !== xMid) {
             movement = true;
             x = xMid;
@@ -1913,8 +1913,8 @@ class EdeapAreas {
 
           // Move to the center in the y dimension.
 
-          var yMin = y;
-          var yMax = y;
+          let yMin = y;
+          let yMax = y;
 
           while (bitmap[yMin * bitmapSizeX + x] && yMin > 0) {
             yMin--;
@@ -1924,7 +1924,7 @@ class EdeapAreas {
             yMax++;
           }
 
-          var yMid = yMin + Math.floor((yMax - yMin) / 2);
+          const yMid = yMin + Math.floor((yMax - yMin) / 2);
           if (y !== yMid) {
             movement = true;
             y = yMid;
@@ -1932,8 +1932,8 @@ class EdeapAreas {
         }
 
         // Calculate and return the actual point.
-        var xPos = startX + x * areaSampleStep;
-        var yPos = startY + y * areaSampleStep;
+        let xPos = startX + x * areaSampleStep;
+        let yPos = startY + y * areaSampleStep;
         zoneLabelPositions[zone] = {
           x: xPos,
           y: yPos,
@@ -2026,7 +2026,7 @@ class EdeapAreas {
       var ca = ellipseC.A;
       var cb = ellipseC.B;
 
-      for (var e = 0; e < this.ellipseLabel.length; e++) {
+      for (let e = 0; e < this.ellipseLabel.length; e++) {
         if (e !== ellipseIndex) {
           let ellipseE = this.ellipseParams[e];
           var ex = ellipseE.X;
@@ -2479,11 +2479,11 @@ class EdeapAreas {
 
     // Build up a set of all desired and actual zones.
     var allZones = new Set<string>();
-    for (var zone in areaData.zoneAreaProportions) {
+    for (const zone in areaData.zoneAreaProportions) {
       allZones.add(zone);
     }
-    for (var i = 0; i < this.globalZoneStrings.length; ++i) {
-      var zone = this.globalZoneStrings[i];
+    for (let i = 0; i < this.globalZoneStrings.length; ++i) {
+      const zone = this.globalZoneStrings[i];
       allZones.add(zone);
     }
     var closureGlobalZoneStrings = this.globalZoneStrings;
@@ -2513,7 +2513,7 @@ class EdeapAreas {
     let csvText = "Zone,Desired,Actual,Difference\n";
 
     var totalAreaDifference = 0;
-    for (var index in zonesArray) {
+    for (const index in zonesArray) {
       var zone = zonesArray[index];
 
       let extraClass = "";
@@ -2956,7 +2956,7 @@ function completionAnimationStep() {
   translateY += translateYAnimationStep;
   progress.value = progress.value + progressAnimationStep;
 
-  var svgText = generateSVG(
+  const svgText = generateSVG(
     canvasWidth,
     canvasHeight,
     showSetLabels,
@@ -3012,9 +3012,9 @@ function selectBestCostMove(elp: number) {
 }
 
 function costMinMove() {
-  var minimumCostMoveID = 1; // 1 is the id of the first move
+  let minimumCostMoveID = 1; // 1 is the id of the first move
   for (
-    var i = 2;
+    let i = 2;
     i <= move.length;
     i++ // find the ID (number of the move that gives the minimum fitness
   )
@@ -3154,7 +3154,7 @@ function computeFitness() {
 
   // compute the total fitness value after equalizing the effect of each measure and applying a weight for each measure
   for (const component in fitnessComponents) {
-    var weight = 1;
+    let weight = 1;
     if (weights.hasOwnProperty(component)) {
       weight = weights[component as keyof typeof fitnessComponents];
     }
@@ -3176,9 +3176,9 @@ function fixNumberPrecision(value: any) {
 // computes the fitness value when we move the center point horizontally
 
 function centerX(elp: number, centerShift: number) {
-  let oldX = ellipseParams[elp].X;
+  const oldX = ellipseParams[elp].X;
   ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
-  var fit = computeFitness();
+  const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
   ellipseParams[elp].X = oldX; // to return back to the state before the change
   return fit;
@@ -3187,9 +3187,9 @@ function centerX(elp: number, centerShift: number) {
 // computes the fitness value when we move the center point vertically
 
 function centerY(elp: number, centerShift: number) {
-  let oldY = ellipseParams[elp].Y;
+  const oldY = ellipseParams[elp].Y;
   ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
-  var fit = computeFitness();
+  const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
   ellipseParams[elp].Y = oldY; // to return back to the state before the change
   return fit;
@@ -3198,8 +3198,8 @@ function centerY(elp: number, centerShift: number) {
 // computes the fitness value when we increase/decrease the radius A
 
 function radiusA(elp: number, radiusLength: number) {
-  var oldA = ellipseParams[elp].A;
-  var oldB = ellipseParams[elp].B;
+  const oldA = ellipseParams[elp].A;
+  const oldB = ellipseParams[elp].B;
 
   if (ellipseParams[elp].A + radiusLength <= 0) {
     return Number.MAX_VALUE;
@@ -3207,7 +3207,7 @@ function radiusA(elp: number, radiusLength: number) {
 
   ellipseParams[elp].A += radiusLength;
   ellipseParams[elp].B = ellipseArea[elp] / (Math.PI * ellipseParams[elp].A);
-  var fit = computeFitness();
+  const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
 
   ellipseParams[elp].A = oldA;
@@ -3219,10 +3219,10 @@ function radiusA(elp: number, radiusLength: number) {
 // rotates the ellipse (if not a circle) by angle r
 
 function rotateEllipse(elp: number, r: number) {
-  var oldR = ellipseParams[elp].R;
+  const oldR = ellipseParams[elp].R;
   ellipseParams[elp].R += r;
   ellipseParams[elp].R = (ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
-  var fit = computeFitness();
+  const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
   ellipseParams[elp].R = oldR;
   return fit;
@@ -3231,15 +3231,15 @@ function rotateEllipse(elp: number, r: number) {
 // increase/decrease radius A and rotate at the same time
 
 function RadiusAndRotateA(elp: number, radiusLength: number, angle: number) {
-  var oldA = ellipseParams[elp].A;
-  var oldB = ellipseParams[elp].B;
-  var oldR = ellipseParams[elp].R;
+  const oldA = ellipseParams[elp].A;
+  const oldB = ellipseParams[elp].B;
+  const oldR = ellipseParams[elp].R;
 
   ellipseParams[elp].A += radiusLength;
   ellipseParams[elp].B = ellipseArea[elp] / (Math.PI * ellipseParams[elp].A);
   ellipseParams[elp].R += angle;
   ellipseParams[elp].R = (ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
-  var fit = computeFitness();
+  const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
 
   ellipseParams[elp].A = oldA;
@@ -3250,13 +3250,13 @@ function RadiusAndRotateA(elp: number, radiusLength: number, angle: number) {
 
 // apply the move on the center point of the ellipse elp horizontally
 function changeCenterX(elp: number, centerShift: number) {
-  let oldX = ellipseParams[elp].X;
+  const oldX = ellipseParams[elp].X;
   ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
 }
 
 // apply the move on the center point of the ellipse elp vertically
 function changeCenterY(elp: number, centerShift: number) {
-  let oldY = ellipseParams[elp].Y;
+  const oldY = ellipseParams[elp].Y;
   ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
 }
 
@@ -3336,7 +3336,7 @@ function init() {
 
   downloadName =
     "edeap-" + date.getMinutes() + date.getSeconds() + date.getMilliseconds();
-  var areaSpecificationText = gup("areaSpecification");
+  let areaSpecificationText = gup("areaSpecification");
   width = parseFloat(gup("width"));
   height = parseFloat(gup("height"));
   setLabelSize = parseFloat(gup("setLabelSize"));
