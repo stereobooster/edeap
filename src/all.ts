@@ -1,47 +1,12 @@
-type Point = {
-  x: number;
-  y: number;
-};
-
-type Fitness = {
-  zoneAreaDifference: number;
-  unwantedZone: number;
-  circleDistortion: number;
-  splitZone: number;
-  missingOneLabelZone: number;
-  missingTwoOrMoreLabelZone: number;
-  unwantedExpandedOverlap: number;
-};
-
-type ZoneInfo = {
-  points: number;
-  bitmap?: boolean[];
-  avgPos: {
-    x: number;
-    y: number;
-    count: number;
-    firstX: number;
-    firstY: number;
-    firstXIndex: number;
-    firstYIndex: number;
-  };
-};
-
-type FitnessData = {
-  overallBoundingBox: {
-    p1: Point;
-    p2: Point;
-  };
-  boundingBoxes: {
-    p1: Point;
-    p2: Point;
-  }[];
-  zoneAreaProportions: Record<string, number>;
-  splitZoneAreaProportions: Record<string, number>;
-  expandedZoneAreaProportions: Record<string, number>;
-  zoneLabelPositions: Record<string, Point> | undefined;
-  zoneAveragePositions: Record<string, ZoneInfo["avgPos"]> | undefined;
-};
+import type {
+  HitInfo,
+  RangeType,
+  Point,
+  EllipseParams,
+  Fitness,
+  ZoneInfo,
+  FitnessData,
+} from "./types";
 
 let downloadName = "edeap.svg";
 
@@ -70,7 +35,7 @@ let globalZones: string[][] = []; // size of number of intersections
 let globalZoneStrings: string[] = []; // size of number of intersections, string version of globalZones
 let globalOriginalProportions: number[] = []; // proportions before scaling, size of number of intersections
 let globalProportions: number[] = []; // proportions after scaling, size of number of intersections
-let globalOriginalContourAreas: number[] = []; // size of number of ellipses
+// let globalOriginalContourAreas: number[] = []; // size of number of ellipses
 let globalContourAreas: number[] = []; // size of number of ellipses
 let globalLabelWidths: number[] = []; // size of number of ellipses
 let globalLabelHeights: number[] = []; // size of number of intersections
@@ -78,27 +43,13 @@ let globalValueWidths: number[] = []; // size of number of intersections
 let globalValueHeights: number[] = []; // size of number of intersections
 let globalAbstractDescription: string;
 
-let globalZoneAreaTableBody = ""; // to access table output from updateZoneAreaTable, not terribly elegant
-let globalFinalFitness = -1; // access to fitness after optimizer has finished
+// let globalZoneAreaTableBody = ""; // to access table output from updateZoneAreaTable, not terribly elegant
+// let globalFinalFitness = -1; // access to fitness after optimizer has finished
 
 // if set fo an index, indicates the number of this ellipse as a duplicate.
 let ellipseDuplication: number[] = [];
 let ellipseEquivilenceSet: Record<string, number> = {};
 
-type EllipseParams = {
-  A: number;
-  B: number;
-  R: number;
-  X: number;
-  Y: number;
-};
-
-// An array of ellipse parameters.  Each an opject with the following props:
-//   X     X centre
-//   Y     Y centre
-//   A     X radius
-//   B     Y radius
-//   R     rotation in radians
 let ellipseParams: EllipseParams[] = [];
 let ellipseLabel: string[] = []; // set associated with ellipse, should be unique
 let ellipseArea: number[] = [];
@@ -109,7 +60,7 @@ function setupGlobal(areaSpecificationText: string) {
   globalZoneStrings = [];
   globalOriginalProportions = [];
   globalProportions = [];
-  globalOriginalContourAreas = [];
+  // globalOriginalContourAreas = [];
   globalContourAreas = [];
   globalLabelWidths = [];
   globalLabelHeights = [];
@@ -182,11 +133,11 @@ function setupGlobal(areaSpecificationText: string) {
   globalContours = findContoursFromZones(globalZones);
 
   // values are before scaling
-  globalOriginalContourAreas = findContourAreas(
-    globalContours,
-    globalZones,
-    globalProportions
-  );
+  // globalOriginalContourAreas = findContourAreas(
+  //   globalContours,
+  //   globalZones,
+  //   globalProportions
+  // );
 
   let totalArea = 0.0;
   for (let i = 0; i < globalProportions.length; i++) {
@@ -313,14 +264,6 @@ function generateInitialRandomLayout(maxX: number, maxY: number) {
     //x = x+increment;
   }
 }
-
-type RangeType = {
-  angle: number;
-  depth: number;
-  x: number;
-  y: number;
-  distanceToNearest: number;
-};
 
 // generate svg from ellipses
 function generateSVG(
@@ -1211,17 +1154,9 @@ function distanceBetween(x1: number, y1: number, x2: number, y2: number) {
 // Author:  Michael Wybrow <Michael.Wybrow@monash.edu>
 //
 
-type HitInfo = {
-  smallHitArray: number[];
-  smallHitArraySizeX: number;
-  position: Point;
-  endPosition: Point;
-  needsFilling?: boolean;
-};
-
 // Bit masks for different types of logging.
 // Each should have a value of "2 ** n" where n is next value.
-const logNothing = 0;
+// const logNothing = 0;
 const logFitnessDetails = 2 ** 0;
 const logOptimizerStep = 2 ** 1;
 const logOptimizerChoice = 2 ** 2;
@@ -2873,7 +2808,7 @@ function optimizeStep(opt: number) {
   }
 
   // Optimizer finishes execution here
-  globalFinalFitness = currentFitness;
+  // globalFinalFitness = currentFitness;
   const transformation = findTransformationToFit(canvasWidth, canvasHeight);
   let progress = document.getElementById(
     "optimizerProgress"
@@ -3291,15 +3226,23 @@ function normalizeMeasure(
 // --------------- main.js ------------------------
 
 function init() {
-  let palette = document.getElementById("palette") as HTMLSelectElement;
+  document.getElementById("svgDownload")?.addEventListener("click", saveSVG);
+  document
+    .getElementById("areaSpecDownload")
+    ?.addEventListener("click", saveAreaSpecification);
+  document
+    .getElementById("generateRandomDiagram")
+    ?.addEventListener("click", generateRandomDiagram);
+
+  const palette = document.getElementById("palette") as HTMLSelectElement;
   // Add colour palette options to HTML select element.
-  for (let paletteName in colourPalettes) {
+  for (const paletteName in colourPalettes) {
     const option = document.createElement("option");
     option.text = paletteName;
     palette.add(option);
   }
 
-  let filePickerRef = document.getElementById(
+  const filePickerRef = document.getElementById(
     "areaSpecFilePicker"
   ) as HTMLInputElement;
 

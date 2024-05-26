@@ -74,7 +74,6 @@
             type="button"
             name="Download diagram as SVG"
             value="Download diagram as SVG"
-            onclick="saveSVG();"
           />
 
           <div id="textLengthMeasure"></div>
@@ -184,7 +183,6 @@
                   type="button"
                   name="Download area specification"
                   value="Download to file"
-                  onclick="saveAreaSpecification();"
                 />
                 <input
                   id="areaSpecFilePicker"
@@ -200,9 +198,9 @@
                 />
                 <span class="developer">
                   <input
+                    id="generateRandomDiagram"
                     type="button"
                     value="Random Area Specification"
-                    onclick="generateRandomDiagram();"
                   />
                 </span>
               </td>
