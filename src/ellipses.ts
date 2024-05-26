@@ -78,7 +78,7 @@ function nextGridPoint(point: Point) {
 var showLogTypes = logReproducability;
 
 // Function to be able to disable fitness logging.
-function logMessage(type: number, message: any) {
+function logMessage(type: number, message: string) {
   if (showLogTypes & type) {
     var args = Array.prototype.slice.call(arguments);
     args.shift();
@@ -276,19 +276,15 @@ class EdeapAreas {
       let ellipse = this.ellipseParams[i];
       let label = this.ellipseLabel[i];
 
-      let ellipseMapKey =
-        ellipse.X +
-        ":" +
-        ellipse.Y +
-        ":" +
-        ellipse.A +
-        ":" +
-        ellipse.B +
-        ":" +
-        ellipse.R;
-      let ellipseHitInfo = ellipseMap.get(ellipseMapKey);
+      const ellipseMapKey = [
+        ellipse.X,
+        ellipse.Y,
+        ellipse.A,
+        ellipse.B,
+        ellipse.R,
+      ].join(":");
+      const ellipseHitInfo = ellipseMap.get(ellipseMapKey);
 
-      //ellipseHitInfo = undefined;
       if (ellipseHitInfo === undefined) {
         // Expand the total bounding box edges to accomodate this
         // ellipse.
@@ -613,15 +609,10 @@ class EdeapAreas {
           // Count the number of points in the fragment of the zone.
           points += zoneFragmentSizes[index];
         }
-        let proportion = points / totalPoints;
+        const proportion = points / totalPoints;
         logMessage(
           logFitnessDetails,
-          "Split zone: " +
-            zone +
-            ": " +
-            zoneFragmentSizes +
-            "  penalty area: " +
-            proportion
+          `Split zone: ${zone} : ${zoneFragmentSizes} penalty area: ${proportion}`
         );
         splitZoneAreaProportions[zone] = proportion;
       } else {
@@ -847,7 +838,7 @@ class EdeapAreas {
     } else if (labelsInZoneB.length >= 2) {
       // For a missing zone B...
 
-      logMessage(logFitnessDetails, "  + Missing zone: " + missingZone);
+      logMessage(logFitnessDetails, `  + Missing zone: ${missingZone}`);
       var zoneWithMostSharedLabels = null;
       var numberOfMostSharedLabels = 0;
       var labelsOfZoneWithMostSharedLabels = null;
@@ -882,7 +873,7 @@ class EdeapAreas {
       if (zoneWithMostSharedLabels) {
         logMessage(
           logFitnessDetails,
-          "     + Zone with most shared labels: " + zoneWithMostSharedLabels
+          `     + Zone with most shared labels: ${zoneWithMostSharedLabels}`
         );
 
         // Find the set of labels in B that are not in C.
@@ -898,14 +889,14 @@ class EdeapAreas {
         // A point known to be in zone C.
         var zx = zonePositions[zoneWithMostSharedLabels].firstX;
         var zy = zonePositions[zoneWithMostSharedLabels].firstY;
-        logMessage(logFitnessDetails, "     + x: " + zx + ", " + "y: " + zy);
+        logMessage(logFitnessDetails, `     + x: ${zx}, y: ${zy}`);
 
         // For each label in B that is not in C
         for (var j = 0; j < labelsInZoneBButNotZoneC.length; ++j) {
           var labelInZoneB = labelsInZoneBButNotZoneC[j];
           logMessage(
             logFitnessDetails,
-            "     + Other label: " + labelInZoneB + " (pull closer)"
+            `     + Other label: ${labelInZoneB} (pull closer)`
           );
 
           // Pull the ellipse for that label from B closer to...
@@ -930,21 +921,21 @@ class EdeapAreas {
           // A point known to be in zone C.
           var zx = zonePositions[zoneWithMostSharedLabels].firstX;
           var zy = zonePositions[zoneWithMostSharedLabels].firstY;
-          logMessage(logFitnessDetails, "     + x: " + zx + ", " + "y: " + zy);
+          logMessage(logFitnessDetails, `     + x: ${zx}, y: ${zy}`);
 
           // For each label in C that is not in B (i.e., not desired)...
           for (var j = 0; j < labelsInZoneCButNotZoneB.length; ++j) {
             var labelInZoneC = labelsInZoneCButNotZoneB[j];
             logMessage(
               logFitnessDetails,
-              "     + Other label: " + labelInZoneC + " (push away)"
+              `     + Other label: ${labelInZoneC} (push away)`
             );
 
             // Push away each of ellipses in Zone B.
             for (var k = 0; k < labelsInZoneB.length; ++k) {
               logMessage(
                 logFitnessDetails,
-                "         + Separate: " + labelInZoneC + ", " + labelsInZoneB[k]
+                `         + Separate: ${labelInZoneC}, ${labelsInZoneB[k]}`
               );
 
               // Push the ellipse for that label away from...
@@ -979,7 +970,7 @@ class EdeapAreas {
   // This is experimental
   //
   _unwantedZonePenalty(zone, difference, actualZones, fitness) {
-    logMessage(logFitnessDetails, "   + Unwanted zone: " + zone);
+    logMessage(logFitnessDetails, `   + Unwanted zone: ${zone}`);
     var zonesArray = zone.split(",");
 
     // For an undesired actual zone A...
@@ -1046,7 +1037,7 @@ class EdeapAreas {
 
           logMessage(
             logFitnessDetails,
-            "     + Separate: " + zonesArray[i] + ", " + zonesArray[j]
+            `     + Separate: ${zonesArray[i]}, ${zonesArray[j]}`
           );
 
           // Missing zone with one label.
@@ -1152,7 +1143,7 @@ class EdeapAreas {
       if (overlapPercentage > 0) {
         logMessage(
           logFitnessDetails,
-          " + Unwanted expanded overlap: " + labelA + ", " + labelB
+          ` + Unwanted expanded overlap: ${labelA}, ${labelB}`
         );
         fitness.unwantedExpandedOverlap += overlapPercentage;
       }
@@ -1207,7 +1198,7 @@ class EdeapAreas {
       var zoneIsUnwanted = false;
       var zoneIsMissing = false;
 
-      logMessage(logFitnessDetails, " + Zone: " + zone);
+      logMessage(logFitnessDetails, ` + Zone: ${zone}`);
       var actualAreaProportion = 0;
       if (fitnessData.zoneAreaProportions.hasOwnProperty(zone)) {
         actualAreaProportion = fitnessData.zoneAreaProportions[zone];
@@ -1226,10 +1217,9 @@ class EdeapAreas {
 
       logMessage(
         logFitnessDetails,
-        "   + Actual: " +
-          actualAreaProportion.toFixed(4) +
-          ", Desired: " +
-          desiredAreaProportion.toFixed(4)
+        `   + Actual: ${actualAreaProportion.toFixed(
+          4
+        )}, Desired: ${desiredAreaProportion.toFixed(4)}`
       );
 
       var difference = Math.abs(actualAreaProportion - desiredAreaProportion);
@@ -1264,7 +1254,7 @@ class EdeapAreas {
     for (var fitnessProperty in fitness) {
       logMessage(
         logFitnessDetails,
-        " + " + fitnessProperty + ": " + fitness[fitnessProperty]
+        ` + ${fitnessProperty}: ${fitness[fitnessProperty]}`
       );
     }
 
@@ -1307,14 +1297,14 @@ class EdeapAreas {
       return result;
     });
 
-    var tbody = "";
-    var csvText = "Zone,Desired,Actual,Difference\n";
+    let tbody = "";
+    let csvText = "Zone,Desired,Actual,Difference\n";
 
     var totalAreaDifference = 0;
     for (var index in zonesArray) {
       var zone = zonesArray[index];
 
-      var extraClass = "";
+      let extraClass = "";
 
       var desiredAreaProportion = 0;
       var zoneIndex = this.globalZoneStrings.indexOf(zone);
@@ -1333,59 +1323,33 @@ class EdeapAreas {
         extraClass += " missing";
       }
 
-      tbody += "<tr>";
-
-      tbody += '<td class="first' + extraClass + '">' + zone + "</td>";
-
-      tbody +=
-        '<td class="other' +
-        extraClass +
-        '">' +
-        (desiredAreaProportion * 100).toFixed(1) +
-        "</td>";
-
-      tbody +=
-        '<td class="other' +
-        extraClass +
-        '">' +
-        (actualAreaProportion * 100).toFixed(1) +
-        "</td>";
-
-      var difference = Math.abs(desiredAreaProportion - actualAreaProportion);
+      const difference = Math.abs(desiredAreaProportion - actualAreaProportion);
       totalAreaDifference += difference;
-      tbody +=
-        '<td class="other' +
-        extraClass +
-        '">' +
-        (difference * 100).toFixed(2) +
-        "</td>";
 
-      tbody += "</tr>";
+      tbody += `<tr>
+        <td class="first${extraClass}">${zone}</td>
+        <td class="other${extraClass}">${(desiredAreaProportion * 100).toFixed(
+        1
+      )}</td>
+        <td class="other${extraClass}">${(actualAreaProportion * 100).toFixed(
+        1
+      )}</td>
+        <td class="other${extraClass}">${(difference * 100).toFixed(2)}</td>
+      </tr>`;
 
-      csvText +=
-        '"' +
-        zone +
-        '",' +
-        desiredAreaProportion * 100 +
-        ", " +
-        actualAreaProportion * 100 +
-        ", " +
-        difference * 100 +
-        "\n";
+      csvText += `"${zone}",${desiredAreaProportion * 100},${
+        actualAreaProportion * 100
+      },${difference * 100}\n`;
     }
 
     let totalAreaDiff = totalAreaDifference * 100;
 
-    tbody += "<tr>";
+    tbody += `<tr>
+      <td><b>Total area diff:</b></td>
+      <td colspan="3" class="other">${totalAreaDiff.toFixed(4)}</td>
+    </tr>`;
 
-    tbody += "<td><b>Total area diff:</b></td>";
-
-    tbody +=
-      '<td colspan="3" class="other">' + totalAreaDiff.toFixed(4) + "</td>";
-
-    tbody += "</tr>";
-
-    csvText += "Total:,,," + totalAreaDiff + "\n";
+    csvText += `Total:,,,${totalAreaDiff}\n`;
 
     // For comparison compare against venneuler().
     // if (typeof VennEulerAreas === "function") {
@@ -1409,16 +1373,11 @@ class EdeapAreas {
       let progressValue =
         (1 - totalAreaDiff / this.maxTotalAreaDiff) * PROGRESS_LENGTH;
 
-      tbody += '<tr class="progressRow">';
-      tbody += '<td colspan="4">';
-      tbody +=
-        '<progress id="optimizerProgress" style="width: 100%;" max="' +
-        PROGRESS_LENGTH +
-        '" value="' +
-        progressValue +
-        '"></progress>';
-      tbody += "</td>";
-      tbody += "</tr>";
+      tbody += `<tr class="progressRow">
+        <td colspan="4">
+          <progress id="optimizerProgress" style="width: 100%;" max="${PROGRESS_LENGTH}" value="${progressValue}"></progress>
+        </td>
+      </tr>`;
     }
 
     if (returnResults) {
