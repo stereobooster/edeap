@@ -16,18 +16,18 @@ var defaultValueFontSize = 12;
 var labelFontSize = "12pt";
 var valueFontSize = "12pt";
 
-var globalContours = []; // size of number of ellipses
+var globalContours: string[] = []; // size of number of ellipses
 var globalZones: string[][] = []; // size of number of intersections
-var globalZoneStrings = []; // size of number of intersections, string version of globalZones
-var globalOriginalProportions = []; // proportions before scaling, size of number of intersections
-var globalProportions = []; // proportions after scaling, size of number of intersections
-var globalOriginalContourAreas = new Array(); // size of number of ellipses
-var globalContourAreas = []; // size of number of ellipses
+var globalZoneStrings: string[] = []; // size of number of intersections, string version of globalZones
+var globalOriginalProportions: number[] = []; // proportions before scaling, size of number of intersections
+var globalProportions: number[] = []; // proportions after scaling, size of number of intersections
+var globalOriginalContourAreas: number[] = []; // size of number of ellipses
+var globalContourAreas: number[] = []; // size of number of ellipses
 var globalLabelWidths = []; // size of number of ellipses
 var globalLabelHeights = []; // size of number of intersections
 var globalValueWidths = []; // size of number of intersections
 var globalValueHeights = []; // size of number of intersections
-var globalAbstractDescription;
+var globalAbstractDescription: string;
 
 var globalZoneAreaTableBody = ""; // to access table output from updateZoneAreaTable, not terribly elegant
 var globalFinalFitness = -1; // access to fitness after optimizer has finished
@@ -65,12 +65,10 @@ function setupGlobal(areaSpecificationText: string) {
   ellipseArea = [];
 
   globalAbstractDescription = decodeAbstractDescription(areaSpecificationText);
-  globalContours = findContours(globalAbstractDescription);
-  globalZones = findZones(globalAbstractDescription);
+  globalContours = findContours(globalAbstractDescription, globalContours);
+  globalZones = findZones(globalAbstractDescription, globalZones);
 
-  if (globalContours.length === 0) {
-    return;
-  }
+  if (globalContours.length === 0) return;
 
   globalProportions = findProportions(globalZones);
   globalZones = removeProportions(globalZones);
@@ -138,7 +136,11 @@ function setupGlobal(areaSpecificationText: string) {
   globalContours = findContoursFromZones(globalZones);
 
   // values are before scaling
-  globalOriginalContourAreas = findContourAreas();
+  globalOriginalContourAreas = findContourAreas(
+    globalContours,
+    globalZones,
+    globalProportions
+  );
 
   var totalArea = 0.0;
   for (var i = 0; i < globalProportions.length; i++) {
@@ -147,17 +149,21 @@ function setupGlobal(areaSpecificationText: string) {
 
   let scalingValue = 1 / totalArea;
 
-  globalOriginalProportions = new Array();
+  globalOriginalProportions = [];
   for (var i = 0; i < globalProportions.length; i++) {
     globalOriginalProportions[i] = globalProportions[i];
     globalProportions[i] = globalProportions[i] * scalingValue;
   }
 
   // called again to get values after scaling
-  globalContourAreas = findContourAreas();
+  globalContourAreas = findContourAreas(
+    globalContours,
+    globalZones,
+    globalProportions
+  );
 
   // sort zone into order of ellipses as in the global ellipse list
-  globalZoneStrings = new Array();
+  globalZoneStrings = [];
   for (var j = 0; j < globalZones.length; j++) {
     var zone = globalZones[j];
     var sortedZone = new Array();
@@ -262,74 +268,13 @@ function generateInitialRandomLayout(maxX, maxY) {
   }
 }
 
-function findContourAreas() {
-  var contourAreas = new Array();
-  for (var i = 0; i < globalContours.length; i++) {
-    var sum = 0;
-    for (var j = 0; j < globalZones.length; j++) {
-      if (globalZones[j].indexOf(globalContours[i]) != -1) {
-        sum = sum + globalProportions[j];
-      }
-    }
-    contourAreas[i] = sum;
-  }
-
-  return contourAreas;
-}
-
-function distanceBetweenNodes(node1, node2) {
-  let xDifferenceSquared = Math.pow(node1.x - node2.x, 2);
-  let yDifferenceSquared = Math.pow(node1.y - node2.y, 2);
-
-  let sumOfSquaredDifferences = xDifferenceSquared + yDifferenceSquared;
-
-  let distance = Math.sqrt(sumOfSquaredDifferences);
-
-  return distance;
-}
-
-function ellipseBoundaryPosition(eA, eB, eR, angleRad) {
-  let divisor = Math.sqrt(
-    Math.pow(eB * Math.cos(angleRad), 2) + Math.pow(eA * Math.sin(angleRad), 2)
-  );
-  let y = (eA * eB * Math.sin(angleRad)) / divisor;
-  let x = (eA * eB * Math.cos(angleRad)) / divisor;
-
-  /*
-		let x = (eA * eB) / Math.sqrt(Math.pow(eB, 2) + Math.pow(eA, 2) * Math.pow(Math.tan(angleRad), 2));
-		if (angleRad < Math.PI * 1.5 && angleRad >= Math.PI/2)
-		{
-			x *= -1;
-		}
-		let y = Math.sqrt(1 - Math.pow(x/eA, 2)) * eB;
-		if (angleRad < Math.PI)
-		{
-			y *= -1;
-		}
-		if (isNaN(x)) {
-			console.log("NAN X: " + eA + ", " + eB + ", " + eR);
-		}
-		if (isNaN(y)) {
-			console.log("NAN X: " + eA + ", " + eB + ", " + eR);
-		}
-		*/
-
-  if (eR > 0) {
-    let s = Math.sin(eR);
-    let c = Math.cos(eR);
-
-    let newX = x * c - y * s;
-    let newY = x * s + y * c;
-
-    x = newX;
-    y = newY;
-  }
-
-  return {
-    x,
-    y,
-  };
-}
+type Range = {
+  angle: number;
+  depth: number;
+  x: number;
+  y: number;
+  distanceToNearest: number;
+};
 
 // generate svg from ellipses
 function generateSVG(
@@ -340,22 +285,16 @@ function generateSVG(
   translateX: number,
   translateY: number,
   scaling: number,
-  areas,
-  forDownload?: boolean
+  areas?: EdeapAreas,
+  forDownload: boolean = false
 ) {
-  if (typeof areas === "undefined") {
-    areas = new EdeapAreas();
-  }
-  if (typeof forDownload === "undefined") {
-    // If not specified, assume not for download.
-    forDownload = false;
-  }
+  if (typeof areas === "undefined") areas = new EdeapAreas();
 
-  var svgString = "";
+  let svgString = "";
 
   if (forDownload) {
     // Prolog is only needed for when in a standalone file.
-    svgString + '<?xml version="1.0" standalone="no"?>';
+    svgString += '<?xml version="1.0" standalone="no"?>';
     svgString +=
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
   }
@@ -369,14 +308,15 @@ function generateSVG(
 
   let nextSVG = "";
   const N = areas.ellipseLabel.length;
-  for (var i = 0; i < N; i++) {
-    var color = findColor(i);
-    var eX = (areas.ellipseParams[i].X + translateX) * scaling;
-    var eY = (areas.ellipseParams[i].Y + translateY) * scaling;
-    var eA = areas.ellipseParams[i].A * scaling;
-    var eB = areas.ellipseParams[i].B * scaling;
+  for (let i = 0; i < N; i++) {
+    const color = findColor(i, colourPalettes[colourPaletteName]);
+    const eX = (areas.ellipseParams[i].X + translateX) * scaling;
+    const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
+    const eA = areas.ellipseParams[i].A * scaling;
+    const eB = areas.ellipseParams[i].B * scaling;
 
-    var eR = toDegrees(areas.ellipseParams[i].R);
+    const eR = toDegrees(areas.ellipseParams[i].R);
+
     nextSVG =
       '<ellipse cx="' +
       eX +
@@ -408,56 +348,53 @@ function generateSVG(
     const LABEL_DEBUGGING = false;
 
     // Find positions for ellipses, one at a time.
-    let angleRange = Math.PI * 2;
-    let ranges = [];
-    for (var i = 0; i < N; i++) {
-      var color = findColor(i);
-
-      var eX = (areas.ellipseParams[i].X + translateX) * scaling;
-      var eY = (areas.ellipseParams[i].Y + translateY) * scaling;
-      var eA = areas.ellipseParams[i].A * scaling;
-      var eB = areas.ellipseParams[i].B * scaling;
-      let eR = areas.ellipseParams[i].R;
+    // let angleRange = Math.PI * 2;
+    let ranges: Range[][][] = [];
+    for (let i = 0; i < N; i++) {
+      // const color = findColor(i, colourPalettes[colourPaletteName]);
+      const eX = (areas.ellipseParams[i].X + translateX) * scaling;
+      const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
+      const eA = areas.ellipseParams[i].A * scaling;
+      const eB = areas.ellipseParams[i].B * scaling;
+      const eR = areas.ellipseParams[i].R;
 
       let minDepth = Number.MAX_SAFE_INTEGER;
       let maxDepth = 0;
 
       // Compute the depth of each boundary point (i.e., how many
       // other ellipses it is within.)
-      var ellipseRanges = [];
-      var currentRange = null;
+      const ellipseRanges: Range[][] = [];
+      let currentRange: Range[] | null = null;
       ranges[i] = ellipseRanges;
       for (let angle = 0; angle < 360; angle += 10) {
-        let angleRad = toRadians(angle);
+        const angleRad = toRadians(angle);
         let { x, y } = ellipseBoundaryPosition(eA, eB, eR, angleRad);
 
         let isIn = 0;
         let nearestPoint = Number.MAX_SAFE_INTEGER;
-        for (var j = 0; j < N; j++) {
-          if (i === j) {
-            continue;
-          }
+        for (let j = 0; j < N; j++) {
+          if (i === j) continue;
 
-          var jX = (areas.ellipseParams[j].X + translateX) * scaling;
-          var jY = (areas.ellipseParams[j].Y + translateY) * scaling;
-          var jA = areas.ellipseParams[j].A * scaling;
-          var jB = areas.ellipseParams[j].B * scaling;
-          let jR = areas.ellipseParams[j].R;
+          const jX = (areas.ellipseParams[j].X + translateX) * scaling;
+          const jY = (areas.ellipseParams[j].Y + translateY) * scaling;
+          const jA = areas.ellipseParams[j].A * scaling;
+          const jB = areas.ellipseParams[j].B * scaling;
+          const jR = areas.ellipseParams[j].R;
 
           if (isInEllipse(x + eX, y + eY, jX, jY, jA, jB, jR)) {
             isIn++;
           }
 
           for (let jAngle = 0; jAngle < 360; jAngle += 10) {
-            let jAngleRad = toRadians(jAngle);
-            let { x: jBX, y: jBY } = ellipseBoundaryPosition(
+            const jAngleRad = toRadians(jAngle);
+            const { x: jBX, y: jBY } = ellipseBoundaryPosition(
               jA,
               jB,
               jR,
               jAngleRad
             );
 
-            let distance = distanceBetweenNodes(
+            const distance = distanceBetweenNodes(
               { x: jX + jBX, y: jY + jBY },
               { x: eX + x, y: eY + y }
             );
@@ -468,7 +405,7 @@ function generateSVG(
         minDepth = Math.min(minDepth, isIn);
         maxDepth = Math.max(maxDepth, isIn);
 
-        let tooClose = nearestPoint < 11;
+        const tooClose = nearestPoint < 11;
         if (!tooClose) {
           if (currentRange == null || currentRange[0].depth != isIn) {
             // Start a new range.
@@ -491,8 +428,8 @@ function generateSVG(
         }
 
         if (LABEL_DEBUGGING) {
-          let intensity = 255 - (255 / (maxDepth - minDepth)) * isIn;
-          let dotColour = tooClose
+          const intensity = 255 - (255 / (maxDepth - minDepth)) * isIn;
+          const dotColour = tooClose
             ? "orange"
             : "rgb(" + intensity + ", " + intensity + ", " + intensity + ")";
           nextSVG =
@@ -509,16 +446,16 @@ function generateSVG(
       }
     }
 
-    for (var i = 0; i < N; i++) {
+    for (let i = 0; i < N; i++) {
       let ellipseRanges = ranges[i];
 
-      var eX = (areas.ellipseParams[i].X + translateX) * scaling;
-      var eY = (areas.ellipseParams[i].Y + translateY) * scaling;
-      var eA = areas.ellipseParams[i].A * scaling;
-      var eB = areas.ellipseParams[i].B * scaling;
-      let eR = areas.ellipseParams[i].R;
+      const eX = (areas.ellipseParams[i].X + translateX) * scaling;
+      const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
+      let eA = areas.ellipseParams[i].A * scaling;
+      let eB = areas.ellipseParams[i].B * scaling;
+      const eR = areas.ellipseParams[i].R;
 
-      let ellipseRangesN = ellipseRanges.length;
+      const ellipseRangesN = ellipseRanges.length;
       if (ellipseRangesN >= 2) {
         // Check for wrap around. Two ranges around zero.
         if (
@@ -544,16 +481,16 @@ function generateSVG(
         }
         return b.length - a.length;
       });
-      for (let j = 0; j < ellipseRanges.length; j++) {
-        let range = ellipseRanges[j];
-      }
+      // for (let j = 0; j < ellipseRanges.length; j++) {
+      //   let range = ellipseRanges[j];
+      // }
 
-      let spacingFromEdge = 8;
+      const spacingFromEdge = 8;
 
       // Take the first range, it will be the best.
-      let range = ellipseRanges[0];
+      const range = ellipseRanges[0];
 
-      let angle;
+      let angle: number;
       if (ellipseRanges.length == 0) {
         // At top for if no valid regions.
         angle = 270;
@@ -582,8 +519,8 @@ function generateSVG(
       let angleRad = toRadians(angle);
       let { x, y } = ellipseBoundaryPosition(eA, eB, eR, angleRad);
 
-      var textWidth = areas.globalLabelWidths[i];
-      var textHeight = areas.globalLabelHeights[i];
+      const textWidth = areas.globalLabelWidths[i];
+      const textHeight = areas.globalLabelHeights[i];
 
       if (LABEL_DEBUGGING) {
         nextSVG =
@@ -596,10 +533,10 @@ function generateSVG(
         svgString += nextSVG;
       }
 
-      let halfWidth = textWidth / 2;
-      let halfHeight = textHeight / 2;
-      let finalLabelAngle = (angle + toDegrees(eR)) % 360;
-      let quarterAngle = finalLabelAngle % 90;
+      const halfWidth = textWidth / 2;
+      const halfHeight = textHeight / 2;
+      const finalLabelAngle = (angle + toDegrees(eR)) % 360;
+      // const quarterAngle = finalLabelAngle % 90;
 
       // Shift the label to allow for the label length.
       if (finalLabelAngle === 0) {
@@ -624,7 +561,7 @@ function generateSVG(
         y -= halfHeight;
       }
 
-      var color = findColor(i);
+      const color = findColor(i, colourPalettes[colourPaletteName]);
       nextSVG =
         '<text style="font-family: Helvetica; font-size: ' +
         labelFontSize +
@@ -643,20 +580,20 @@ function generateSVG(
   }
 
   if (intersectionValues) {
-    var generateLabelPositions = true;
-    var areaInfo = areas.computeAreasAndBoundingBoxesFromEllipses(
+    const generateLabelPositions = true;
+    const areaInfo = areas.computeAreasAndBoundingBoxesFromEllipses(
       generateLabelPositions
     );
 
-    for (var i = 0; i < areas.globalZoneStrings.length; i++) {
-      var zoneLabel = areas.globalZoneStrings[i];
-      var labelPosition = areaInfo.zoneLabelPositions[zoneLabel];
+    for (let i = 0; i < areas.globalZoneStrings.length; i++) {
+      const zoneLabel = areas.globalZoneStrings[i];
+      const labelPosition = areaInfo.zoneLabelPositions[zoneLabel];
       if (labelPosition !== undefined) {
-        //var labelPosition = computeLabelPosition(globalZones[i]);
-        var labelX = (labelPosition.x + translateX) * scaling;
-        var labelY = (labelPosition.y + translateY) * scaling;
-        var textWidth = areas.globalValueWidths[i];
-        var textHeight = areas.globalValueHeights[i];
+        //const labelPosition = computeLabelPosition(globalZones[i]);
+        const labelX = (labelPosition.x + translateX) * scaling;
+        const labelY = (labelPosition.y + translateY) * scaling;
+        // const textWidth = areas.globalValueWidths[i];
+        // const textHeight = areas.globalValueHeights[i];
         if (!isNaN(labelX)) {
           nextSVG =
             '<text dominant-baseline="middle" text-anchor="middle" x="' +
@@ -684,9 +621,7 @@ function generateSVG(
  * This returns a transformation to fit the diagram in the given size
  */
 function findTransformationToFit(width, height, areas) {
-  if (typeof areas === "undefined") {
-    areas = new EdeapAreas();
-  }
+  if (typeof areas === "undefined") areas = new EdeapAreas();
 
   canvasWidth = parseInt(width);
   canvasHeight = parseInt(height);
@@ -729,46 +664,6 @@ function findTransformationToFit(width, height, areas) {
     translateX: translateX,
     translateY: translateY,
   };
-}
-
-function removeProportions(zones) {
-  var ret = new Array();
-  for (var i = 0; i < zones.length; i++) {
-    var zone = zones[i];
-    var newZone = new Array();
-    for (var j = 0; j < zone.length - 1; j++) {
-      // get all but last element
-      var e = zone[j];
-      newZone[j] = e;
-    }
-    ret[i] = newZone;
-  }
-  return ret;
-}
-
-function findProportions(zones) {
-  var ret = new Array();
-  for (var i = 0; i < zones.length; i++) {
-    var zone = zones[i];
-    ret[i] = parseFloat(zone[zone.length - 1]);
-  }
-  return ret;
-}
-
-function findContoursFromZones(zones) {
-  var ret = new Array();
-  for (var i = 0; i < zones.length; i++) {
-    var zone = zones[i];
-    for (var j = 0; j < zone.length; j++) {
-      var e = zone[j];
-      if (!contains(ret, e)) {
-        ret.push(e);
-      }
-    }
-  }
-  ret = sortContours(ret);
-
-  return ret;
 }
 
 let colourPalettes = {
@@ -834,116 +729,6 @@ let colourPalettes = {
   ],
 };
 
-function findColor(i: number) {
-  let colourPalette = colourPalettes[colourPaletteName];
-
-  if (i < colourPalette.length) {
-    return colourPalette[i];
-  }
-
-  return get_random_color();
-}
-
-function findContours(abstractDescription: string) {
-  // prevent repeated processing
-  if (globalContours.length > 0) {
-    return globalContours;
-  }
-
-  globalContours = new Array();
-  var index = 0;
-  var adSplit = abstractDescription.split("\n");
-
-  for (var i = 0; i < adSplit.length; i++) {
-    var line = adSplit[i];
-    var lineSplit = line.split(" ");
-    for (var j = 0; j < lineSplit.length; j++) {
-      var contour = lineSplit[j].trim();
-      var empty = false;
-      try {
-        if (contour.length === 0) {
-          empty = true;
-        }
-      } catch (err) {
-        empty = true;
-      }
-      if (!empty) {
-        if (!contains(globalContours, contour)) {
-          globalContours[index] = contour;
-          index++;
-        }
-      }
-    }
-  }
-
-  // sort contours
-  globalContours = sortContours(globalContours);
-
-  return globalContours;
-}
-
-function sortContours<T>(contours: T[]) {
-  contours.sort();
-
-  return contours;
-}
-
-function get_random_color() {
-  var letters = "0123456789ABCDEF".split("");
-  var color = "#";
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.round(Math.random() * 15)];
-  }
-  return color;
-}
-
-function findZones(abstractDescription: string) {
-  // prevent repeated processing
-  if (globalZones.length > 0) {
-    return globalZones;
-  }
-
-  globalZones = new Array();
-  var diagramIndex = 0;
-  var adSplit = abstractDescription.split("\n");
-
-  for (var i = 0; i < adSplit.length; i++) {
-    var zone: string[] = [];
-    var zoneIndex = 0;
-    var line = adSplit[i];
-    var lineSplit = line.split(" ");
-    for (var j = 0; j < lineSplit.length; j++) {
-      var contour = lineSplit[j].trim();
-      var empty = false;
-      try {
-        if (contour.length === 0) {
-          empty = true;
-        }
-      } catch (err) {
-        empty = true;
-      }
-      if (!empty) {
-        zone[zoneIndex] = contour;
-        zoneIndex++;
-      }
-    }
-
-    if (zone.length > 0) {
-      globalZones[diagramIndex] = zone;
-      diagramIndex++;
-    }
-  }
-  return globalZones;
-}
-
-function decodeAbstractDescription(abstractDescriptionField: string) {
-  var abstractDescription = decodeURIComponent(abstractDescriptionField);
-  while (abstractDescription.indexOf("+") != -1) {
-    abstractDescription = abstractDescription.replace("+", " ");
-  }
-  return abstractDescription;
-}
-
 function gup(name: string) {
   var regexS = "[\\?&]" + name + "=([^&#]*)";
   var regex = new RegExp(regexS);
@@ -954,47 +739,6 @@ function gup(name: string) {
   } else {
     return results[1];
   }
-}
-
-/**
- * Returns an array of strings containing all the zone combinations for
- * the contours, contours labelled with a single letter starting at "a" (venn diagram).
- * Does not return the outside contour.
- */
-function findAllZones(numberOfContours: number) {
-  var zoneList = new Array();
-
-  var numberOfZones = Math.pow(2, numberOfContours) - 1;
-  for (var zoneNumber = 1; zoneNumber <= numberOfZones; zoneNumber++) {
-    var zone = findZone(zoneNumber);
-    zoneList.push(zone);
-  }
-
-  //		ZoneStringComparator zComp = new ZoneStringComparator();
-  //		Collections.sort(zoneList,zComp);
-
-  return zoneList;
-}
-
-/**
- * Takes a zone number, which should be seen as a binary,
- * indicating whether each contour is in the zone.
- * Contours are assumed to be labelled from "a" onwards.
- */
-function findZone(zoneNumber: number) {
-  var zoneString = "";
-  var current = zoneNumber;
-  var i = 0;
-  while (current != 0) {
-    if (current % 2 === 1) {
-      var contourChar = String.fromCharCode(97 + i);
-      zoneString += contourChar + " ";
-    }
-    current = Math.floor(current / 2);
-    i++;
-  }
-  zoneString = zoneString.trim();
-  return zoneString;
 }
 
 function findLabelSizes() {
@@ -1061,7 +805,230 @@ function findValueSizes() {
   };
 }
 
+// --------------- No globals ------------------------
+
+function findColor(i: number, colourPalette: string[]) {
+  if (i < colourPalette.length) {
+    return colourPalette[i];
+  }
+
+  return get_random_color();
+}
+
+function get_random_color() {
+  const letters = "0123456789ABCDEF".split("");
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.round(Math.random() * 15)];
+  }
+  return color;
+}
+
 // --------------- Pure functions --------------------
+
+type Node = {
+  x: number;
+  y: number;
+};
+
+function distanceBetweenNodes(node1: Node, node2: Node) {
+  const xDifferenceSquared = Math.pow(node1.x - node2.x, 2);
+  const yDifferenceSquared = Math.pow(node1.y - node2.y, 2);
+
+  const sumOfSquaredDifferences = xDifferenceSquared + yDifferenceSquared;
+
+  const distance = Math.sqrt(sumOfSquaredDifferences);
+
+  return distance;
+}
+
+function ellipseBoundaryPosition(
+  eA: number,
+  eB: number,
+  eR: number,
+  angleRad: number
+) {
+  const divisor = Math.sqrt(
+    Math.pow(eB * Math.cos(angleRad), 2) + Math.pow(eA * Math.sin(angleRad), 2)
+  );
+  let y = (eA * eB * Math.sin(angleRad)) / divisor;
+  let x = (eA * eB * Math.cos(angleRad)) / divisor;
+
+  /*
+		let x = (eA * eB) / Math.sqrt(Math.pow(eB, 2) + Math.pow(eA, 2) * Math.pow(Math.tan(angleRad), 2));
+		if (angleRad < Math.PI * 1.5 && angleRad >= Math.PI/2)
+		{
+			x *= -1;
+		}
+		let y = Math.sqrt(1 - Math.pow(x/eA, 2)) * eB;
+		if (angleRad < Math.PI)
+		{
+			y *= -1;
+		}
+		if (isNaN(x)) {
+			console.log("NAN X: " + eA + ", " + eB + ", " + eR);
+		}
+		if (isNaN(y)) {
+			console.log("NAN X: " + eA + ", " + eB + ", " + eR);
+		}
+		*/
+
+  if (eR > 0) {
+    const s = Math.sin(eR);
+    const c = Math.cos(eR);
+
+    const newX = x * c - y * s;
+    const newY = x * s + y * c;
+
+    x = newX;
+    y = newY;
+  }
+
+  return {
+    x,
+    y,
+  };
+}
+
+function findContours(abstractDescription: string, contours: string[]) {
+  // prevent repeated processing
+  if (contours.length > 0) return contours;
+
+  contours = [];
+  let index = 0;
+  const adSplit = abstractDescription.split("\n");
+
+  for (let i = 0; i < adSplit.length; i++) {
+    const line = adSplit[i];
+    const lineSplit = line.split(" ");
+    for (let j = 0; j < lineSplit.length; j++) {
+      const contour = lineSplit[j].trim();
+      let empty = false;
+      try {
+        if (contour.length === 0) {
+          empty = true;
+        }
+      } catch (err) {
+        empty = true;
+      }
+      if (!empty) {
+        if (!contains(contours, contour)) {
+          contours[index] = contour;
+          index++;
+        }
+      }
+    }
+  }
+
+  // sort contours
+  return sortContours(contours);
+}
+
+function findZones(abstractDescription: string, zones: string[][]) {
+  // prevent repeated processing
+  if (zones.length > 0) return zones;
+
+  zones = [];
+  let diagramIndex = 0;
+  const adSplit = abstractDescription.split("\n");
+
+  for (let i = 0; i < adSplit.length; i++) {
+    const zone: string[] = [];
+    let zoneIndex = 0;
+    const line = adSplit[i];
+    const lineSplit = line.split(" ");
+    for (let j = 0; j < lineSplit.length; j++) {
+      const contour = lineSplit[j].trim();
+      let empty = false;
+      try {
+        if (contour.length === 0) {
+          empty = true;
+        }
+      } catch (err) {
+        empty = true;
+      }
+      if (!empty) {
+        zone[zoneIndex] = contour;
+        zoneIndex++;
+      }
+    }
+
+    if (zone.length > 0) {
+      zones[diagramIndex] = zone;
+      diagramIndex++;
+    }
+  }
+
+  return zones;
+}
+
+function findProportions(zones: string[][]) {
+  const ret: number[] = [];
+  for (let i = 0; i < zones.length; i++) {
+    const zone = zones[i];
+    ret[i] = parseFloat(zone[zone.length - 1]);
+  }
+  return ret;
+}
+
+function findContourAreas(
+  contours: string[],
+  zones: string[][],
+  proportions: number[]
+) {
+  const contourAreas: number[] = [];
+  for (let i = 0; i < contours.length; i++) {
+    let sum = 0;
+    for (let j = 0; j < zones.length; j++) {
+      if (zones[j].indexOf(contours[i]) != -1) {
+        sum = sum + proportions[j];
+      }
+    }
+    contourAreas[i] = sum;
+  }
+  return contourAreas;
+}
+
+function removeProportions(zones: string[][]) {
+  const ret: string[][] = [];
+  for (var i = 0; i < zones.length; i++) {
+    const zone = zones[i];
+    const newZone: string[] = [];
+    for (let j = 0; j < zone.length - 1; j++) {
+      // get all but last element
+      const e = zone[j];
+      newZone[j] = e;
+    }
+    ret[i] = newZone;
+  }
+  return ret;
+}
+
+function findContoursFromZones(zones: string[][]) {
+  const ret: string[] = [];
+  for (let i = 0; i < zones.length; i++) {
+    const zone = zones[i];
+    for (let j = 0; j < zone.length; j++) {
+      const e = zone[j];
+      if (!contains(ret, e)) {
+        ret.push(e);
+      }
+    }
+  }
+  return sortContours(ret);
+}
+
+function sortContours<T>(contours: T[]) {
+  return contours.sort();
+}
+
+function decodeAbstractDescription(abstractDescriptionField: string) {
+  let abstractDescription = decodeURIComponent(abstractDescriptionField);
+  while (abstractDescription.indexOf("+") != -1) {
+    abstractDescription = abstractDescription.replace("+", " ");
+  }
+  return abstractDescription;
+}
 
 function contains<T>(arr: T[], e: T) {
   for (let i = 0; i < arr.length; i++) {
