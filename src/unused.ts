@@ -306,3 +306,19 @@
 //   }
 //   return zoneString.trim();
 // }
+
+// this function equalizes the effect of each measure. For each measure i, it computes the product of all the other measures and multiply it by measure i
+// for example: if m1 = 1, m2 = 10, m3 = 1000, to equalize the effect of each measure m1 is multiplied by 10 * 1000, m2 is multiplied by 1 * 1000, and m3
+// is multiplied by 1 * 10 ... this is just an example. in our system, all the measures are normalized before this step is performed.
+
+// function equalizeEffect(i, normalizedMeasures) {
+//   if (normalizedMeasures[i] != 0) {
+//     var effectProduct = 1;
+//     for (var j in normalizedMeasures) {
+//       if (i != j && normalizedMeasures[j] != 0)
+//         effectProduct *= normalizedMeasures[j];
+//     }
+//     return effectProduct;
+//   }
+//   return 0;
+// }
