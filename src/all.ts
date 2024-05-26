@@ -1,3 +1,8 @@
+type Point = {
+  x: number;
+  y: number;
+};
+
 type Fitness = {
   zoneAreaDifference: number;
   unwantedZone: number;
@@ -24,24 +29,12 @@ type ZoneInfo = {
 
 type FitnessData = {
   overallBoundingBox: {
-    p1: {
-      x: number;
-      y: number;
-    };
-    p2: {
-      x: number;
-      y: number;
-    };
+    p1: Point;
+    p2: Point;
   };
   boundingBoxes: {
-    p1: {
-      x: number;
-      y: number;
-    };
-    p2: {
-      x: number;
-      y: number;
-    };
+    p1: Point;
+    p2: Point;
   }[];
   zoneAreaProportions: Record<string, number>;
   splitZoneAreaProportions: Record<string, number>;
@@ -1218,11 +1211,6 @@ function distanceBetween(x1: number, y1: number, x2: number, y2: number) {
 // Author:  Michael Wybrow <Michael.Wybrow@monash.edu>
 //
 
-type Point = {
-  x: number;
-  y: number;
-};
-
 type HitInfo = {
   smallHitArray: number[];
   smallHitArraySizeX: number;
@@ -1458,10 +1446,10 @@ class EdeapAreas {
     let endY = nextGridValue(oversizedBB.p2.y);
 
     // ### AREA TEST DEBUG START
-    //        var movedX1 = oversizedBB.p1.x - startX;
-    //        var movedY1 = oversizedBB.p1.y - startY;
-    //        var movedX2 = endX - oversizedBB.p2.x;
-    //        var movedY2 = endY - oversizedBB.p2.y;
+    //        let movedX1 = oversizedBB.p1.x - startX;
+    //        let movedY1 = oversizedBB.p1.y - startY;
+    //        let movedX2 = endX - oversizedBB.p2.x;
+    //        let movedY2 = endY - oversizedBB.p2.y;
     // ### AREA TEST DEBUG END
 
     let ellipseKeys = [];
@@ -1693,18 +1681,18 @@ class EdeapAreas {
       yCounter++;
     }
 
-    for (var i = 0; i < this.ellipseParams.length; i++) {
+    for (let i = 0; i < this.ellipseParams.length; i++) {
       let ellipseAreaInfo = ellipseKeys[i];
       ellipseAreaInfo.needsFilling = false;
     }
 
     // For each zone, calculate the proportion of its area of the
     // total area of all zones other than the non-labelled zone.
-    var zoneProportions: Record<string, number> = {};
+    const zoneProportions: Record<string, number> = {};
     // ### AREA TEST DEBUG START
-    //        var zoneSamples = {};
+    //        let zoneSamples = {};
     // ### AREA TEST DEBUG END
-    for (let [key, value] of zoneInfo.entries()) {
+    for (const [key, value] of zoneInfo.entries()) {
       const proportion = value.points / totalPoints;
       zoneProportions[key] = proportion;
       // ### AREA TEST DEBUG START
@@ -1720,9 +1708,9 @@ class EdeapAreas {
       expandedZoneProportions[property] = proportion;
     }
 
-    var splitZoneAreaProportions: Record<string, number> = {};
+    const splitZoneAreaProportions: Record<string, number> = {};
 
-    var result = {
+    const result = {
       overallBoundingBox: totalBB,
       boundingBoxes: ellipseBoundingBoxes,
       zoneAreaProportions: zoneProportions,
@@ -1747,7 +1735,7 @@ class EdeapAreas {
     };
 
     // Return the point in each zone with the widest x and y coord.
-    var zoneLabelPositions: Record<string, Point> = {};
+    const zoneLabelPositions: Record<string, Point> = {};
     for (let [zone, zoneValue] of zoneInfo.entries()) {
       const bitmap = zoneValue.bitmap;
       if (bitmap === undefined) continue;
@@ -1757,19 +1745,19 @@ class EdeapAreas {
       // with the fillFragment function on the zoneFragmentMap array. After
       // this process zoneFragmentSizes will hold the size in sampled points
       // of each of the regions.
-      let zoneFragmentSizes = [];
-      let zoneFragmentMap: number[] = new Array(length).fill(0);
+      const zoneFragmentSizes = [];
+      const zoneFragmentMap: number[] = new Array(length).fill(0);
       for (let y = 0; y < bitmapSizeY; y++) {
         for (let x = 0; x < bitmapSizeX; x++) {
-          let index = y * bitmapSizeX + x;
-          let inZone = bitmap[index];
+          const index = y * bitmapSizeX + x;
+          const inZone = bitmap[index];
           if (inZone) {
             if (zoneFragmentMap[index] === 0) {
               // This is a unnumbered fragment (i.e., a fragment of
               // the zone we haven't encountered yet), number all
               // adjoining points as part of this fragment and
               // then record the size of the fragment.
-              let size = this._fillFragment(
+              const size = this._fillFragment(
                 zoneFragmentMap,
                 bitmap,
                 x,
@@ -1824,8 +1812,8 @@ class EdeapAreas {
       // @ts-expect-error
       delete zoneAvgPos.count;
 
-      var x = zoneAvgPos.firstXIndex;
-      var y = zoneAvgPos.firstYIndex;
+      let x = zoneAvgPos.firstXIndex;
+      let y = zoneAvgPos.firstYIndex;
       // @ts-expect-error
       delete zoneAvgPos.firstXIndex;
       // @ts-expect-error
@@ -1853,10 +1841,10 @@ class EdeapAreas {
           return neighbourCount;
         }
 
-        var centreX = Math.floor(
+        const centreX = Math.floor(
           (zoneAvgPos.x - oversizedBB.p1.x) / areaSampleStep
         );
-        var centreY = Math.floor(
+        const centreY = Math.floor(
           (zoneAvgPos.y - oversizedBB.p1.y) / areaSampleStep
         );
 
@@ -1886,8 +1874,8 @@ class EdeapAreas {
           }
         }
 
-        var movement = true;
-        var limit = 20;
+        let movement = true;
+        let limit = 20;
         while (movement && limit > 0) {
           movement = false;
           --limit;
@@ -2012,30 +2000,30 @@ class EdeapAreas {
     fitnessData: FitnessData,
     fitness: Fitness
   ) {
-    // var actualZones = fitnessData.zoneAreaProportions;
+    // let actualZones = fitnessData.zoneAreaProportions;
     const zonePositions = fitnessData.zoneAveragePositions!;
 
     const labelsInZoneB = missingZone.split(",");
     if (labelsInZoneB.length === 1) {
       // Missing zone with one label.
       // Push this ellipse away from other ellipses.
-      var ellipseIndex = this.ellipseLabel.indexOf(labelsInZoneB[0]);
-      let ellipseC = this.ellipseParams[ellipseIndex];
-      var cx = ellipseC.X;
-      var cy = ellipseC.Y;
-      var ca = ellipseC.A;
-      var cb = ellipseC.B;
+      const ellipseIndex = this.ellipseLabel.indexOf(labelsInZoneB[0]);
+      const ellipseC = this.ellipseParams[ellipseIndex];
+      const cx = ellipseC.X;
+      const cy = ellipseC.Y;
+      const ca = ellipseC.A;
+      const cb = ellipseC.B;
 
       for (let e = 0; e < this.ellipseLabel.length; e++) {
         if (e !== ellipseIndex) {
           let ellipseE = this.ellipseParams[e];
-          var ex = ellipseE.X;
-          var ey = ellipseE.Y;
-          var ea = ellipseE.A;
-          var eb = ellipseE.B;
-          var separation = Math.max(ea, eb) + Math.max(ca, cb);
+          const ex = ellipseE.X;
+          const ey = ellipseE.Y;
+          const ea = ellipseE.A;
+          const eb = ellipseE.B;
+          const separation = Math.max(ea, eb) + Math.max(ca, cb);
 
-          var dist = separation - distanceBetween(cx, cy, ex, ey);
+          let dist = separation - distanceBetween(cx, cy, ex, ey);
           dist = Math.max(0, dist);
           fitness.missingOneLabelZone += dist;
         }
@@ -2044,15 +2032,15 @@ class EdeapAreas {
       // For a missing zone B...
 
       logMessage(logFitnessDetails, `  + Missing zone: ${missingZone}`);
-      var zoneWithMostSharedLabels = null;
-      var numberOfMostSharedLabels = 0;
-      var labelsOfZoneWithMostSharedLabels: string[] = [];
+      let zoneWithMostSharedLabels = null;
+      let numberOfMostSharedLabels = 0;
+      let labelsOfZoneWithMostSharedLabels: string[] = [];
       // Find the actual zone C that shares the most labels with B
-      for (var existingZone in fitnessData.zoneAreaProportions) {
+      for (const existingZone in fitnessData.zoneAreaProportions) {
         // Count common labels between C and B
-        var count = 0;
-        var existingZoneLabels = existingZone.split(",");
-        for (var i = 0; i < labelsInZoneB.length; i++) {
+        let count = 0;
+        const existingZoneLabels = existingZone.split(",");
+        for (let i = 0; i < labelsInZoneB.length; i++) {
           if (existingZoneLabels.includes(labelsInZoneB[i])) {
             ++count;
           }
@@ -2082,32 +2070,32 @@ class EdeapAreas {
         );
 
         // Find the set of labels in B that are not in C.
-        var labelsInZoneBButNotZoneC = labelsInZoneB.slice();
-        var labelsInZoneC = zoneWithMostSharedLabels.split(",");
-        for (var j = 0; j < labelsInZoneC.length; ++j) {
-          var index = labelsInZoneBButNotZoneC.indexOf(labelsInZoneC[j]);
+        const labelsInZoneBButNotZoneC = labelsInZoneB.slice();
+        const labelsInZoneC = zoneWithMostSharedLabels.split(",");
+        for (let j = 0; j < labelsInZoneC.length; ++j) {
+          const index = labelsInZoneBButNotZoneC.indexOf(labelsInZoneC[j]);
           if (index !== -1) {
             labelsInZoneBButNotZoneC.splice(index, 1);
           }
         }
 
         // A point known to be in zone C.
-        var zx = zonePositions[zoneWithMostSharedLabels].firstX;
-        var zy = zonePositions[zoneWithMostSharedLabels].firstY;
+        let zx = zonePositions[zoneWithMostSharedLabels].firstX;
+        let zy = zonePositions[zoneWithMostSharedLabels].firstY;
         logMessage(logFitnessDetails, `     + x: ${zx}, y: ${zy}`);
 
         // For each label in B that is not in C
-        for (var j = 0; j < labelsInZoneBButNotZoneC.length; ++j) {
-          var labelInZoneB = labelsInZoneBButNotZoneC[j];
+        for (let j = 0; j < labelsInZoneBButNotZoneC.length; ++j) {
+          const labelInZoneB = labelsInZoneBButNotZoneC[j];
           logMessage(
             logFitnessDetails,
             `     + Other label: ${labelInZoneB} (pull closer)`
           );
 
           // Pull the ellipse for that label from B closer to...
-          var jEllipseIndex = this.ellipseLabel.indexOf(labelInZoneB);
-          var jx = this.ellipseParams[jEllipseIndex].X;
-          var jy = this.ellipseParams[jEllipseIndex].Y;
+          const jEllipseIndex = this.ellipseLabel.indexOf(labelInZoneB);
+          const jx = this.ellipseParams[jEllipseIndex].X;
+          const jy = this.ellipseParams[jEllipseIndex].Y;
 
           // ... the point known to be in zone C.
           fitness.missingTwoOrMoreLabelZone += distanceBetween(jx, jy, zx, zy);
@@ -2115,53 +2103,53 @@ class EdeapAreas {
 
         if (numberOfMostSharedLabels === labelsInZoneB.length) {
           // Find the set of labels in C that are not in B.
-          var labelsInZoneCButNotZoneB = labelsInZoneC.slice();
-          for (var j = 0; j < labelsInZoneB.length; ++j) {
-            var index = labelsInZoneCButNotZoneB.indexOf(labelsInZoneB[j]);
+          const labelsInZoneCButNotZoneB = labelsInZoneC.slice();
+          for (let j = 0; j < labelsInZoneB.length; ++j) {
+            const index = labelsInZoneCButNotZoneB.indexOf(labelsInZoneB[j]);
             if (index !== -1) {
               labelsInZoneCButNotZoneB.splice(index, 1);
             }
           }
 
           // A point known to be in zone C.
-          var zx = zonePositions[zoneWithMostSharedLabels].firstX;
-          var zy = zonePositions[zoneWithMostSharedLabels].firstY;
+          zx = zonePositions[zoneWithMostSharedLabels].firstX;
+          zy = zonePositions[zoneWithMostSharedLabels].firstY;
           logMessage(logFitnessDetails, `     + x: ${zx}, y: ${zy}`);
 
           // For each label in C that is not in B (i.e., not desired)...
-          for (var j = 0; j < labelsInZoneCButNotZoneB.length; ++j) {
-            var labelInZoneC = labelsInZoneCButNotZoneB[j];
+          for (let j = 0; j < labelsInZoneCButNotZoneB.length; ++j) {
+            const labelInZoneC = labelsInZoneCButNotZoneB[j];
             logMessage(
               logFitnessDetails,
               `     + Other label: ${labelInZoneC} (push away)`
             );
 
             // Push away each of ellipses in Zone B.
-            for (var k = 0; k < labelsInZoneB.length; ++k) {
+            for (let k = 0; k < labelsInZoneB.length; ++k) {
               logMessage(
                 logFitnessDetails,
                 `         + Separate: ${labelInZoneC}, ${labelsInZoneB[k]}`
               );
 
               // Push the ellipse for that label away from...
-              var jEllipseIndex = this.ellipseLabel.indexOf(labelInZoneC);
-              let ellipseJ = this.ellipseParams[jEllipseIndex];
-              var jx = ellipseJ.X;
-              var jy = ellipseJ.Y;
-              var ja = ellipseJ.A;
-              var jb = ellipseJ.B;
-              var jr = Math.max(ja, jb);
+              const jEllipseIndex = this.ellipseLabel.indexOf(labelInZoneC);
+              const ellipseJ = this.ellipseParams[jEllipseIndex];
+              const jx = ellipseJ.X;
+              const jy = ellipseJ.Y;
+              const ja = ellipseJ.A;
+              const jb = ellipseJ.B;
+              const jr = Math.max(ja, jb);
 
-              var ellipseIndex = this.ellipseLabel.indexOf(labelsInZoneB[k]);
-              let ellipseK = this.ellipseParams[ellipseIndex];
-              var kx = ellipseK.X;
-              var ky = ellipseK.Y;
-              var ka = ellipseK.A;
-              var kb = ellipseK.B;
-              var kr = Math.max(ka, kb);
+              const ellipseIndex = this.ellipseLabel.indexOf(labelsInZoneB[k]);
+              const ellipseK = this.ellipseParams[ellipseIndex];
+              const kx = ellipseK.X;
+              const ky = ellipseK.Y;
+              const ka = ellipseK.A;
+              const kb = ellipseK.B;
+              const kr = Math.max(ka, kb);
 
               // Subtract the distance between two points from the minimum separation.
-              var diff = kr + jr - distanceBetween(kx, ky, jx, jy);
+              const diff = kr + jr - distanceBetween(kx, ky, jx, jy);
 
               // ... the point known to be in zone C.
               fitness.missingTwoOrMoreLabelZone += diff;
@@ -2181,16 +2169,16 @@ class EdeapAreas {
     fitness: Fitness
   ) {
     logMessage(logFitnessDetails, `   + Unwanted zone: ${zone}`);
-    var zonesArray = zone.split(",");
+    const zonesArray = zone.split(",");
 
     // For an undesired actual zone A...
 
     // Check that there is no desired zone B...
-    for (var i = 0; i < this.globalZoneStrings.length; ++i) {
+    for (let i = 0; i < this.globalZoneStrings.length; ++i) {
       // That has all the labels from zone A
-      var count = 0;
-      var desiredZoneLabels = this.globalZoneStrings[i].split(",");
-      for (var k = 0; k < zonesArray.length; ++k) {
+      let count = 0;
+      const desiredZoneLabels = this.globalZoneStrings[i].split(",");
+      for (let k = 0; k < zonesArray.length; ++k) {
         if (desiredZoneLabels.includes(zonesArray[k])) {
           ++count;
         }
@@ -2216,19 +2204,19 @@ class EdeapAreas {
     // If there isn't a desired zone that has all the labels of zone A...
 
     // Start with a factor of 1.
-    var factor = 1;
+    let factor = 1;
 
     // The consider every pair of labels in zone A...
     for (let i = 0; i < zonesArray.length; i++) {
-      var iZone = zonesArray[i];
+      const iZone = zonesArray[i];
       for (let j = i + 1; j < zonesArray.length; j++) {
-        let jZone = zonesArray[j];
+        const jZone = zonesArray[j];
 
         // For the pair of labels, check there is no desired zone
         // with both those labels...
         let isDesiredZoneContainingBothLabels = false;
         for (let k = 0; k < this.globalZoneStrings.length; ++k) {
-          let desiredZoneLabels = this.globalZoneStrings[k].split(",");
+          const desiredZoneLabels = this.globalZoneStrings[k].split(",");
           if (
             desiredZoneLabels.includes(iZone) &&
             desiredZoneLabels.includes(jZone)
@@ -2252,25 +2240,25 @@ class EdeapAreas {
 
           // Missing zone with one label.
           // Push this ellipse away from other ellipses.
-          var ellipseIndex = this.ellipseLabel.indexOf(zonesArray[i]);
-          let ellipseI = this.ellipseParams[ellipseIndex];
-          var ix = ellipseI.X;
-          var iy = ellipseI.Y;
-          var ia = ellipseI.A;
-          var ib = ellipseI.B;
-          var ir = Math.max(ia, ib);
+          let ellipseIndex = this.ellipseLabel.indexOf(zonesArray[i]);
+          const ellipseI = this.ellipseParams[ellipseIndex];
+          const ix = ellipseI.X;
+          const iy = ellipseI.Y;
+          const ia = ellipseI.A;
+          const ib = ellipseI.B;
+          const ir = Math.max(ia, ib);
 
-          var ellipseIndex = this.ellipseLabel.indexOf(zonesArray[j]);
-          let ellipseJ = this.ellipseParams[ellipseIndex];
-          var jx = ellipseJ.X;
-          var jy = ellipseJ.Y;
-          var ja = ellipseJ.A;
-          var jb = ellipseJ.B;
-          var jr = Math.max(ja, jb);
+          ellipseIndex = this.ellipseLabel.indexOf(zonesArray[j]);
+          const ellipseJ = this.ellipseParams[ellipseIndex];
+          const jx = ellipseJ.X;
+          const jy = ellipseJ.Y;
+          const ja = ellipseJ.A;
+          const jb = ellipseJ.B;
+          const jr = Math.max(ja, jb);
 
           // Subtract the distance between the two ellipse centres from
           // the minimum separation.
-          var diff = ir + jr - distanceBetween(ix, iy, jx, jy);
+          const diff = ir + jr - distanceBetween(ix, iy, jx, jy);
           fitness.unwantedZone += diff * factor;
         }
       }
@@ -2281,7 +2269,7 @@ class EdeapAreas {
 
   // Compute the fitness components of the ellipses layout.
   computeFitnessComponents() {
-    // var penalty = 0;
+    // let penalty = 0;
     const fitnessData = this.computeAreasAndBoundingBoxesFromEllipses();
 
     // Build up a set of all desired and actual zones.
@@ -2290,12 +2278,12 @@ class EdeapAreas {
       allZones.add(zone);
     }
     for (let i = 0; i < this.globalZoneStrings.length; ++i) {
-      var zone = this.globalZoneStrings[i];
+      const zone = this.globalZoneStrings[i];
       allZones.add(zone);
     }
 
     logMessage(logFitnessDetails, "Fitness calculation:");
-    var fitness = {
+    const fitness = {
       zoneAreaDifference: 0,
       unwantedZone: 0,
       circleDistortion: 0,
@@ -2307,20 +2295,20 @@ class EdeapAreas {
 
     // Save us recomputing these in nested loops.
     let splitGlobalZoneStrings = [];
-    for (var k = 0; k < this.globalZoneStrings.length; ++k) {
+    for (let k = 0; k < this.globalZoneStrings.length; ++k) {
       splitGlobalZoneStrings[k] = this.globalZoneStrings[k].split(",");
     }
 
-    var nonOverlappingPairs = [];
+    const nonOverlappingPairs = [];
     // Compute ellipses we don't want to be overlapping or touching.
-    for (var i = 0; i < this.ellipseLabel.length; i++) {
-      var labelI = ellipseLabel[i];
-      for (var j = i + 1; j < this.ellipseLabel.length; j++) {
-        var labelJ = this.ellipseLabel[j];
+    for (let i = 0; i < this.ellipseLabel.length; i++) {
+      const labelI = ellipseLabel[i];
+      for (let j = i + 1; j < this.ellipseLabel.length; j++) {
+        const labelJ = this.ellipseLabel[j];
 
-        var shouldOverlap = false;
-        for (var k = 0; k < this.globalZoneStrings.length; ++k) {
-          var desiredZoneLabels = splitGlobalZoneStrings[k];
+        let shouldOverlap = false;
+        for (let k = 0; k < this.globalZoneStrings.length; ++k) {
+          const desiredZoneLabels = splitGlobalZoneStrings[k];
           if (
             desiredZoneLabels.includes(labelI) &&
             desiredZoneLabels.includes(labelJ)
@@ -2331,20 +2319,20 @@ class EdeapAreas {
         }
 
         if (shouldOverlap === false) {
-          var pair = labelI + "," + labelJ;
+          const pair = labelI + "," + labelJ;
           nonOverlappingPairs.push(pair);
         }
       }
     }
 
-    for (var i = 0; i < nonOverlappingPairs.length; i++) {
-      var labels = nonOverlappingPairs[i].split(",");
-      var labelA = labels[0];
-      var labelB = labels[1];
+    for (let i = 0; i < nonOverlappingPairs.length; i++) {
+      const labels = nonOverlappingPairs[i].split(",");
+      const labelA = labels[0];
+      const labelB = labels[1];
 
-      var overlapPercentage = 0;
-      for (var zone in fitnessData.expandedZoneAreaProportions) {
-        var zoneLabels = zone.split(",");
+      let overlapPercentage = 0;
+      for (const zone in fitnessData.expandedZoneAreaProportions) {
+        const zoneLabels = zone.split(",");
         if (zoneLabels.includes(labelA) && zoneLabels.includes(labelB)) {
           overlapPercentage += fitnessData.expandedZoneAreaProportions[zone];
         }
@@ -2359,23 +2347,23 @@ class EdeapAreas {
       }
     }
 
-    var fullyContainedPairs: string[] = [];
+    const fullyContainedPairs: string[] = [];
     // Compute ellipses that are fully contained in other ellipses (which
     // we don't want to have unnecessarily overlapping borders).
-    for (var i = 0; i < this.ellipseLabel.length; i++) {
-      var labelI = this.ellipseLabel[i];
-      for (var j = 0; j < this.ellipseLabel.length; j++) {
+    for (let i = 0; i < this.ellipseLabel.length; i++) {
+      const labelI = this.ellipseLabel[i];
+      for (let j = 0; j < this.ellipseLabel.length; j++) {
         if (i === j) {
           // Don't consider same label.
           continue;
         }
 
-        var labelJ = this.ellipseLabel[j];
+        const labelJ = this.ellipseLabel[j];
 
-        var iIsOnlyContainedInJ = true;
-        var jExistsOutsideOfI = false;
-        for (var k = 0; k < this.globalZoneStrings.length; ++k) {
-          var desiredZoneLabels = splitGlobalZoneStrings[k];
+        let iIsOnlyContainedInJ = true;
+        let jExistsOutsideOfI = false;
+        for (let k = 0; k < this.globalZoneStrings.length; ++k) {
+          const desiredZoneLabels = splitGlobalZoneStrings[k];
 
           if (
             desiredZoneLabels.includes(labelI) &&
@@ -2396,7 +2384,7 @@ class EdeapAreas {
           // Ellipse with label I is fully contained in ellipse with
           // label J.
           // console.log(labelI + " is fully contained within " + labelJ);
-          var pair = labelI + "," + labelJ;
+          const pair = labelI + "," + labelJ;
           fullyContainedPairs.push(pair);
         }
       }
@@ -2404,12 +2392,12 @@ class EdeapAreas {
 
     // For each desired or actual zone add to the fitness value the
     // difference between the actual and desired area.
-    for (var zone of allZones) {
-      var zoneIsUnwanted = false;
+    for (const zone of allZones) {
+      let zoneIsUnwanted = false;
       // let zoneIsMissing = false;
 
       logMessage(logFitnessDetails, ` + Zone: ${zone}`);
-      var actualAreaProportion = 0;
+      let actualAreaProportion = 0;
       if (fitnessData.zoneAreaProportions.hasOwnProperty(zone)) {
         actualAreaProportion = fitnessData.zoneAreaProportions[zone];
       } else {
@@ -2417,8 +2405,8 @@ class EdeapAreas {
         this._missingZonePenalty(zone, fitnessData, fitness);
       }
 
-      var desiredAreaProportion = 0;
-      var zoneIndex = this.globalZoneStrings.indexOf(zone);
+      let desiredAreaProportion = 0;
+      const zoneIndex = this.globalZoneStrings.indexOf(zone);
       if (zoneIndex !== -1) {
         desiredAreaProportion = this.globalProportions[zoneIndex];
       } else {
@@ -2432,7 +2420,7 @@ class EdeapAreas {
         )}, Desired: ${desiredAreaProportion.toFixed(4)}`
       );
 
-      var difference = Math.abs(actualAreaProportion - desiredAreaProportion);
+      const difference = Math.abs(actualAreaProportion - desiredAreaProportion);
       if (zoneIsUnwanted) {
         this._unwantedZonePenalty(
           zone,
@@ -2452,7 +2440,7 @@ class EdeapAreas {
 
     // Add to the fitness the difference between radiuses --
     // we prefer circles over ellipses.
-    for (var i = 0; i < this.ellipseLabel.length; ++i) {
+    for (let i = 0; i < this.ellipseLabel.length; ++i) {
       fitness.circleDistortion +=
         1 -
         Math.min(this.ellipseParams[i].A, this.ellipseParams[i].B) /
@@ -2474,11 +2462,11 @@ class EdeapAreas {
   }
 
   zoneAreaTableBody(_returnResults?: boolean) {
-    var areaData = this.computeAreasAndBoundingBoxesFromEllipses();
-    // var veStress = -1;
+    const areaData = this.computeAreasAndBoundingBoxesFromEllipses();
+    // const veStress = -1;
 
     // Build up a set of all desired and actual zones.
-    var allZones = new Set<string>();
+    const allZones = new Set<string>();
     for (const zone in areaData.zoneAreaProportions) {
       allZones.add(zone);
     }
@@ -2486,23 +2474,23 @@ class EdeapAreas {
       const zone = this.globalZoneStrings[i];
       allZones.add(zone);
     }
-    var closureGlobalZoneStrings = this.globalZoneStrings;
-    var closureGlobalProportions = this.globalProportions;
-    var zonesArray = Array.from(allZones);
+    const closureGlobalZoneStrings = this.globalZoneStrings;
+    const closureGlobalProportions = this.globalProportions;
+    const zonesArray = Array.from(allZones);
     zonesArray.sort(function (a: string, b: string) {
-      var desiredAreaProportionA = 0;
-      var zoneIndex = closureGlobalZoneStrings.indexOf(a);
+      let desiredAreaProportionA = 0;
+      let zoneIndex = closureGlobalZoneStrings.indexOf(a);
       if (zoneIndex !== -1) {
         desiredAreaProportionA = closureGlobalProportions[zoneIndex];
       }
 
-      var desiredAreaProportionB = 0;
-      var zoneIndex = closureGlobalZoneStrings.indexOf(b);
+      let desiredAreaProportionB = 0;
+      zoneIndex = closureGlobalZoneStrings.indexOf(b);
       if (zoneIndex !== -1) {
         desiredAreaProportionB = closureGlobalProportions[zoneIndex];
       }
 
-      var result = desiredAreaProportionB - desiredAreaProportionA;
+      const result = desiredAreaProportionB - desiredAreaProportionA;
       if (result === 0) {
         return a.localeCompare(b);
       }
@@ -2512,19 +2500,19 @@ class EdeapAreas {
     let tbody = "";
     let csvText = "Zone,Desired,Actual,Difference\n";
 
-    var totalAreaDifference = 0;
+    let totalAreaDifference = 0;
     for (const index in zonesArray) {
-      var zone = zonesArray[index];
+      const zone = zonesArray[index];
 
       let extraClass = "";
 
-      var desiredAreaProportion = 0;
-      var zoneIndex = this.globalZoneStrings.indexOf(zone);
+      let desiredAreaProportion = 0;
+      const zoneIndex = this.globalZoneStrings.indexOf(zone);
       if (zoneIndex !== -1) {
         desiredAreaProportion = this.globalProportions[zoneIndex];
       }
 
-      var actualAreaProportion = 0;
+      let actualAreaProportion = 0;
       if (areaData.zoneAreaProportions.hasOwnProperty(zone)) {
         actualAreaProportion = areaData.zoneAreaProportions[zone];
       }
@@ -2722,7 +2710,7 @@ function optimizeStep(opt: number) {
     bestMoveFitness = currentFitness;
     bestMoveEllipse = -1;
     for (
-      var elp = 0;
+      let elp = 0;
       elp < ellipseLabel.length;
       elp++ // for each ellipse
     ) {
@@ -2751,7 +2739,7 @@ function optimizeStep(opt: number) {
       applyMove(bestMoveEllipse, bestMove);
       if (animateOptimizer) {
         if (zoomToFitAtEachStep) {
-          var transformation = findTransformationToFit(
+          const transformation = findTransformationToFit(
             canvasWidth,
             canvasHeight
           );
@@ -2816,9 +2804,9 @@ function optimizeStep(opt: number) {
     ) {
       bestMoveFitness = currentFitness;
       bestMoveEllipse = -1;
-      var found = false; // if a solution that satisfies the annealing criteria is found
+      let found = false; // if a solution that satisfies the annealing criteria is found
       for (
-        var elp = 0;
+        let elp = 0;
         elp < ellipseLabel.length && !found;
         elp++ // for each ellipse
       ) {
@@ -2831,9 +2819,9 @@ function optimizeStep(opt: number) {
         logMessage(logOptimizerStep, ellipseLabel[elp]);
         const possibleFitness = selectRandomMove(elp); // select a random move (between 1 and 10) for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
         logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
-        var fitnessDifference = possibleFitness - bestMoveFitness; // difference between the bestFitness so far and the fitness of the selected random move
-        var SAAccept = Math.exp((-1 * fitnessDifference) / temp); // Simulated annealing acceptance function
-        var SARand = Math.random(); // a random number between [0,1)
+        const fitnessDifference = possibleFitness - bestMoveFitness; // difference between the bestFitness so far and the fitness of the selected random move
+        const SAAccept = Math.exp((-1 * fitnessDifference) / temp); // Simulated annealing acceptance function
+        const SARand = Math.random(); // a random number between [0,1)
         if (fitnessDifference < 0 || (SAAccept <= 1 && SARand < SAAccept)) {
           // solution acceptance criteria
           // move to a solution that satisfies the acceptance criteria of SA
@@ -2886,7 +2874,7 @@ function optimizeStep(opt: number) {
 
   // Optimizer finishes execution here
   globalFinalFitness = currentFitness;
-  var transformation = findTransformationToFit(canvasWidth, canvasHeight);
+  const transformation = findTransformationToFit(canvasWidth, canvasHeight);
   let progress = document.getElementById(
     "optimizerProgress"
   ) as HTMLProgressElement;
