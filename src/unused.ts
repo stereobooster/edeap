@@ -223,3 +223,46 @@
 //   }
 //   return ret;
 // }
+
+// function randomDiagram(numberOfContours: number, chanceOfZoneAddition: number) {
+//   var zones = findAllZones(numberOfContours);
+//   var adZones = "";
+//   for (var i = 0; i < zones.length; i++) {
+//     var z = zones[i];
+//     if (Math.random() < chanceOfZoneAddition) {
+//       if (adZones != "") {
+//         adZones += "\n";
+//       }
+//       adZones += z;
+//     }
+//   }
+//   return adZones;
+// }
+
+// function encodeAbstractDescription(abstractDescriptionDecoded: string) {
+//   var abstractDescription = encodeURIComponent(abstractDescriptionDecoded);
+//   while (abstractDescription.indexOf(" ") != -1) {
+//     abstractDescription = abstractDescription.replace(" ", "+");
+//   }
+//   return abstractDescription;
+// }
+
+// function arrayToString(arr) {
+//   var ret = "";
+//   for (var i = 0; i < arr.length - 1; i++) {
+//     ret += arr[i] + " ";
+//   }
+//   ret += arr[arr.length - 1];
+//   return ret;
+// }
+
+// function isNumber(n: any) {
+//   return !isNaN(parseFloat(n)) && isFinite(n);
+// }
+
+// function escapeHTML(string: string) {
+//   var pre = document.createElement("pre");
+//   var text = document.createTextNode(string);
+//   pre.appendChild(text);
+//   return pre.innerHTML;
+// }
