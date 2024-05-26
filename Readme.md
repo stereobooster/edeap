@@ -4,8 +4,10 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] isolate types
-- [ ] isolate pure functions
+- [x] isolate types
+- [x] isolate pure functions
+- [ ] isolate `UI` code
+- [ ] isolate `generateSVG`
 
 ----
 
