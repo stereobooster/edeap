@@ -22,6 +22,34 @@ type ZoneInfo = {
   };
 };
 
+type FitnessData = {
+  overallBoundingBox: {
+    p1: {
+      x: number;
+      y: number;
+    };
+    p2: {
+      x: number;
+      y: number;
+    };
+  };
+  boundingBoxes: {
+    p1: {
+      x: number;
+      y: number;
+    };
+    p2: {
+      x: number;
+      y: number;
+    };
+  }[];
+  zoneAreaProportions: Record<string, number>;
+  splitZoneAreaProportions: Record<string, number>;
+  expandedZoneAreaProportions: Record<string, number>;
+  zoneLabelPositions: Record<string, Point> | undefined;
+  zoneAveragePositions: Record<string, ZoneInfo["avgPos"]> | undefined;
+};
+
 let downloadName = "edeap.svg";
 
 // let areaSpecification;
@@ -1692,7 +1720,7 @@ class EdeapAreas {
       expandedZoneProportions[property] = proportion;
     }
 
-    var splitZoneAreaProportions = {};
+    var splitZoneAreaProportions: Record<string, number> = {};
 
     var result = {
       overallBoundingBox: totalBB,
@@ -1712,24 +1740,25 @@ class EdeapAreas {
       // ### AREA TEST DEBUG START
       splitZoneAreaProportions: splitZoneAreaProportions,
       expandedZoneAreaProportions: expandedZoneProportions,
-      zoneLabelPositions: undefined,
-      zoneAveragePositions: undefined,
+      zoneLabelPositions: undefined as Record<string, Point> | undefined,
+      zoneAveragePositions: undefined as
+        | Record<string, ZoneInfo["avgPos"]>
+        | undefined,
     };
 
     // Return the point in each zone with the widest x and y coord.
-    var zoneLabelPositions = {};
+    var zoneLabelPositions: Record<string, Point> = {};
     for (let [zone, zoneValue] of zoneInfo.entries()) {
       const bitmap = zoneValue.bitmap;
-      if (bitmap === undefined) {
-        continue;
-      }
+      if (bitmap === undefined) continue;
+
       // Scan the bitmap of points within this zone in order to determine
       // the number of disconnected fragments.  We do this by flood-filling
       // with the fillFragment function on the zoneFragmentMap array. After
       // this process zoneFragmentSizes will hold the size in sampled points
       // of each of the regions.
       let zoneFragmentSizes = [];
-      let zoneFragmentMap = new Array(length).fill(0);
+      let zoneFragmentMap: number[] = new Array(length).fill(0);
       for (let y = 0; y < bitmapSizeY; y++) {
         for (let x = 0; x < bitmapSizeX; x++) {
           let index = y * bitmapSizeX + x;
@@ -1788,22 +1817,25 @@ class EdeapAreas {
         splitZoneAreaProportions[zone] = 0;
       }
 
-      let zoneAvgPos = zoneInfo.get(zone).avgPos;
+      let zoneAvgPos = zoneInfo.get(zone)!.avgPos;
       // Update average points.
       zoneAvgPos.x /= zoneAvgPos.count;
       zoneAvgPos.y /= zoneAvgPos.count;
+      // @ts-expect-error
       delete zoneAvgPos.count;
 
       var x = zoneAvgPos.firstXIndex;
       var y = zoneAvgPos.firstYIndex;
+      // @ts-expect-error
       delete zoneAvgPos.firstXIndex;
+      // @ts-expect-error
       delete zoneAvgPos.firstYIndex;
 
       if (generateLabelPositions) {
         function isInRegion(x: number, y: number) {
           let index = y * bitmapSizeX + x;
           if (index >= 0 && index < length) {
-            return bitmap[index] ? 1 : 0;
+            return bitmap![index] ? 1 : 0;
           }
           return 0;
         }
@@ -1913,7 +1945,7 @@ class EdeapAreas {
       result.zoneLabelPositions = zoneLabelPositions;
     }
 
-    let zoneAvgPosArray = [];
+    let zoneAvgPosArray: Record<string, ZoneInfo["avgPos"]> = {};
     for (let [label, value] of zoneInfo.entries()) {
       zoneAvgPosArray[label] = value.avgPos;
     }
@@ -1930,13 +1962,13 @@ class EdeapAreas {
   // zoneFragmentN is the number we are assigning to the fragment we are filling.
   //
   _fillFragment(
-    zoneFragmentMap,
-    bitmap,
+    zoneFragmentMap: number[],
+    bitmap: boolean[],
     x: number,
     y: number,
-    bitmapSizeX,
-    bitmapSizeY,
-    zoneFragmentN
+    bitmapSizeX: number,
+    bitmapSizeY: number,
+    zoneFragmentN: number
   ) {
     let toTest: [number, number][] = [];
     let total = 0;
@@ -1975,11 +2007,15 @@ class EdeapAreas {
 
   // This is experimental
   //
-  _missingZonePenalty(missingZone, fitnessData, fitness) {
+  _missingZonePenalty(
+    missingZone: string,
+    fitnessData: FitnessData,
+    fitness: Fitness
+  ) {
     // var actualZones = fitnessData.zoneAreaProportions;
-    var zonePositions = fitnessData.zoneAveragePositions;
+    const zonePositions = fitnessData.zoneAveragePositions!;
 
-    var labelsInZoneB = missingZone.split(",");
+    const labelsInZoneB = missingZone.split(",");
     if (labelsInZoneB.length === 1) {
       // Missing zone with one label.
       // Push this ellipse away from other ellipses.
@@ -2010,7 +2046,7 @@ class EdeapAreas {
       logMessage(logFitnessDetails, `  + Missing zone: ${missingZone}`);
       var zoneWithMostSharedLabels = null;
       var numberOfMostSharedLabels = 0;
-      var labelsOfZoneWithMostSharedLabels = null;
+      var labelsOfZoneWithMostSharedLabels: string[] = [];
       // Find the actual zone C that shares the most labels with B
       for (var existingZone in fitnessData.zoneAreaProportions) {
         // Count common labels between C and B
@@ -2428,7 +2464,9 @@ class EdeapAreas {
     for (const fitnessProperty in fitness) {
       logMessage(
         logFitnessDetails,
-        ` + ${fitnessProperty}: ${fitness[fitnessProperty as keyof typeof fitness]}`
+        ` + ${fitnessProperty}: ${
+          fitness[fitnessProperty as keyof typeof fitness]
+        }`
       );
     }
 
@@ -2709,6 +2747,7 @@ function optimizeStep(opt: number) {
       changeSearchSpace = false; // use first search space
       // There is a move better than the current fitness.
       currentFitness = bestMoveFitness;
+      // @ts-expect-error
       applyMove(bestMoveEllipse, bestMove);
       if (animateOptimizer) {
         if (zoomToFitAtEachStep) {
@@ -2733,7 +2772,7 @@ function optimizeStep(opt: number) {
           scaling
         );
 
-        let tbody = areas.zoneAreaTableBody();
+        let tbody = areas!.zoneAreaTableBody();
         document.getElementById("areaTableBody")!.innerHTML = tbody;
       }
 
@@ -2808,6 +2847,7 @@ function optimizeStep(opt: number) {
         // if a move is taken
         changeSearchSpace = false; // first search space
         currentFitness = bestMoveFitness;
+        // @ts-expect-error
         applyMove(bestMoveEllipse, bestMove);
         if (animateOptimizer) {
           logMessage(logOptimizerStep, "Fitness %s", currentFitness);
