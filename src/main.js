@@ -268,15 +268,15 @@ function getDownloadName() {
 }
 
 function generateRandomDiagram() {
-  var maxContours = 5;
-  var maxZones = 10;
-  var maxZoneSize = 4;
+  const maxContours = 5;
+  const maxZones = 10;
+  const maxZoneSize = 4;
 
-  var maxSize = 10;
+  const maxSize = 10;
 
-  var randomZones = generateRandomZones(maxContours, maxZones, maxZoneSize);
+  const randomZones = generateRandomZones(maxContours, maxZones, maxZoneSize);
 
-  var adString = "";
+  let adString = "";
   for (var i = 0; i < randomZones.length; i++) {
     var zoneList = randomZones[i];
     for (var j = 0; j < zoneList.length; j++) {

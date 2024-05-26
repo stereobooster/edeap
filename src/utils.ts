@@ -23,10 +23,10 @@ var globalOriginalProportions: number[] = []; // proportions before scaling, siz
 var globalProportions: number[] = []; // proportions after scaling, size of number of intersections
 var globalOriginalContourAreas: number[] = []; // size of number of ellipses
 var globalContourAreas: number[] = []; // size of number of ellipses
-var globalLabelWidths = []; // size of number of ellipses
-var globalLabelHeights = []; // size of number of intersections
-var globalValueWidths = []; // size of number of intersections
-var globalValueHeights = []; // size of number of intersections
+var globalLabelWidths: number[] = []; // size of number of ellipses
+var globalLabelHeights: number[] = []; // size of number of intersections
+var globalValueWidths: number[] = []; // size of number of intersections
+var globalValueHeights: number[] = []; // size of number of intersections
 var globalAbstractDescription: string;
 
 var globalZoneAreaTableBody = ""; // to access table output from updateZoneAreaTable, not terribly elegant
@@ -89,31 +89,21 @@ function setupGlobal(areaSpecificationText: string) {
       JSON.stringify(globalZones[i].filter(onlyUnique)) != globalZonesString
     ) {
       console.log(
-        "ERROR:    " + lineNum + ": Zone description has duplicated labels: "
+        `ERROR:    ${lineNum}: Zone description has duplicated labels:`
       );
-      console.log("          " + globalZones[i].join(" ") + " " + proportion);
+      console.log(`          ${globalZones[i].join(" ")} ${proportion}`);
     }
 
     for (var j = 0; j < i; j++) {
       if (globalZonesString == JSON.stringify(globalZones[j])) {
         if (globalProportions[i] != globalProportions[j]) {
           console.log(
-            "ERROR:    " +
-              lineNum +
-              ": Duplicated zone doesn't match previous area (" +
-              globalProportions[j] +
-              "): "
+            `ERROR:    ${lineNum}: Duplicated zone doesn't match previous area (${globalProportions[j]}):`
           );
-          console.log(
-            "          " + globalZones[i].join(" ") + " " + proportion
-          );
+          console.log(`          ${globalZones[i].join(" ")} ${proportion}`);
         } else {
-          console.log(
-            "WARNING:  " + lineNum + ": Unnecessary duplicated zone: "
-          );
-          console.log(
-            "          " + globalZones[i].join(" ") + " " + proportion
-          );
+          console.log(`WARNING:  ${lineNum}: Unnecessary duplicated zone:`);
+          console.log(`          ${globalZones[i].join(" ")} ${proportion}`);
         }
         removeList.push(i);
         problem = true;
@@ -184,7 +174,7 @@ function setupGlobal(areaSpecificationText: string) {
 function generateInitialLayout() {
   var x = 1;
   var y = 1;
-  var increment = 0.3;
+  // var increment = 0.3;
 
   for (var i = 0; i < globalContourAreas.length; i++) {
     var area = globalContourAreas[i];
@@ -246,14 +236,14 @@ function generateInitialLayout() {
   }
 }
 
-function generateInitialRandomLayout(maxX, maxY) {
-  var x = 0;
-  var y = 0;
-  var increment = 0.3;
+function generateInitialRandomLayout(maxX: number, maxY: number) {
+  // var x = 0;
+  // var y = 0;
+  // var increment = 0.3;
 
-  for (var i = 0; i < globalContourAreas.length; i++) {
-    var area = globalContourAreas[i];
-    var radius = Math.sqrt(area / Math.PI); // start as a circle
+  for (let i = 0; i < globalContourAreas.length; i++) {
+    const area = globalContourAreas[i];
+    const radius = Math.sqrt(area / Math.PI); // start as a circle
     ellipseParams[i] = {
       X: Math.random() * maxX,
       Y: Math.random() * maxY,
@@ -299,12 +289,7 @@ function generateSVG(
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
   }
 
-  svgString +=
-    '<svg width="' +
-    width +
-    '" height="' +
-    height +
-    '" xmlns="http://www.w3.org/2000/svg">\n';
+  svgString += `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">\n`;
 
   let nextSVG = "";
   const N = areas.ellipseLabel.length;
@@ -317,30 +302,7 @@ function generateSVG(
 
     const eR = toDegrees(areas.ellipseParams[i].R);
 
-    nextSVG =
-      '<ellipse cx="' +
-      eX +
-      '" cy="' +
-      eY +
-      '" rx="' +
-      eA +
-      '" ry="' +
-      eB +
-      '" fill="' +
-      color +
-      '" fill-opacity="0.075" stroke="' +
-      color +
-      '" stroke-width="' +
-      2 +
-      '" transform="rotate(' +
-      eR +
-      " " +
-      eX +
-      " " +
-      eY +
-      " " +
-      ')" />' +
-      "\n";
+    nextSVG = `<ellipse cx="${eX}" cy="${eY}" rx="${eA}" ry="${eB}" fill="${color}" fill-opacity="0.075" stroke="${color}" stroke-width="${2}" transform="rotate(${eR} ${eX} ${eY})" />\n`;
     svgString += nextSVG;
   }
 
@@ -432,15 +394,9 @@ function generateSVG(
           const dotColour = tooClose
             ? "orange"
             : "rgb(" + intensity + ", " + intensity + ", " + intensity + ")";
-          nextSVG =
-            '<circle cx="' +
-            (x + eX) +
-            '" cy="' +
-            (y + eY) +
-            '" r="4" stroke-width="1" stroke="black" fill="' +
-            dotColour +
-            '" />' +
-            "\n";
+          nextSVG = `<circle cx="${x + eX}" cy="${
+            y + eY
+          }" r="4" stroke-width="1" stroke="black" fill="${dotColour}" />\n`;
           svgString += nextSVG;
         }
       }
@@ -523,13 +479,9 @@ function generateSVG(
       const textHeight = areas.globalLabelHeights[i];
 
       if (LABEL_DEBUGGING) {
-        nextSVG =
-          '<circle cx="' +
-          (x + eX) +
-          '" cy="' +
-          (y + eY) +
-          '" r="5" stroke-width="1" stroke="black" fill="red" />' +
-          "\n";
+        nextSVG = `<circle cx="${x + eX}" cy="${
+          y + eY
+        }" r="5" stroke-width="1" stroke="black" fill="red" />\n`;
         svgString += nextSVG;
       }
 
@@ -562,19 +514,11 @@ function generateSVG(
       }
 
       const color = findColor(i, colourPalettes[colourPaletteName]);
-      nextSVG =
-        '<text style="font-family: Helvetica; font-size: ' +
-        labelFontSize +
-        ';" x="' +
-        (x + eX - textWidth / 2) +
-        '" y="' +
-        (y + eY) +
-        '" fill="' +
-        color +
-        '">' +
-        areas.ellipseLabel[i] +
-        "</text>" +
-        "\n";
+      nextSVG = `<text style="font-family: Helvetica; font-size: ${labelFontSize};" x="${
+        x + eX - textWidth / 2
+      }" y="${y + eY}" fill="${color}">
+          ${areas.ellipseLabel[i]}
+        </text>\n`;
       svgString += nextSVG;
     }
   }
@@ -595,24 +539,16 @@ function generateSVG(
         // const textWidth = areas.globalValueWidths[i];
         // const textHeight = areas.globalValueHeights[i];
         if (!isNaN(labelX)) {
-          nextSVG =
-            '<text dominant-baseline="middle" text-anchor="middle" x="' +
-            labelX +
-            '" y="' +
-            labelY +
-            '" style="font-family: Helvetica; font-size: ' +
-            valueFontSize +
-            ';" fill="black">' +
-            areas.globalOriginalProportions[i] +
-            "</text>" +
-            "\n";
+          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${valueFontSize};" fill="black">
+              ${areas.globalOriginalProportions[i]}
+            </text>\n`;
           svgString += nextSVG;
         }
       }
     }
   }
 
-  svgString += "</svg>" + "\n";
+  svgString += "</svg>\n";
 
   return svgString;
 }
@@ -620,7 +556,11 @@ function generateSVG(
 /**
  * This returns a transformation to fit the diagram in the given size
  */
-function findTransformationToFit(width, height, areas) {
+function findTransformationToFit(
+  width: string,
+  height: string,
+  areas: EdeapAreas
+) {
   if (typeof areas === "undefined") areas = new EdeapAreas();
 
   canvasWidth = parseInt(width);
@@ -751,24 +691,21 @@ function findLabelSizes() {
   );
   svg.appendChild(text);
   document.getElementById("textLengthMeasure").appendChild(svg);
+  // const spaceWidth = text.getComputedTextLength();
 
-  const spaceWidth = text.getComputedTextLength();
-
-  var lengths = new Array();
-  var heights = new Array();
+  let lengths: number[] = [];
+  let heights: number[] = [];
   let maxHeight = 0;
   let maxWidth = 0;
   for (var i = 0; i < ellipseLabel.length; i++) {
-    var label = ellipseLabel[i];
-
-    text.textContent = label;
-
+    text.textContent = ellipseLabel[i];
     lengths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
     maxHeight = Math.max(maxHeight, heights[i]);
     maxWidth = Math.max(maxWidth, lengths[i]);
   }
   document.getElementById("textLengthMeasure").innerHTML = ""; // clear the div
+
   return {
     lengths,
     heights,
@@ -788,17 +725,16 @@ function findValueSizes() {
   svg.appendChild(text);
   document.getElementById("textLengthMeasure").appendChild(svg);
 
-  var lengths = new Array();
-  var heights = new Array();
-  for (var i = 0; i < globalOriginalProportions.length; i++) {
-    var label = globalOriginalProportions[i];
-
-    text.textContent = label;
-
+  let lengths: number[] = [];
+  let heights: number[] = [];
+  for (let i = 0; i < globalOriginalProportions.length; i++) {
+    let label = globalOriginalProportions[i];
+    text.textContent = String(label);
     lengths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
   }
   document.getElementById("textLengthMeasure").innerHTML = ""; // clear the div
+
   return {
     lengths,
     heights,
