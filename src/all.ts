@@ -7,6 +7,21 @@ type Fitness = {
   missingTwoOrMoreLabelZone: number;
   unwantedExpandedOverlap: number;
 };
+
+type ZoneInfo = {
+  points: number;
+  bitmap?: boolean[];
+  avgPos: {
+    x: number;
+    y: number;
+    count: number;
+    firstX: number;
+    firstY: number;
+    firstXIndex: number;
+    firstYIndex: number;
+  };
+};
+
 let downloadName = "edeap.svg";
 
 // let areaSpecification;
@@ -1397,22 +1412,22 @@ class EdeapAreas {
 
     // For each point in the overall bounding box, check which ellipses
     // it is inside to determine its zone.
-    var zoneInfo = new Map();
-    var totalPoints = 0;
-    var expandedZonePoints = {};
-    var expandedTotalPoints = 0;
+    let zoneInfo = new Map<string, ZoneInfo>();
+    let totalPoints = 0;
+    let expandedZonePoints: Record<string, number> = {};
+    let expandedTotalPoints = 0;
 
-    var bitmapSizeX = Math.ceil(diffX / areaSampleStep) + 1;
-    var bitmapSizeY = Math.ceil(diffY / areaSampleStep) + 1;
-    var length = bitmapSizeX * bitmapSizeY;
+    let bitmapSizeX = Math.ceil(diffX / areaSampleStep) + 1;
+    let bitmapSizeY = Math.ceil(diffY / areaSampleStep) + 1;
+    let length = bitmapSizeX * bitmapSizeY;
 
     // Always align the area sampling point with a multiple of the
     // areaSampleStep.  Otherwise we could get different values for
     // some ellipses if the left or top of the bounding box changes.
-    var startX = prevGridValue(oversizedBB.p1.x);
-    var startY = prevGridValue(oversizedBB.p1.y);
-    var endX = nextGridValue(oversizedBB.p2.x);
-    var endY = nextGridValue(oversizedBB.p2.y);
+    let startX = prevGridValue(oversizedBB.p1.x);
+    let startY = prevGridValue(oversizedBB.p1.y);
+    let endX = nextGridValue(oversizedBB.p2.x);
+    let endY = nextGridValue(oversizedBB.p2.y);
 
     // ### AREA TEST DEBUG START
     //        var movedX1 = oversizedBB.p1.x - startX;
@@ -1529,7 +1544,7 @@ class EdeapAreas {
       }
     }
 
-    let lastZoneInfoVal = null;
+    let lastZoneInfoVal: ZoneInfo | undefined;
     let lastZone = null;
 
     // ### AREA TEST DEBUG START
@@ -1580,7 +1595,7 @@ class EdeapAreas {
         // zone string is just the sets list stringified.
         if (sets.length > 0) {
           let zone = sets.toString();
-          let zoneInfoVal = null;
+          let zoneInfoVal: ZoneInfo | undefined;
           if (zone === lastZone) {
             zoneInfoVal = lastZoneInfoVal;
           } else {
@@ -1610,19 +1625,21 @@ class EdeapAreas {
             lastZoneInfoVal = zoneInfoVal;
           }
 
-          // Zone has been seen, increment points count.
-          zoneInfoVal.points++;
+          if (zoneInfoVal) {
+            // Zone has been seen, increment points count.
+            zoneInfoVal.points++;
 
-          if (generateLabelPositions) {
-            // Mark point in zone bitmap.
-            zoneInfoVal.bitmap[yCounter * bitmapSizeX + xCounter] = true;
+            if (generateLabelPositions && zoneInfoVal.bitmap) {
+              // Mark point in zone bitmap.
+              zoneInfoVal.bitmap[yCounter * bitmapSizeX + xCounter] = true;
+            }
+
+            // Add this position to the x and y total,
+            // so we can compute average position later.
+            zoneInfoVal.avgPos.x += x;
+            zoneInfoVal.avgPos.y += y;
+            zoneInfoVal.avgPos.count += 1;
           }
-
-          // Add this position to the x and y total,
-          // so we can compute average position later.
-          zoneInfoVal.avgPos.x += x;
-          zoneInfoVal.avgPos.y += y;
-          zoneInfoVal.avgPos.count += 1;
 
           // Update totalPoints if point is not in empty set.
           totalPoints++;
@@ -1655,12 +1672,12 @@ class EdeapAreas {
 
     // For each zone, calculate the proportion of its area of the
     // total area of all zones other than the non-labelled zone.
-    var zoneProportions = {};
+    var zoneProportions: Record<string, number> = {};
     // ### AREA TEST DEBUG START
     //        var zoneSamples = {};
     // ### AREA TEST DEBUG END
     for (let [key, value] of zoneInfo.entries()) {
-      var proportion = value.points / totalPoints;
+      const proportion = value.points / totalPoints;
       zoneProportions[key] = proportion;
       // ### AREA TEST DEBUG START
       //            zoneSamples[key] = value.points;
@@ -1669,9 +1686,9 @@ class EdeapAreas {
 
     // For each expanded zone, calculate the proportion of its area of the
     // total area of all zones other than the non-labelled zone.
-    var expandedZoneProportions = {};
-    for (var property in expandedZonePoints) {
-      var proportion = expandedZonePoints[property] / expandedTotalPoints;
+    const expandedZoneProportions: Record<string, number> = {};
+    for (const property in expandedZonePoints) {
+      const proportion = expandedZonePoints[property] / expandedTotalPoints;
       expandedZoneProportions[property] = proportion;
     }
 
@@ -1702,7 +1719,7 @@ class EdeapAreas {
     // Return the point in each zone with the widest x and y coord.
     var zoneLabelPositions = {};
     for (let [zone, zoneValue] of zoneInfo.entries()) {
-      let bitmap = zoneValue.bitmap;
+      const bitmap = zoneValue.bitmap;
       if (bitmap === undefined) {
         continue;
       }
@@ -1921,7 +1938,7 @@ class EdeapAreas {
     bitmapSizeY,
     zoneFragmentN
   ) {
-    let toTest = [];
+    let toTest: [number, number][] = [];
     let total = 0;
 
     function tryFill(x: number, y: number) {
@@ -1942,9 +1959,9 @@ class EdeapAreas {
     tryFill(x, y);
 
     while (toTest.length > 0) {
-      let point = toTest.pop();
-      let x = point[0];
-      let y = point[1];
+      const point = toTest.pop()!;
+      const x = point[0];
+      const y = point[1];
 
       // Try the surrounding cells.
       tryFill(x, y - 1);
@@ -2408,10 +2425,10 @@ class EdeapAreas {
     fitness.circleDistortion /= this.ellipseLabel.length;
 
     logMessage(logFitnessDetails, "Fitness components:");
-    for (var fitnessProperty in fitness) {
+    for (const fitnessProperty in fitness) {
       logMessage(
         logFitnessDetails,
-        ` + ${fitnessProperty}: ${fitness[fitnessProperty]}`
+        ` + ${fitnessProperty}: ${fitness[fitnessProperty as keyof typeof fitness]}`
       );
     }
 
@@ -2659,9 +2676,9 @@ let translateYAnimationStep = 0;
 let progressAnimationStep = 0;
 
 function optimizeStep(opt: number) {
-  var bestMoveFitness;
-  var bestMoveEllipse;
-  var bestMove;
+  let bestMoveFitness: number;
+  let bestMoveEllipse: number;
+  let bestMove: number;
 
   if (opt === HILL_CLIMBING) {
     bestMoveFitness = currentFitness;
@@ -2806,7 +2823,7 @@ function optimizeStep(opt: number) {
             areas
           );
           document.getElementById("areaTableBody")!.innerHTML =
-            areas.zoneAreaTableBody();
+            areas!.zoneAreaTableBody();
         }
       } // if no move is taken
       else if (!changeSearchSpace) {
@@ -3070,7 +3087,7 @@ function selectRandomMove(elp: number) {
 function computeFitness() {
   HCEvalSolutions++; // when computeFitness function is called, that means a solution has been evaluated (increase counter of evaluated solutions by 1) Hill Climbing
   SAEvalSolutions++; // Simulated annealing
-  let normalizedMeasures = {};
+  let normalizedMeasures: Record<string, number> = {};
   const fitnessComponents = areas!.computeFitnessComponents(); // get the measures (criteria)
 
   let fitness = 0;
@@ -3085,7 +3102,7 @@ function computeFitness() {
     }
 
     // the value of the measure before normalization
-    var m = fitnessComponents[component];
+    let m = fitnessComponents[component as keyof typeof fitnessComponents];
     // the value of the measure after normalization
     m = normalizeMeasure(m, maxMeasures[component]);
     logMessage(logOptimizerStep, "    " + component + " = " + m);
@@ -3096,10 +3113,10 @@ function computeFitness() {
   }
 
   // compute the total fitness value after equalizing the effect of each measure and applying a weight for each measure
-  for (var component in fitnessComponents) {
+  for (const component in fitnessComponents) {
     var weight = 1;
     if (weights.hasOwnProperty(component)) {
-      weight = weights[component];
+      weight = weights[component as keyof typeof fitnessComponents];
     }
 
     fitness += weight * normalizedMeasures[component];
