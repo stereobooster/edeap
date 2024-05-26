@@ -266,3 +266,43 @@
 //   pre.appendChild(text);
 //   return pre.innerHTML;
 // }
+
+/**
+ * Returns an array of strings containing all the zone combinations for
+ * the contours, contours labelled with a single letter starting at "a" (venn diagram).
+ * Does not return the outside contour.
+ */
+// function findAllZones(numberOfContours: number) {
+//     var zoneList = new Array();
+
+//     var numberOfZones = Math.pow(2, numberOfContours) - 1;
+//     for (var zoneNumber = 1; zoneNumber <= numberOfZones; zoneNumber++) {
+//       var zone = findZone(zoneNumber);
+//       zoneList.push(zone);
+//     }
+
+//     //		ZoneStringComparator zComp = new ZoneStringComparator();
+//     //		Collections.sort(zoneList,zComp);
+
+//     return zoneList;
+//   }
+
+/**
+ * Takes a zone number, which should be seen as a binary,
+ * indicating whether each contour is in the zone.
+ * Contours are assumed to be labelled from "a" onwards.
+ */
+// function findZone(zoneNumber: number) {
+//   let zoneString = "";
+//   let current = zoneNumber;
+//   let i = 0;
+//   while (current != 0) {
+//     if (current % 2 === 1) {
+//       let contourChar = String.fromCharCode(97 + i);
+//       zoneString += contourChar + " ";
+//     }
+//     current = Math.floor(current / 2);
+//     i++;
+//   }
+//   return zoneString.trim();
+// }
