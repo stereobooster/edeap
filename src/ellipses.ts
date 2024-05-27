@@ -913,7 +913,6 @@ export class EdeapAreas {
   }
 
   // This is experimental
-  //
   _unwantedZonePenalty(
     zone: string,
     difference: number,
