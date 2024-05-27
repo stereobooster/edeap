@@ -71,3 +71,39 @@ export type FitnessData = {
   zoneLabelPositions: Record<string, Point> | undefined;
   zoneAveragePositions: Record<string, ZoneInfo["avgPos"]> | undefined;
 };
+
+type ColourPalettes =
+  | "Tableau10"
+  | "Tableau20"
+  | "Tableau ColorBlind"
+  | "ColorBrewer";
+
+export type State = {
+  translateX: number;
+  translateY: number;
+  scaling: number;
+  showSetLabels: boolean;
+  showIntersectionValues: boolean;
+  colourPaletteName: ColourPalettes;
+  labelFontSize: string;
+  valueFontSize: string;
+
+  // if set fo an index, indicates the number of this ellipse as a duplicate.
+  ellipseDuplication: number[];
+  ellipseArea: number[];
+  ellipseParams: EllipseParams[];
+  ellipseLabel: string[];
+  duplicatedEllipseIndexes: number[];
+
+  // size of number of ellipses
+  contours: string[];
+  labelWidths: number[];
+  labelHeights: number[];
+  valueWidths: number[];
+  valueHeights: number[];
+  contourAreas: number[];
+  proportions: number[];
+  originalProportions: number[];
+  zones: string[][];
+  zoneStrings: string[];
+};

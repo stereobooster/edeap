@@ -2,9 +2,10 @@
 // Author:  Fadi Dib <deeb.f@gust.edu.kw>
 //
 
-import { State, findTransformationToFit, generateSVG } from "./all";
+import { findTransformationToFit, generateSVG } from "./all";
 import { EdeapAreas } from "./ellipses";
 import { logMessage, logOptimizerStep, logOptimizerChoice } from "./pure";
+import { State } from "./types";
 
 function fixNumberPrecision(value: any) {
   return Number(parseFloat(value).toPrecision(13));
@@ -272,7 +273,7 @@ function optimizeStep({
             false,
             state.translateX,
             state.translateY,
-            state.scaling,
+            state.scaling
           );
           document.getElementById("areaTableBody")!.innerHTML =
             areas!.zoneAreaTableBody();
