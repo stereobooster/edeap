@@ -32,16 +32,20 @@ import {
   nextGridValue,
   prevGridPoint,
   nextGridPoint,
+  logFitnessDetails,
+  logMessage,
+  logOptimizerStep,
+  logOptimizerChoice,
+  logReproducability,
 } from "./pure";
 import {
   canvasHeight,
   canvasWidth,
   downloadFileFromText,
-  generateRandomDiagram,
   getDownloadName,
   gup,
   heightForSvgDownload,
-  saveAreaSpecification,
+  initUI,
   widthForSvgDownload,
 } from "./ui";
 
@@ -282,7 +286,7 @@ function generateInitialRandomLayout(maxX: number, maxY: number) {
 }
 
 // generate svg from ellipses
-function generateSVG(
+export function generateSVG(
   width: number,
   height: number,
   setLabels: boolean,
@@ -571,7 +575,7 @@ function generateSVG(
 /**
  * This returns a transformation to fit the diagram in the given size
  */
-function findTransformationToFit(
+export function findTransformationToFit(
   width: number,
   height: number,
   areas?: EdeapAreas
@@ -684,30 +688,7 @@ function findValueSizes() {
 // Author:  Michael Wybrow <Michael.Wybrow@monash.edu>
 //
 
-// Bit masks for different types of logging.
-// Each should have a value of "2 ** n" where n is next value.
-// const logNothing = 0;
-const logFitnessDetails = 2 ** 0;
-const logOptimizerStep = 2 ** 1;
-const logOptimizerChoice = 2 ** 2;
-const logReproducability = 2 ** 3;
-
 let ellipseMap = new Map<string, HitInfo>();
-
-// Select the type of logging to display.  To select multiple types
-// of logging, assign this variable a value via options separated by
-// bitwise OR (|):
-//    showLogTypes = logReproducability | logOptimizerStep;
-const showLogTypes = logReproducability;
-
-// Function to be able to disable fitness logging.
-function logMessage(type: number, ..._messages: any[]) {
-  if (showLogTypes & type) {
-    const args = Array.prototype.slice.call(arguments);
-    args.shift();
-    console.log.apply(console, args);
-  }
-}
 
 // ### AREA TEST DEBUG START
 //let paramsArray = [];
@@ -853,10 +834,7 @@ class EdeapAreas {
 
       // XXX: Use fixed grid size
       this.areaSampleStep = gridSize;
-      console.log(
-        logFitnessDetails,
-        "Area sample step: " + this.areaSampleStep
-      );
+      logMessage(logFitnessDetails, "Area sample step: " + this.areaSampleStep);
     }
 
     let areaSampleStep = this.areaSampleStep;
@@ -2546,7 +2524,7 @@ function computeFitness() {
 
   let fitness = 0;
 
-  logMessage(logOptimizerStep, "- move[" + (move.length + 1) + "]");
+  logMessage(logOptimizerStep, `- move[${move.length + 1}]`);
   let fitnessComponentN = 0;
   for (const component in fitnessComponents) {
     if (maxMeasures.hasOwnProperty(component) === false) {
@@ -2559,7 +2537,7 @@ function computeFitness() {
     let m = fitnessComponents[component as keyof typeof fitnessComponents];
     // the value of the measure after normalization
     m = normalizeMeasure(m, maxMeasures[component]);
-    logMessage(logOptimizerStep, "    " + component + " = " + m);
+    logMessage(logOptimizerStep, `    ${component} = ${m}`);
 
     normalizedMeasures[component] = m; // store the normalized measures to use in fitness computation after equalizing their effect
 
@@ -2578,7 +2556,7 @@ function computeFitness() {
   // Divide by the total number of measures.
   fitness = fitness / fitnessComponentN;
 
-  logMessage(logOptimizerStep, "  Fitness: " + fitness);
+  logMessage(logOptimizerStep, `  Fitness: ${fitness}`);
 
   return fitness;
 }
@@ -2696,90 +2674,34 @@ function changeRadiusAndRotationA(
 // --------------- main.js ------------------------
 
 function init() {
-  document.getElementById("svgDownload")?.addEventListener("click", saveSVG);
-  document
-    .getElementById("areaSpecDownload")
-    ?.addEventListener("click", saveAreaSpecification);
-  document
-    .getElementById("generateRandomDiagram")
-    ?.addEventListener("click", generateRandomDiagram);
-
-  const palette = document.getElementById("palette") as HTMLSelectElement;
-  // Add colour palette options to HTML select element.
-  for (const paletteName in colourPalettes) {
-    const option = document.createElement("option");
-    option.text = paletteName;
-    palette.add(option);
-  }
-
-  const filePickerRef = document.getElementById(
-    "areaSpecFilePicker"
-  ) as HTMLInputElement;
-
-  filePickerRef.addEventListener("change", function (event) {
-    const reader = new FileReader();
-
-    // Setup completion callback for FileReader object.
-    reader.onload = function (event) {
-      // Get the text from the file and show it in the outputArea div.
-      const fileText = event.target?.result;
-      (document.getElementById("areaSpecification") as HTMLInputElement).value =
-        fileText?.toString() || "";
-    };
-
-    // Tell the FileReader to start reading the file.
-    // @ts-expect-error
-    const file = event.target.files[0];
-    reader.readAsText(file);
-  });
-
-  let areaSpecificationText = gup("areaSpecification");
+  let areaSpecificationText =
+    gup("areaSpecification") ||
+    "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8";
   let setLabelSize = parseFloat(gup("setLabelSize"));
   let intersectionLabelSize = parseFloat(gup("intersectionLabelSize"));
   let startingDiagram = gup("startingDiagram");
   let optimizationMethod: string | number = gup("optimizationMethod");
   // @ts-expect-error trust
-  colourPaletteName = gup("palette").replace("+", " ");
-  // @ts-expect-error trust
-  if (colourPaletteName === "") {
-    colourPaletteName = "Tableau10";
-  }
+  colourPaletteName = gup("palette").replace("+", " ") || "Tableau10";
 
-  if (optimizationMethod === "") {
-    optimizationMethod = HILL_CLIMBING;
-  } else if (optimizationMethod === "1") {
-    (document.getElementById("optimizationHill") as HTMLInputElement).checked =
-      true;
-    (document.getElementById("optimizationSE") as HTMLInputElement).checked =
-      false;
+  document.getElementById("svgDownload")?.addEventListener("click", saveSVG);
+  initUI({
+    colourPaletteName,
+    startingDiagram,
+    areaSpecificationText,
+    optimizationMethod,
+  });
+
+  if (optimizationMethod === "1" || optimizationMethod === "") {
     OPTIMSER = HILL_CLIMBING;
   } else {
-    (document.getElementById("optimizationHill") as HTMLInputElement).checked =
-      false;
-    (document.getElementById("optimizationSE") as HTMLInputElement).checked =
-      true;
     OPTIMSER = SIMULATED_ANNEALING;
   }
-
-  if (areaSpecificationText === "") {
-    // default
-    areaSpecificationText =
-      "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8";
-  }
-
-  const widthEntry = document.getElementById("widthEntry") as HTMLInputElement;
-  widthEntry.value = String(widthForSvgDownload());
-
-  const heightEntry = document.getElementById(
-    "heightEntry"
-  ) as HTMLInputElement;
-  heightEntry.value = String(heightForSvgDownload());
 
   if (isNaN(setLabelSize)) {
     (
       document.getElementById("setLabelSizeEntry") as HTMLInputElement
     ).placeholder = String(defaultLabelFontSize);
-    labelFontSize = "";
     showSetLabels = true;
   } else {
     setLabelSize = Math.floor(setLabelSize);
@@ -2793,7 +2715,6 @@ function init() {
     (
       document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
     ).placeholder = String(defaultValueFontSize);
-    valueFontSize = "";
     showIntersectionValues = true;
   } else {
     intersectionLabelSize = Math.floor(intersectionLabelSize);
@@ -2802,18 +2723,6 @@ function init() {
     ).value = String(intersectionLabelSize);
     valueFontSize = intersectionLabelSize + "pt";
     showIntersectionValues = intersectionLabelSize > 0;
-  }
-
-  if (startingDiagram === "random") {
-    (document.getElementById("startingDefault") as HTMLInputElement).checked =
-      false;
-    (document.getElementById("startingRandom") as HTMLInputElement).checked =
-      true;
-  } else {
-    (document.getElementById("startingDefault") as HTMLInputElement).checked =
-      true;
-    (document.getElementById("startingRandom") as HTMLInputElement).checked =
-      false;
   }
 
   setupGlobal(areaSpecificationText);
@@ -2838,13 +2747,6 @@ function init() {
     colourPaletteName = "Tableau20";
   }
 
-  // Select the chosen colour palette.
-  for (let i = 0; i < palette.length; i++) {
-    if (colourPaletteName == palette.options[i].text) {
-      palette.selectedIndex = i;
-    }
-  }
-
   // reproducability logging
   logMessage(
     logReproducability,
@@ -2859,7 +2761,7 @@ function init() {
     "// paste this in index.html just before the reproducability logging:"
   );
   for (let i = 0; i < ellipseParams.length; i++) {
-    logMessage(logReproducability, "ellipseParams[" + i + "] = {};");
+    logMessage(logReproducability, `ellipseParams[${i}] = {};`);
     logMessage(
       logReproducability,
       "ellipseParams[" + i + "].X = " + ellipseParams[i].X + ";"
@@ -2893,9 +2795,6 @@ function init() {
   translateX = transformation.translateX;
   translateY = transformation.translateY;
 
-  document.getElementById("areaSpecification")!.innerHTML =
-    decodeAbstractDescription(areaSpecificationText);
-
   document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
     canvasWidth(),
     canvasHeight(),
@@ -2905,9 +2804,6 @@ function init() {
     translateY,
     scaling
   );
-
-  document.getElementById("downloadName")!.innerHTML =
-    getDownloadName() + ".svg";
 }
 
 function saveSVG() {
