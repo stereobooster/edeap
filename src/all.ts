@@ -23,7 +23,6 @@ import {
   findContourAreas,
   toDegrees,
   isInEllipse,
-  generateRandomZones,
   findColor,
   colourPalettes,
   fixNumberPrecision,
@@ -34,8 +33,12 @@ import {
   prevGridPoint,
   nextGridPoint,
 } from "./pure";
-
-let downloadName = "edeap.svg";
+import {
+  downloadFileFromText,
+  generateRandomDiagram,
+  getDownloadName,
+  saveAreaSpecification,
+} from "./ui";
 
 // let areaSpecification;
 let width: number;
@@ -52,8 +55,8 @@ let scaling = 100;
 let showSetLabels = true;
 let showIntersectionValues = true;
 let colourPaletteName: keyof typeof colourPalettes = "Tableau10";
-let defaultLabelFontSize = 12;
-let defaultValueFontSize = 12;
+const defaultLabelFontSize = 12;
+const defaultValueFontSize = 12;
 let labelFontSize = "12pt";
 let valueFontSize = "12pt";
 
@@ -239,15 +242,11 @@ function generateInitialLayout() {
 
     let count = 1;
     let zonesWithA = globalZones
-      .filter(function (element) {
-        return element.includes(ellipseLabel[indexA]);
-      })
+      .filter((element) => element.includes(ellipseLabel[indexA]))
       .join("#");
     for (let indexB = indexA + 1; indexB < ellipseLabel.length; ++indexB) {
       let zonesWithB = globalZones
-        .filter(function (element) {
-          return element.includes(ellipseLabel[indexB]);
-        })
+        .filter((element) => element.includes(ellipseLabel[indexB]))
         .join("#");
       if (zonesWithA === zonesWithB) {
         if (typeof ellipseEquivilenceSet[zonesWithA] === "undefined") {
@@ -577,14 +576,14 @@ function generateSVG(
  * This returns a transformation to fit the diagram in the given size
  */
 function findTransformationToFit(
-  width: number | string,
-  height: number | string,
+  width: number,
+  height: number,
   areas?: EdeapAreas
 ) {
   if (typeof areas === "undefined") areas = new EdeapAreas();
 
-  canvasWidth = parseInt(width as any);
-  canvasHeight = parseInt(height as any);
+  canvasWidth = width;
+  canvasHeight = height;
 
   let sizes = findLabelSizes();
   let idealWidth = canvasWidth - 15 - sizes.maxWidth * 2;
@@ -794,11 +793,9 @@ class EdeapAreas {
   //    zoneLabelPositions    Ideal label position for each zone.  Only
   //                          generated if generateLabelPositions is true.
   //
-  computeAreasAndBoundingBoxesFromEllipses(generateLabelPositions?: boolean) {
-    if (generateLabelPositions === undefined) {
-      generateLabelPositions = false;
-    }
-
+  computeAreasAndBoundingBoxesFromEllipses(
+    generateLabelPositions: boolean = false
+  ) {
     // ### AREA TEST DEBUG START
     //        if (generateLabelPositions) {
     //            let paramsString = JSON.stringify(this.ellipseParams);
@@ -2323,7 +2320,7 @@ function optimizeStep(opt: number) {
   // Optimizer finishes execution here
   // globalFinalFitness = currentFitness;
   const transformation = findTransformationToFit(canvasWidth, canvasHeight);
-  let progress = document.getElementById(
+  const progress = document.getElementById(
     "optimizerProgress"
   ) as HTMLProgressElement;
 
@@ -2348,7 +2345,7 @@ function optimizeStep(opt: number) {
     }
   }
 
-  let svgText = generateSVG(
+  const svgText = generateSVG(
     canvasWidth,
     canvasHeight,
     showSetLabels,
@@ -2755,10 +2752,6 @@ function init() {
     reader.readAsText(file);
   });
 
-  const date = new Date();
-
-  downloadName =
-    "edeap-" + date.getMinutes() + date.getSeconds() + date.getMilliseconds();
   let areaSpecificationText = gup("areaSpecification");
   width = parseFloat(gup("width"));
   height = parseFloat(gup("height"));
@@ -2872,9 +2865,7 @@ function init() {
 
   if (ellipseLabel.length > colourPalettes[colourPaletteName].length) {
     console.log(
-      "More ellipses than supported by " +
-        colourPaletteName +
-        " colour palette. Using Tableau20 palette."
+      `More ellipses than supported by ${colourPaletteName} colour palette. Using Tableau20 palette.`
     );
     colourPaletteName = "Tableau20";
   }
@@ -2885,8 +2876,6 @@ function init() {
       palette.selectedIndex = i;
     }
   }
-
-  // reproducability logging code should go here
 
   // reproducability logging
   logMessage(
@@ -2953,19 +2942,6 @@ function init() {
     getDownloadName() + ".svg";
 }
 
-// downloadFileFromText function from:
-// https://stackoverflow.com/questions/4845215/making-a-chrome-extension-download-a-file
-function downloadFileFromText(filename: string, content: string) {
-  const a = document.createElement("a");
-  const blob = new Blob([content], { type: "text/plain;charset=UTF-8" });
-  a.href = window.URL.createObjectURL(blob);
-  a.download = filename;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click(); //this is probably the key - simulating a click on a download link
-  // delete a; // we don't need this anymore
-}
-
 function saveSVG() {
   const transformation = findTransformationToFit(width, height);
   const outputScaling = transformation.scaling;
@@ -2985,40 +2961,6 @@ function saveSVG() {
     forDownload
   );
   downloadFileFromText(getDownloadName() + ".svg", svgString);
-}
-
-function saveAreaSpecification() {
-  const areaSpecificationString = (
-    document.getElementById("areaSpecification") as HTMLTextAreaElement
-  ).value;
-  downloadFileFromText(getDownloadName() + ".txt", areaSpecificationString);
-}
-
-function getDownloadName() {
-  return downloadName;
-}
-
-function generateRandomDiagram() {
-  const maxContours = 5;
-  const maxZones = 10;
-  const maxZoneSize = 4;
-
-  const maxSize = 10;
-
-  const randomZones = generateRandomZones(maxContours, maxZones, maxZoneSize);
-
-  let adString = "";
-  for (let i = 0; i < randomZones.length; i++) {
-    const zoneList = randomZones[i];
-    for (let j = 0; j < zoneList.length; j++) {
-      adString += zoneList[j] + " ";
-    }
-    adString += Math.floor(Math.random() * maxSize + 1) + "\n";
-  }
-  const areaSpecificationEl = document.getElementById(
-    "areaSpecification"
-  ) as HTMLInputElement;
-  areaSpecificationEl.value = adString;
 }
 
 init();
