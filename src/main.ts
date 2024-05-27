@@ -1,5 +1,4 @@
 import {
-  State,
   findLabelSizes,
   findTransformationToFit,
   findValueSizes,
@@ -16,6 +15,7 @@ import {
   logMessage,
   logReproducability,
 } from "./pure";
+import { State } from "./types";
 
 let sharedState: State;
 

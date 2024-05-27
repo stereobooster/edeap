@@ -2,7 +2,6 @@
 // Author:  Michael Wybrow <Michael.Wybrow@monash.edu>
 //
 
-import { State } from "./all";
 import {
   distanceBetween,
   ellipseBoundingBox,
@@ -23,6 +22,7 @@ import {
   HitInfo,
   Point,
   ZoneInfo,
+  State,
 } from "./types";
 
 // ### AREA TEST DEBUG START
