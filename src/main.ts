@@ -15,8 +15,6 @@ import {
   colourPalettes,
   decodeAbstractDescription,
   generateRandomZones,
-  logMessage,
-  logReproducability,
 } from "./pure";
 
 const canvasWidth = () => document.getElementById("ellipsesSVG")!.offsetWidth;
@@ -258,56 +256,56 @@ function init() {
   sharedState.globalValueWidths = valueSizes.lengths;
   sharedState.globalValueHeights = valueSizes.heights;
 
-  if (
-    sharedState.ellipseLabel.length >
-    colourPalettes[sharedState.colourPaletteName].length
-  ) {
-    console.log(
-      `More ellipses than supported by ${sharedState.colourPaletteName} colour palette. Using Tableau20 palette.`
-    );
-    sharedState.colourPaletteName = "Tableau20";
-  }
+  //   if (
+  //     sharedState.ellipseLabel.length >
+  //     colourPalettes[sharedState.colourPaletteName].length
+  //   ) {
+  //     console.log(
+  //       `More ellipses than supported by ${sharedState.colourPaletteName} colour palette. Using Tableau20 palette.`
+  //     );
+  //     sharedState.colourPaletteName = "Tableau20";
+  //   }
 
   // reproducability logging
-  logMessage(
-    logReproducability,
-    "// paste this into the abstract description:"
-  );
-  logMessage(
-    logReproducability,
-    decodeAbstractDescription(areaSpecificationText)
-  );
-  logMessage(
-    logReproducability,
-    "// paste this in index.html just before the reproducability logging:"
-  );
-  for (let i = 0; i < sharedState.ellipseParams.length; i++) {
-    logMessage(logReproducability, `ellipseParams[${i}] = {};`);
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].X = " + sharedState.ellipseParams[i].X + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].Y = " + sharedState.ellipseParams[i].Y + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].A = " + sharedState.ellipseParams[i].A + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].B = " + sharedState.ellipseParams[i].B + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].R = " + sharedState.ellipseParams[i].R + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseLabel[" + i + "] = '" + sharedState.ellipseLabel[i] + "';"
-    );
-  }
+  //   logMessage(
+  //     logReproducability,
+  //     "// paste this into the abstract description:"
+  //   );
+  //   logMessage(
+  //     logReproducability,
+  //     decodeAbstractDescription(areaSpecificationText)
+  //   );
+  //   logMessage(
+  //     logReproducability,
+  //     "// paste this in index.html just before the reproducability logging:"
+  //   );
+  //   for (let i = 0; i < sharedState.ellipseParams.length; i++) {
+  //     logMessage(logReproducability, `ellipseParams[${i}] = {};`);
+  //     logMessage(
+  //       logReproducability,
+  //       "ellipseParams[" + i + "].X = " + sharedState.ellipseParams[i].X + ";"
+  //     );
+  //     logMessage(
+  //       logReproducability,
+  //       "ellipseParams[" + i + "].Y = " + sharedState.ellipseParams[i].Y + ";"
+  //     );
+  //     logMessage(
+  //       logReproducability,
+  //       "ellipseParams[" + i + "].A = " + sharedState.ellipseParams[i].A + ";"
+  //     );
+  //     logMessage(
+  //       logReproducability,
+  //       "ellipseParams[" + i + "].B = " + sharedState.ellipseParams[i].B + ";"
+  //     );
+  //     logMessage(
+  //       logReproducability,
+  //       "ellipseParams[" + i + "].R = " + sharedState.ellipseParams[i].R + ";"
+  //     );
+  //     logMessage(
+  //       logReproducability,
+  //       "ellipseLabel[" + i + "] = '" + sharedState.ellipseLabel[i] + "';"
+  //     );
+  //   }
 
   optimize({ strategy, width: canvasWidth(), height: canvasHeight() });
 

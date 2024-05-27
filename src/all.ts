@@ -672,7 +672,7 @@ export function findValueSizes() {
 // Author:  Michael Wybrow <Michael.Wybrow@monash.edu>
 //
 
-let ellipseMap = new Map<string, HitInfo>();
+// let ellipseMap = new Map<string, HitInfo>();
 
 // ### AREA TEST DEBUG START
 //let paramsArray = [];
@@ -692,6 +692,7 @@ class EdeapAreas {
   globalOriginalProportions: number[];
   ellipseLabel: string[];
   ellipseParams: EllipseParams[];
+  ellipseMap: Map<string, HitInfo>;
 
   constructor() {
     // The amount to step when doing area samples for ellipses.
@@ -709,6 +710,8 @@ class EdeapAreas {
     this.globalOriginalProportions = globalOriginalProportions;
     this.ellipseLabel = sharedState.ellipseLabel;
     this.ellipseParams = sharedState.ellipseParams;
+
+    this.ellipseMap = new Map<string, HitInfo>();
   }
 
   useEllipseParams(ellipseParams: EllipseParams[]) {
@@ -863,7 +866,7 @@ class EdeapAreas {
         ellipse.B,
         ellipse.R,
       ].join(":");
-      const ellipseHitInfo = ellipseMap.get(ellipseMapKey);
+      const ellipseHitInfo = this.ellipseMap.get(ellipseMapKey);
 
       if (ellipseHitInfo === undefined) {
         // Expand the total bounding box edges to accomodate this
@@ -901,7 +904,7 @@ class EdeapAreas {
           endPosition: nextGridPoint(oversizedBB.p2),
         };
         ellipseKeys[i] = hitInfo;
-        ellipseMap.set(ellipseMapKey, hitInfo);
+        this.ellipseMap.set(ellipseMapKey, hitInfo);
 
         let hitArray = hitInfo.smallHitArray;
 
@@ -2050,14 +2053,13 @@ export function optimize({
   width: number;
   height: number;
 }) {
-  ellipseMap = new Map();
-
   changeSearchSpace = false; // optimizer in first stage of search space
   maxMeasures = {}; // to save the maximum value of a meausure in a history of values of each measure to be used in the normalization process
   move = [];
   HCEvalSolutions = 0; // initialize number of evaluated solutions (by hill climber) to zero
   SAEvalSolutions = 0; // initialize number of evaluated solutions (by simulated annealing) to zero
   areas = new EdeapAreas();
+  // areas.ellipseMap = new Map();
   currentAnnealingIteration = 0;
   currentTemperatureIteration = 0;
 
@@ -2072,9 +2074,7 @@ export function optimize({
   logMessage(logOptimizerStep, "Fitness %s", currentFitness);
 
   if (animateOptimizer || optimizerUsesSetTimeout) {
-    setTimeout(function () {
-      optimizeStep({ strategy, width, height });
-    }, animationDelay);
+    setTimeout(() => optimizeStep({ strategy, width, height }), animationDelay);
   } else {
     optimizeStep({ strategy, width, height });
   }
@@ -2162,29 +2162,16 @@ function optimizeStep({
 
       // Only continue if there were improvements.
       if (animateOptimizer || optimizerUsesSetTimeout) {
-        setTimeout(function () {
-          optimizeStep({ strategy, width, height });
-        }, animationDelay);
+        setTimeout(
+          () => optimizeStep({ strategy, width, height }),
+          animationDelay
+        );
       } else {
         optimizeStep({ strategy, width, height });
       }
       return;
     } else {
-      /* Disable this:
-		  if (!changeSearchSpace) // if the optimizer was searching in the first search space, switch to the second.
-		  {
-			  changeSearchSpace = true;
-			  if(animateOptimizer || optimizerUsesSetTimeout)
-			  {
-			  	   setTimeout(function(){optimizeStep(OPTIMSER)}, animationDelay);
-			  }
-			  else
-			  {
-			  	   optimizeStep(OPTIMSER);
-		      }
-              return;
-		  }
-          */
+      /* Disable this: */
     }
   } else if (strategy === SIMULATED_ANNEALING) {
     if (currentTemperatureIteration >= tempIterations) {
@@ -2258,9 +2245,10 @@ function optimizeStep({
       currentTemperatureIteration++;
 
       if (animateOptimizer || optimizerUsesSetTimeout) {
-        setTimeout(function () {
-          optimizeStep({ strategy, width, height });
-        }, animationDelay);
+        setTimeout(
+          () => optimizeStep({ strategy, width, height }),
+          animationDelay
+        );
       } else {
         optimizeStep({ strategy, width, height });
       }
