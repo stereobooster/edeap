@@ -2,12 +2,8 @@
 // Author:  Fadi Dib <deeb.f@gust.edu.kw>
 //
 
-import {
-  EdeapAreas,
-  findTransformationToFit,
-  generateSVG,
-  sharedState,
-} from "./all";
+import { findTransformationToFit, generateSVG, sharedState } from "./all";
+import { EdeapAreas } from "./ellipses";
 
 import { logMessage, logOptimizerStep, logOptimizerChoice } from "./pure";
 
@@ -98,7 +94,7 @@ export function optimize({
   move = [];
   HCEvalSolutions = 0; // initialize number of evaluated solutions (by hill climber) to zero
   SAEvalSolutions = 0; // initialize number of evaluated solutions (by simulated annealing) to zero
-  areas = new EdeapAreas();
+  areas = new EdeapAreas(sharedState);
   // areas.ellipseMap = new Map();
   currentAnnealingIteration = 0;
   currentTemperatureIteration = 0;
