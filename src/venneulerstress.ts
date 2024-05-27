@@ -30,14 +30,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-// type EllipseParams = {
-//   A: number;
-//   B: number;
-//   R: number;
-//   X: number;
-//   Y: number;
-// };
-
 // class VennEulerAreas {
 //   ellipseLabels: string[];
 //   globalZoneStrings: string[];
