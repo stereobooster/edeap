@@ -472,27 +472,6 @@ export const colourPalettes = {
   ],
 };
 
-export function fixNumberPrecision(value: any) {
-  return Number(parseFloat(value).toPrecision(13));
-}
-
-/*********** Normalization starts here *******************/
-
-const safetyValue = 0.000000000001; // a safety value to ensure that the normalized value will remain within the range so that the returned value will always be between 0 and 1
-// this is a technique which is used whenever the measure has no upper bound.
-
-// a function that takes the value which we need to normalize measureValueBeforeNorm and the maximum value of the measure computed so far
-// we will get the maximum value we computed so far and we add a safety value to it
-// to ensure that we don't exceed the actual upper bound (which is unknown for us)
-export function normalizeMeasure(
-  measureValueBeforeNorm: number,
-  maxMeasure: number[]
-) {
-  if (measureValueBeforeNorm > maxMeasure[0])
-    maxMeasure[0] = measureValueBeforeNorm; // update the maximum value of the measure if the new value is greater than the current max value
-  return measureValueBeforeNorm / (maxMeasure[0] + safetyValue); // normalized
-}
-
 export const gridSize = 0.026;
 
 export function prevGridValue(value: number) {
