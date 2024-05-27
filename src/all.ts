@@ -19,67 +19,77 @@ import {
 
 import { EdeapAreas } from "./ellipses";
 
-export const sharedState = {
-  translateX: 0,
-  translateY: 0,
-  scaling: 100,
-  showSetLabels: true,
-  showIntersectionValues: true,
-  colourPaletteName: "Tableau10" as keyof typeof colourPalettes,
-  labelFontSize: "12pt",
-  valueFontSize: "12pt",
+export type State = {
+  translateX: number;
+  translateY: number;
+  scaling: number;
+  showSetLabels: boolean;
+  showIntersectionValues: boolean;
+  colourPaletteName: keyof typeof colourPalettes;
+  labelFontSize: string;
+  valueFontSize: string;
 
   // if set fo an index, indicates the number of this ellipse as a duplicate.
-  ellipseDuplication: [] as number[],
-  ellipseArea: [] as number[],
-  ellipseParams: [] as EllipseParams[],
-  ellipseLabel: [] as string[],
-  duplicatedEllipseIndexes: [] as number[],
+  ellipseDuplication: number[];
+  ellipseArea: number[];
+  ellipseParams: EllipseParams[];
+  ellipseLabel: string[];
+  duplicatedEllipseIndexes: number[];
 
   // size of number of ellipses
-  contours: [] as string[],
-  labelWidths: [] as number[],
-  labelHeights: [] as number[],
-  valueWidths: [] as number[],
-  valueHeights: [] as number[],
-  contourAreas: [] as number[],
-  proportions: [] as number[],
-  originalProportions: [] as number[],
-  zones: [] as string[][],
-  zoneStrings: [] as string[],
+  contours: string[];
+  labelWidths: number[];
+  labelHeights: number[];
+  valueWidths: number[];
+  valueHeights: number[];
+  contourAreas: number[];
+  proportions: number[];
+  originalProportions: number[];
+  zones: string[][];
+  zoneStrings: string[];
 };
 
-export type State = typeof sharedState;
-
 export function setupGlobal(areaSpecificationText: string) {
-  sharedState.contours = [];
-  sharedState.zones = [];
-  sharedState.zoneStrings = [];
-  sharedState.originalProportions = [];
-  sharedState.proportions = [];
-  sharedState.contourAreas = [];
-  sharedState.labelWidths = [];
-  sharedState.labelHeights = [];
-  sharedState.valueWidths = [];
-  sharedState.valueHeights = [];
+  const state: State = {
+    translateX: 0,
+    translateY: 0,
+    scaling: 100,
+    showSetLabels: true,
+    showIntersectionValues: true,
+    colourPaletteName: "Tableau10",
+    labelFontSize: "12pt",
+    valueFontSize: "12pt",
 
-  sharedState.ellipseParams = [];
-  sharedState.ellipseLabel = [];
-  sharedState.ellipseArea = [];
+    // if set fo an index, indicates the number of this ellipse as a duplicate.
+    ellipseDuplication: [],
+    ellipseArea: [],
+    ellipseParams: [],
+    ellipseLabel: [],
+    duplicatedEllipseIndexes: [],
+
+    // size of number of ellipses
+    contours: [],
+    labelWidths: [],
+    labelHeights: [],
+    valueWidths: [],
+    valueHeights: [],
+    contourAreas: [],
+    proportions: [],
+    originalProportions: [],
+    zones: [],
+    zoneStrings: [],
+  };
 
   let globalAbstractDescription = decodeAbstractDescription(
     areaSpecificationText
   );
-  sharedState.contours = findContours(
-    globalAbstractDescription,
-    sharedState.contours
-  );
-  sharedState.zones = findZones(globalAbstractDescription, sharedState.zones);
+  state.contours = findContours(globalAbstractDescription, state.contours);
+  state.zones = findZones(globalAbstractDescription, state.zones);
 
-  if (sharedState.contours.length === 0) return;
+  if (state.contours.length === 0) return state;
 
-  sharedState.proportions = findProportions(sharedState.zones);
-  sharedState.zones = removeProportions(sharedState.zones);
+  state.proportions = findProportions(state.zones);
+  state.zones = removeProportions(state.zones);
 
   function onlyUnique<T>(value: T, index: number, self: T[]) {
     return self.indexOf(value) === index;
@@ -87,36 +97,31 @@ export function setupGlobal(areaSpecificationText: string) {
 
   // remove zero zones and proportions
   const removeList = [];
-  for (let i = 0; i < sharedState.proportions.length; i++) {
-    const proportion = sharedState.proportions[i];
+  for (let i = 0; i < state.proportions.length; i++) {
+    const proportion = state.proportions[i];
     let problem = false;
     let lineNum = i + 1;
 
-    let globalZonesString = JSON.stringify(sharedState.zones[i]);
+    let globalZonesString = JSON.stringify(state.zones[i]);
     if (
-      JSON.stringify(sharedState.zones[i].filter(onlyUnique)) !=
-      globalZonesString
+      JSON.stringify(state.zones[i].filter(onlyUnique)) != globalZonesString
     ) {
       console.log(
         `ERROR:    ${lineNum}: Zone description has duplicated labels:`
       );
-      console.log(`          ${sharedState.zones[i].join(" ")} ${proportion}`);
+      console.log(`          ${state.zones[i].join(" ")} ${proportion}`);
     }
 
     for (let j = 0; j < i; j++) {
-      if (globalZonesString == JSON.stringify(sharedState.zones[j])) {
-        if (sharedState.proportions[i] != sharedState.proportions[j]) {
+      if (globalZonesString == JSON.stringify(state.zones[j])) {
+        if (state.proportions[i] != state.proportions[j]) {
           console.log(
-            `ERROR:    ${lineNum}: Duplicated zone doesn't match previous area (${sharedState.proportions[j]}):`
+            `ERROR:    ${lineNum}: Duplicated zone doesn't match previous area (${state.proportions[j]}):`
           );
-          console.log(
-            `          ${sharedState.zones[i].join(" ")} ${proportion}`
-          );
+          console.log(`          ${state.zones[i].join(" ")} ${proportion}`);
         } else {
           console.log(`WARNING:  ${lineNum}: Unnecessary duplicated zone:`);
-          console.log(
-            `          ${sharedState.zones[i].join(" ")} ${proportion}`
-          );
+          console.log(`          ${state.zones[i].join(" ")} ${proportion}`);
         }
         removeList.push(i);
         problem = true;
@@ -125,49 +130,47 @@ export function setupGlobal(areaSpecificationText: string) {
     }
     if (proportion === 0.0 && !problem) {
       console.log("WARNING: " + lineNum + ": Unnecessary empty zone: ");
-      console.log(
-        "          " + sharedState.zones[i].join(" ") + " " + proportion
-      );
+      console.log("          " + state.zones[i].join(" ") + " " + proportion);
       removeList.push(i);
       continue;
     }
   }
   for (let i = removeList.length - 1; i >= 0; i--) {
     const index = removeList[i];
-    sharedState.proportions.splice(index, 1);
-    sharedState.zones.splice(index, 1);
+    state.proportions.splice(index, 1);
+    state.zones.splice(index, 1);
   }
 
-  sharedState.contours = findContoursFromZones(sharedState.zones);
+  state.contours = findContoursFromZones(state.zones);
 
   let totalArea = 0.0;
-  for (let i = 0; i < sharedState.proportions.length; i++) {
-    totalArea = totalArea + sharedState.proportions[i];
+  for (let i = 0; i < state.proportions.length; i++) {
+    totalArea = totalArea + state.proportions[i];
   }
 
   const scalingValue = 1 / totalArea;
 
-  sharedState.originalProportions = [];
-  for (let i = 0; i < sharedState.proportions.length; i++) {
-    sharedState.originalProportions[i] = sharedState.proportions[i];
-    sharedState.proportions[i] = sharedState.proportions[i] * scalingValue;
+  state.originalProportions = [];
+  for (let i = 0; i < state.proportions.length; i++) {
+    state.originalProportions[i] = state.proportions[i];
+    state.proportions[i] = state.proportions[i] * scalingValue;
   }
 
   // called again to get values after scaling
-  sharedState.contourAreas = findContourAreas(
-    sharedState.contours,
-    sharedState.zones,
-    sharedState.proportions
+  state.contourAreas = findContourAreas(
+    state.contours,
+    state.zones,
+    state.proportions
   );
 
   // sort zone into order of ellipses as in the global ellipse list
-  sharedState.zoneStrings = [];
-  for (let j = 0; j < sharedState.zones.length; j++) {
-    const zone = sharedState.zones[j];
+  state.zoneStrings = [];
+  for (let j = 0; j < state.zones.length; j++) {
+    const zone = state.zones[j];
     const sortedZone = [];
     let zonePosition = 0;
-    for (let i = 0; i < sharedState.contours.length; i++) {
-      const contour = sharedState.contours[i];
+    for (let i = 0; i < state.contours.length; i++) {
+      const contour = state.contours[i];
       if (zone.indexOf(contour) != -1) {
         sortedZone[zonePosition] = contour;
         zonePosition++;
@@ -175,93 +178,100 @@ export function setupGlobal(areaSpecificationText: string) {
     }
     //			globalZones[j] = sortedZone;
     const sortedZoneString = sortedZone.toString();
-    sharedState.zoneStrings[j] = sortedZoneString;
+    state.zoneStrings[j] = sortedZoneString;
   }
+
+  return state;
 }
 
-export function generateInitialLayout() {
+export function generateInitialLayout(state: State) {
   let x = 1;
   let y = 1;
   // let increment = 0.3;
 
-  for (let i = 0; i < sharedState.contourAreas.length; i++) {
-    const area = sharedState.contourAreas[i];
+  for (let i = 0; i < state.contourAreas.length; i++) {
+    const area = state.contourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
-    sharedState.ellipseParams[i] = {
+    state.ellipseParams[i] = {
       X: x,
       Y: y,
       A: radius,
       B: radius,
       R: 0,
     };
-    sharedState.ellipseLabel[i] = sharedState.contours[i];
-    sharedState.ellipseArea[i] = area;
+    state.ellipseLabel[i] = state.contours[i];
+    state.ellipseArea[i] = area;
 
     //x = x+increment;
   }
 
   // Check for ellipses that must be the same:
-  sharedState.ellipseDuplication = [];
-  sharedState.duplicatedEllipseIndexes = [];
+  state.ellipseDuplication = [];
+  state.duplicatedEllipseIndexes = [];
   const ellipseEquivilenceSet: Record<string, number> = {};
   let ellipseEquivilenceSetCount = 0;
-  for (let indexA = 0; indexA < sharedState.ellipseLabel.length; ++indexA) {
-    if (sharedState.ellipseDuplication[indexA] != undefined) {
+  for (let indexA = 0; indexA < state.ellipseLabel.length; ++indexA) {
+    if (state.ellipseDuplication[indexA] != undefined) {
       // Already processed.
       continue;
     }
 
     let count = 1;
-    let zonesWithA = sharedState.zones
-      .filter((element) => element.includes(sharedState.ellipseLabel[indexA]))
+    let zonesWithA = state.zones
+      .filter((element) => element.includes(state.ellipseLabel[indexA]))
       .join("#");
     for (
       let indexB = indexA + 1;
-      indexB < sharedState.ellipseLabel.length;
+      indexB < state.ellipseLabel.length;
       ++indexB
     ) {
-      let zonesWithB = sharedState.zones
-        .filter((element) => element.includes(sharedState.ellipseLabel[indexB]))
+      let zonesWithB = state.zones
+        .filter((element) => element.includes(state.ellipseLabel[indexB]))
         .join("#");
       if (zonesWithA === zonesWithB) {
         if (typeof ellipseEquivilenceSet[zonesWithA] === "undefined") {
           ellipseEquivilenceSetCount++;
           console.log("Eqivalence set " + ellipseEquivilenceSetCount);
           ellipseEquivilenceSet[zonesWithA] = ellipseEquivilenceSetCount;
-          console.log(" -- " + sharedState.ellipseLabel[indexA]);
+          console.log(" -- " + state.ellipseLabel[indexA]);
         }
         ellipseEquivilenceSet[zonesWithB] = ellipseEquivilenceSetCount;
-        console.log(" -- " + sharedState.ellipseLabel[indexB]);
+        console.log(" -- " + state.ellipseLabel[indexB]);
 
         // Set ellipse B as a duplicate of ellipse A
-        sharedState.ellipseParams[indexB] = sharedState.ellipseParams[indexA];
-        sharedState.duplicatedEllipseIndexes.push(indexB);
+        state.ellipseParams[indexB] = state.ellipseParams[indexA];
+        state.duplicatedEllipseIndexes.push(indexB);
 
         count++;
-        sharedState.ellipseDuplication[indexB] = count;
+        state.ellipseDuplication[indexB] = count;
       }
     }
   }
 }
 
-export function generateInitialRandomLayout(maxX: number, maxY: number) {
-  for (let i = 0; i < sharedState.contourAreas.length; i++) {
-    const area = sharedState.contourAreas[i];
+export function generateInitialRandomLayout(
+  state: State,
+  maxX: number,
+  maxY: number
+) {
+  for (let i = 0; i < state.contourAreas.length; i++) {
+    const area = state.contourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
-    sharedState.ellipseParams[i] = {
+    state.ellipseParams[i] = {
       X: Math.random() * maxX,
       Y: Math.random() * maxY,
       A: radius,
       B: radius,
       R: 0,
     };
-    sharedState.ellipseLabel[i] = sharedState.contours[i];
-    sharedState.ellipseArea[i] = area;
+    state.ellipseLabel[i] = state.contours[i];
+    state.ellipseArea[i] = area;
   }
 }
 
 // generate svg from ellipses
 export function generateSVG(
+  state: State,
   width: number,
   height: number,
   setLabels: boolean,
@@ -269,10 +279,9 @@ export function generateSVG(
   translateX: number,
   translateY: number,
   scaling: number,
-  areas?: EdeapAreas,
   forDownload: boolean = false
 ) {
-  if (typeof areas === "undefined") areas = new EdeapAreas(sharedState);
+  const areas = new EdeapAreas(state);
 
   let svgString = "";
 
@@ -288,7 +297,7 @@ export function generateSVG(
   let nextSVG = "";
   const N = areas.ellipseLabel.length;
   for (let i = 0; i < N; i++) {
-    const color = findColor(i, colourPalettes[sharedState.colourPaletteName]);
+    const color = findColor(i, colourPalettes[state.colourPaletteName]);
     const eX = (areas.ellipseParams[i].X + translateX) * scaling;
     const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
     const eA = areas.ellipseParams[i].A * scaling;
@@ -456,8 +465,8 @@ export function generateSVG(
         angle = range[0].angle;
       }
 
-      if (sharedState.ellipseDuplication[i] !== undefined) {
-        angle -= 15 * (sharedState.ellipseDuplication[i] - 1);
+      if (state.ellipseDuplication[i] !== undefined) {
+        angle -= 15 * (state.ellipseDuplication[i] - 1);
       }
 
       eA += spacingFromEdge;
@@ -504,9 +513,9 @@ export function generateSVG(
         y -= halfHeight;
       }
 
-      const color = findColor(i, colourPalettes[sharedState.colourPaletteName]);
+      const color = findColor(i, colourPalettes[state.colourPaletteName]);
       nextSVG = `<text style="font-family: Helvetica; font-size: ${
-        sharedState.labelFontSize
+        state.labelFontSize
       };" x="${x + eX - textWidth / 2}" y="${y + eY}" fill="${color}">
           ${areas.ellipseLabel[i]}
         </text>\n`;
@@ -530,7 +539,7 @@ export function generateSVG(
         // const textWidth = areas.globalValueWidths[i];
         // const textHeight = areas.globalValueHeights[i];
         if (!isNaN(labelX)) {
-          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${sharedState.valueFontSize};" fill="black">
+          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${state.valueFontSize};" fill="black">
               ${areas.originalProportions[i]}
             </text>\n`;
           svgString += nextSVG;
@@ -550,11 +559,11 @@ export function generateSVG(
 export function findTransformationToFit(
   width: number,
   height: number,
-  areas?: EdeapAreas
+  state: State
 ) {
-  if (typeof areas === "undefined") areas = new EdeapAreas(sharedState);
+  const areas = new EdeapAreas(state);
 
-  let sizes = findLabelSizes();
+  let sizes = findLabelSizes(state);
   let idealWidth = width - 15 - sizes.maxWidth * 2;
   let idealHeight = height - 15 - sizes.maxHeight * 2;
 
@@ -594,13 +603,13 @@ export function findTransformationToFit(
   };
 }
 
-export function findLabelSizes() {
+export function findLabelSizes(state: State) {
   document.getElementById("textLengthMeasure")!.innerHTML = ""; // clear the div
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
   text.setAttribute(
     "style",
-    "font-family: Helvetica; font-size: " + sharedState.labelFontSize + ";"
+    "font-family: Helvetica; font-size: " + state.labelFontSize + ";"
   );
   svg.appendChild(text);
   document.getElementById("textLengthMeasure")!.appendChild(svg);
@@ -610,8 +619,8 @@ export function findLabelSizes() {
   let heights: number[] = [];
   let maxHeight = 0;
   let maxWidth = 0;
-  for (let i = 0; i < sharedState.ellipseLabel.length; i++) {
-    text.textContent = sharedState.ellipseLabel[i];
+  for (let i = 0; i < state.ellipseLabel.length; i++) {
+    text.textContent = state.ellipseLabel[i];
     lengths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
     maxHeight = Math.max(maxHeight, heights[i]);
@@ -627,21 +636,21 @@ export function findLabelSizes() {
   };
 }
 
-export function findValueSizes() {
+export function findValueSizes(state: State) {
   document.getElementById("textLengthMeasure")!.innerHTML = ""; // clear the div
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
   text.setAttribute(
     "style",
-    "font-family: Helvetica; font-size: " + sharedState.valueFontSize + ";"
+    "font-family: Helvetica; font-size: " + state.valueFontSize + ";"
   );
   svg.appendChild(text);
   document.getElementById("textLengthMeasure")!.appendChild(svg);
 
   let lengths: number[] = [];
   let heights: number[] = [];
-  for (let i = 0; i < sharedState.originalProportions.length; i++) {
-    let label = sharedState.originalProportions[i];
+  for (let i = 0; i < state.originalProportions.length; i++) {
+    let label = state.originalProportions[i];
     text.textContent = String(label);
     lengths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
@@ -653,5 +662,3 @@ export function findValueSizes() {
     heights,
   };
 }
-
-// --------------- ellipses.ts ------------------------

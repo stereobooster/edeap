@@ -179,7 +179,7 @@ function optimizeStep({
       applyMove(bestMoveEllipse, bestMove!, state);
       if (animateOptimizer) {
         if (zoomToFitAtEachStep) {
-          const transformation = findTransformationToFit(width, height);
+          const transformation = findTransformationToFit(width, height, state);
           state.scaling = transformation.scaling;
           state.translateX = transformation.translateX;
           state.translateY = transformation.translateY;
@@ -188,6 +188,7 @@ function optimizeStep({
         logMessage(logOptimizerStep, "Fitness %s", currentFitness);
         printEllipseInfo(bestMoveEllipse, state);
         document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
+          state,
           width,
           height,
           false,
@@ -264,6 +265,7 @@ function optimizeStep({
           logMessage(logOptimizerStep, "Fitness %s", currentFitness);
           printEllipseInfo(bestMoveEllipse, state);
           document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
+            state,
             width,
             height,
             false,
@@ -271,7 +273,6 @@ function optimizeStep({
             state.translateX,
             state.translateY,
             state.scaling,
-            areas
           );
           document.getElementById("areaTableBody")!.innerHTML =
             areas!.zoneAreaTableBody();
@@ -297,7 +298,7 @@ function optimizeStep({
   }
 
   // Optimizer finishes execution here
-  const transformation = findTransformationToFit(width, height);
+  const transformation = findTransformationToFit(width, height, state);
   const progress = document.getElementById(
     "optimizerProgress"
   ) as HTMLProgressElement;
@@ -329,6 +330,7 @@ function optimizeStep({
   }
 
   const svgText = generateSVG(
+    state,
     width,
     height,
     state.showSetLabels,
@@ -372,6 +374,7 @@ function completionAnimationStep({
   progress.value = progress.value + progressAnimationStep;
 
   const svgText = generateSVG(
+    state,
     width,
     height,
     state.showSetLabels,

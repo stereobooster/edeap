@@ -1,4 +1,5 @@
 import {
+  State,
   findLabelSizes,
   findTransformationToFit,
   findValueSizes,
@@ -6,7 +7,6 @@ import {
   generateInitialRandomLayout,
   generateSVG,
   setupGlobal,
-  sharedState,
 } from "./all";
 import { HILL_CLIMBING, SIMULATED_ANNEALING, optimize } from "./optimizer";
 import {
@@ -16,6 +16,8 @@ import {
   logMessage,
   logReproducability,
 } from "./pure";
+
+let sharedState: State;
 
 const canvasWidth = () => document.getElementById("ellipsesSVG")!.offsetWidth;
 const canvasHeight = () => document.getElementById("ellipsesSVG")!.offsetHeight;
@@ -193,6 +195,8 @@ function init() {
   let areaSpecificationText =
     gup("areaSpecification") ||
     "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8";
+  sharedState = setupGlobal(areaSpecificationText);
+
   let setLabelSize = parseFloat(gup("setLabelSize"));
   let intersectionLabelSize = parseFloat(gup("intersectionLabelSize"));
   let startingDiagram = gup("startingDiagram");
@@ -241,18 +245,16 @@ function init() {
     sharedState.showIntersectionValues = intersectionLabelSize > 0;
   }
 
-  setupGlobal(areaSpecificationText);
-
   if (startingDiagram === "random") {
-    generateInitialRandomLayout(2, 2);
+    generateInitialRandomLayout(sharedState, 2, 2);
   } else {
-    generateInitialLayout();
+    generateInitialLayout(sharedState);
   }
 
-  const labelSizes = findLabelSizes();
+  const labelSizes = findLabelSizes(sharedState);
   sharedState.labelWidths = labelSizes.lengths;
   sharedState.labelHeights = labelSizes.heights;
-  const valueSizes = findValueSizes();
+  const valueSizes = findValueSizes(sharedState);
   sharedState.valueWidths = valueSizes.lengths;
   sharedState.valueHeights = valueSizes.heights;
 
@@ -314,12 +316,17 @@ function init() {
     state: sharedState,
   });
 
-  const transformation = findTransformationToFit(canvasWidth(), canvasHeight());
+  const transformation = findTransformationToFit(
+    canvasWidth(),
+    canvasHeight(),
+    sharedState
+  );
   sharedState.scaling = transformation.scaling;
   sharedState.translateX = transformation.translateX;
   sharedState.translateY = transformation.translateY;
 
   document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
+    sharedState,
     canvasWidth(),
     canvasHeight(),
     sharedState.showSetLabels,
@@ -333,7 +340,8 @@ function init() {
 function saveSVG() {
   const transformation = findTransformationToFit(
     widthForSvgDownload(),
-    heightForSvgDownload()
+    heightForSvgDownload(),
+    sharedState
   );
   const outputScaling = transformation.scaling;
   const outputTranslateX = transformation.translateX;
@@ -341,6 +349,7 @@ function saveSVG() {
 
   const forDownload = true;
   const svgString = generateSVG(
+    sharedState,
     canvasWidth(),
     canvasHeight(),
     sharedState.showSetLabels,
@@ -348,7 +357,6 @@ function saveSVG() {
     outputTranslateX,
     outputTranslateY,
     outputScaling,
-    undefined,
     forDownload
   );
   downloadFileFromText(getDownloadName() + ".svg", svgString);
