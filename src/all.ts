@@ -36,76 +36,73 @@ import {
   logMessage,
   logOptimizerStep,
   logOptimizerChoice,
-  logReproducability,
 } from "./pure";
-import {
-  canvasHeight,
-  canvasWidth,
-  downloadFileFromText,
-  getDownloadName,
-  gup,
-  heightForSvgDownload,
-  initUI,
-  widthForSvgDownload,
-} from "./ui";
 
-let translateX = 0;
-let translateY = 0;
-let scaling = 100;
-let showSetLabels = true;
-let showIntersectionValues = true;
-let colourPaletteName: keyof typeof colourPalettes = "Tableau10";
-const defaultLabelFontSize = 12;
-const defaultValueFontSize = 12;
-let labelFontSize = "12pt";
-let valueFontSize = "12pt";
+import { canvasHeight, canvasWidth } from "./ui";
 
-let globalContours: string[] = []; // size of number of ellipses
+export const sharedState = {
+  translateX: 0,
+  translateY: 0,
+  scaling: 100,
+  showSetLabels: true,
+  showIntersectionValues: true,
+  colourPaletteName: "Tableau10" as keyof typeof colourPalettes,
+  labelFontSize: "12pt",
+  valueFontSize: "12pt",
+  // if set fo an index, indicates the number of this ellipse as a duplicate.
+  ellipseDuplication: [] as number[],
+  ellipseArea: [] as number[],
+  ellipseParams: [] as EllipseParams[],
+  ellipseLabel: [] as string[],
+
+  // size of number of ellipses
+  globalContours: [] as string[],
+  globalLabelWidths: [] as number[],
+  globalLabelHeights: [] as number[],
+  globalValueWidths: [] as number[],
+  globalValueHeights: [] as number[],
+};
+
 let globalZones: string[][] = []; // size of number of intersections
 let globalZoneStrings: string[] = []; // size of number of intersections, string version of globalZones
 let globalOriginalProportions: number[] = []; // proportions before scaling, size of number of intersections
 let globalProportions: number[] = []; // proportions after scaling, size of number of intersections
 // let globalOriginalContourAreas: number[] = []; // size of number of ellipses
 let globalContourAreas: number[] = []; // size of number of ellipses
-let globalLabelWidths: number[] = []; // size of number of ellipses
-let globalLabelHeights: number[] = []; // size of number of intersections
-let globalValueWidths: number[] = []; // size of number of intersections
-let globalValueHeights: number[] = []; // size of number of intersections
+// let globalLabelWidths: number[] = []; // size of number of ellipses
+// let globalLabelHeights: number[] = []; // size of number of intersections
+// let globalValueWidths: number[] = []; // size of number of intersections
+// let globalValueHeights: number[] = []; // size of number of intersections
 let globalAbstractDescription: string;
 
 // let globalZoneAreaTableBody = ""; // to access table output from updateZoneAreaTable, not terribly elegant
 // let globalFinalFitness = -1; // access to fitness after optimizer has finished
 
-// if set fo an index, indicates the number of this ellipse as a duplicate.
-let ellipseDuplication: number[] = [];
-let ellipseEquivilenceSet: Record<string, number> = {};
-
-let ellipseParams: EllipseParams[] = [];
-let ellipseLabel: string[] = []; // set associated with ellipse, should be unique
-let ellipseArea: number[] = [];
-
-function setupGlobal(areaSpecificationText: string) {
-  globalContours = [];
+export function setupGlobal(areaSpecificationText: string) {
+  sharedState.globalContours = [];
   globalZones = [];
   globalZoneStrings = [];
   globalOriginalProportions = [];
   globalProportions = [];
   // globalOriginalContourAreas = [];
   globalContourAreas = [];
-  globalLabelWidths = [];
-  globalLabelHeights = [];
-  globalValueWidths = [];
-  globalValueHeights = [];
+  sharedState.globalLabelWidths = [];
+  sharedState.globalLabelHeights = [];
+  sharedState.globalValueWidths = [];
+  sharedState.globalValueHeights = [];
 
-  ellipseParams = [];
-  ellipseLabel = [];
-  ellipseArea = [];
+  sharedState.ellipseParams = [];
+  sharedState.ellipseLabel = [];
+  sharedState.ellipseArea = [];
 
   globalAbstractDescription = decodeAbstractDescription(areaSpecificationText);
-  globalContours = findContours(globalAbstractDescription, globalContours);
+  sharedState.globalContours = findContours(
+    globalAbstractDescription,
+    sharedState.globalContours
+  );
   globalZones = findZones(globalAbstractDescription, globalZones);
 
-  if (globalContours.length === 0) return;
+  if (sharedState.globalContours.length === 0) return;
 
   globalProportions = findProportions(globalZones);
   globalZones = removeProportions(globalZones);
@@ -160,7 +157,7 @@ function setupGlobal(areaSpecificationText: string) {
     globalZones.splice(index, 1);
   }
 
-  globalContours = findContoursFromZones(globalZones);
+  sharedState.globalContours = findContoursFromZones(globalZones);
 
   // values are before scaling
   // globalOriginalContourAreas = findContourAreas(
@@ -184,7 +181,7 @@ function setupGlobal(areaSpecificationText: string) {
 
   // called again to get values after scaling
   globalContourAreas = findContourAreas(
-    globalContours,
+    sharedState.globalContours,
     globalZones,
     globalProportions
   );
@@ -195,8 +192,8 @@ function setupGlobal(areaSpecificationText: string) {
     const zone = globalZones[j];
     const sortedZone = [];
     let zonePosition = 0;
-    for (let i = 0; i < globalContours.length; i++) {
-      const contour = globalContours[i];
+    for (let i = 0; i < sharedState.globalContours.length; i++) {
+      const contour = sharedState.globalContours[i];
       if (zone.indexOf(contour) != -1) {
         sortedZone[zonePosition] = contour;
         zonePosition++;
@@ -208,7 +205,7 @@ function setupGlobal(areaSpecificationText: string) {
   }
 }
 
-function generateInitialLayout() {
+export function generateInitialLayout() {
   let x = 1;
   let y = 1;
   // let increment = 0.3;
@@ -216,72 +213,76 @@ function generateInitialLayout() {
   for (let i = 0; i < globalContourAreas.length; i++) {
     const area = globalContourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
-    ellipseParams[i] = {
+    sharedState.ellipseParams[i] = {
       X: x,
       Y: y,
       A: radius,
       B: radius,
       R: 0,
     };
-    ellipseLabel[i] = globalContours[i];
-    ellipseArea[i] = area;
+    sharedState.ellipseLabel[i] = sharedState.globalContours[i];
+    sharedState.ellipseArea[i] = area;
 
     //x = x+increment;
   }
 
   // Check for ellipses that must be the same:
-  ellipseDuplication = [];
+  sharedState.ellipseDuplication = [];
   duplicatedEllipseIndexes = [];
-  ellipseEquivilenceSet = {};
+  const ellipseEquivilenceSet: Record<string, number> = {};
   let ellipseEquivilenceSetCount = 0;
-  for (let indexA = 0; indexA < ellipseLabel.length; ++indexA) {
-    if (ellipseDuplication[indexA] != undefined) {
+  for (let indexA = 0; indexA < sharedState.ellipseLabel.length; ++indexA) {
+    if (sharedState.ellipseDuplication[indexA] != undefined) {
       // Already processed.
       continue;
     }
 
     let count = 1;
     let zonesWithA = globalZones
-      .filter((element) => element.includes(ellipseLabel[indexA]))
+      .filter((element) => element.includes(sharedState.ellipseLabel[indexA]))
       .join("#");
-    for (let indexB = indexA + 1; indexB < ellipseLabel.length; ++indexB) {
+    for (
+      let indexB = indexA + 1;
+      indexB < sharedState.ellipseLabel.length;
+      ++indexB
+    ) {
       let zonesWithB = globalZones
-        .filter((element) => element.includes(ellipseLabel[indexB]))
+        .filter((element) => element.includes(sharedState.ellipseLabel[indexB]))
         .join("#");
       if (zonesWithA === zonesWithB) {
         if (typeof ellipseEquivilenceSet[zonesWithA] === "undefined") {
           ellipseEquivilenceSetCount++;
           console.log("Eqivalence set " + ellipseEquivilenceSetCount);
           ellipseEquivilenceSet[zonesWithA] = ellipseEquivilenceSetCount;
-          console.log(" -- " + ellipseLabel[indexA]);
+          console.log(" -- " + sharedState.ellipseLabel[indexA]);
         }
         ellipseEquivilenceSet[zonesWithB] = ellipseEquivilenceSetCount;
-        console.log(" -- " + ellipseLabel[indexB]);
+        console.log(" -- " + sharedState.ellipseLabel[indexB]);
 
         // Set ellipse B as a duplicate of ellipse A
-        ellipseParams[indexB] = ellipseParams[indexA];
+        sharedState.ellipseParams[indexB] = sharedState.ellipseParams[indexA];
         duplicatedEllipseIndexes.push(indexB);
 
         count++;
-        ellipseDuplication[indexB] = count;
+        sharedState.ellipseDuplication[indexB] = count;
       }
     }
   }
 }
 
-function generateInitialRandomLayout(maxX: number, maxY: number) {
+export function generateInitialRandomLayout(maxX: number, maxY: number) {
   for (let i = 0; i < globalContourAreas.length; i++) {
     const area = globalContourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
-    ellipseParams[i] = {
+    sharedState.ellipseParams[i] = {
       X: Math.random() * maxX,
       Y: Math.random() * maxY,
       A: radius,
       B: radius,
       R: 0,
     };
-    ellipseLabel[i] = globalContours[i];
-    ellipseArea[i] = area;
+    sharedState.ellipseLabel[i] = sharedState.globalContours[i];
+    sharedState.ellipseArea[i] = area;
   }
 }
 
@@ -313,7 +314,7 @@ export function generateSVG(
   let nextSVG = "";
   const N = areas.ellipseLabel.length;
   for (let i = 0; i < N; i++) {
-    const color = findColor(i, colourPalettes[colourPaletteName]);
+    const color = findColor(i, colourPalettes[sharedState.colourPaletteName]);
     const eX = (areas.ellipseParams[i].X + translateX) * scaling;
     const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
     const eA = areas.ellipseParams[i].A * scaling;
@@ -484,8 +485,8 @@ export function generateSVG(
         angle = range[0].angle;
       }
 
-      if (ellipseDuplication[i] !== undefined) {
-        angle -= 15 * (ellipseDuplication[i] - 1);
+      if (sharedState.ellipseDuplication[i] !== undefined) {
+        angle -= 15 * (sharedState.ellipseDuplication[i] - 1);
       }
 
       eA += spacingFromEdge;
@@ -532,10 +533,10 @@ export function generateSVG(
         y -= halfHeight;
       }
 
-      const color = findColor(i, colourPalettes[colourPaletteName]);
-      nextSVG = `<text style="font-family: Helvetica; font-size: ${labelFontSize};" x="${
-        x + eX - textWidth / 2
-      }" y="${y + eY}" fill="${color}">
+      const color = findColor(i, colourPalettes[sharedState.colourPaletteName]);
+      nextSVG = `<text style="font-family: Helvetica; font-size: ${
+        sharedState.labelFontSize
+      };" x="${x + eX - textWidth / 2}" y="${y + eY}" fill="${color}">
           ${areas.ellipseLabel[i]}
         </text>\n`;
       svgString += nextSVG;
@@ -558,7 +559,7 @@ export function generateSVG(
         // const textWidth = areas.globalValueWidths[i];
         // const textHeight = areas.globalValueHeights[i];
         if (!isNaN(labelX)) {
-          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${valueFontSize};" fill="black">
+          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${sharedState.valueFontSize};" fill="black">
               ${areas.globalOriginalProportions[i]}
             </text>\n`;
           svgString += nextSVG;
@@ -622,13 +623,13 @@ export function findTransformationToFit(
   };
 }
 
-function findLabelSizes() {
+export function findLabelSizes() {
   document.getElementById("textLengthMeasure")!.innerHTML = ""; // clear the div
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
   text.setAttribute(
     "style",
-    "font-family: Helvetica; font-size: " + labelFontSize + ";"
+    "font-family: Helvetica; font-size: " + sharedState.labelFontSize + ";"
   );
   svg.appendChild(text);
   document.getElementById("textLengthMeasure")!.appendChild(svg);
@@ -638,8 +639,8 @@ function findLabelSizes() {
   let heights: number[] = [];
   let maxHeight = 0;
   let maxWidth = 0;
-  for (let i = 0; i < ellipseLabel.length; i++) {
-    text.textContent = ellipseLabel[i];
+  for (let i = 0; i < sharedState.ellipseLabel.length; i++) {
+    text.textContent = sharedState.ellipseLabel[i];
     lengths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
     maxHeight = Math.max(maxHeight, heights[i]);
@@ -655,13 +656,13 @@ function findLabelSizes() {
   };
 }
 
-function findValueSizes() {
+export function findValueSizes() {
   document.getElementById("textLengthMeasure")!.innerHTML = ""; // clear the div
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
   text.setAttribute(
     "style",
-    "font-family: Helvetica; font-size: " + valueFontSize + ";"
+    "font-family: Helvetica; font-size: " + sharedState.valueFontSize + ";"
   );
   svg.appendChild(text);
   document.getElementById("textLengthMeasure")!.appendChild(svg);
@@ -718,13 +719,13 @@ class EdeapAreas {
 
     this.globalZoneStrings = globalZoneStrings;
     this.globalProportions = globalProportions;
-    this.globalValueWidths = globalValueWidths;
-    this.globalValueHeights = globalValueHeights;
-    this.globalLabelWidths = globalLabelWidths;
-    this.globalLabelHeights = globalLabelHeights;
+    this.globalValueWidths = sharedState.globalValueWidths;
+    this.globalValueHeights = sharedState.globalValueHeights;
+    this.globalLabelWidths = sharedState.globalLabelWidths;
+    this.globalLabelHeights = sharedState.globalLabelHeights;
     this.globalOriginalProportions = globalOriginalProportions;
-    this.ellipseLabel = ellipseLabel;
-    this.ellipseParams = ellipseParams;
+    this.ellipseLabel = sharedState.ellipseLabel;
+    this.ellipseParams = sharedState.ellipseParams;
   }
 
   useEllipseParams(ellipseParams: EllipseParams[]) {
@@ -1715,7 +1716,7 @@ class EdeapAreas {
     const nonOverlappingPairs = [];
     // Compute ellipses we don't want to be overlapping or touching.
     for (let i = 0; i < this.ellipseLabel.length; i++) {
-      const labelI = ellipseLabel[i];
+      const labelI = sharedState.ellipseLabel[i];
       for (let j = i + 1; j < this.ellipseLabel.length; j++) {
         const labelJ = this.ellipseLabel[j];
 
@@ -2045,10 +2046,8 @@ const weights = {
   circleDistortion: 0,
 };
 
-const HILL_CLIMBING = 1;
-const SIMULATED_ANNEALING = 2;
-
-let OPTIMSER = HILL_CLIMBING;
+export const HILL_CLIMBING = 1;
+export const SIMULATED_ANNEALING = 2;
 
 let maxMeasures: Record<string, number[]> = {}; // to save the maximum value of a measure in a history of values of each measure to be used in the normalization process
 
@@ -2061,7 +2060,7 @@ let selectedMove: number;
 
 // the optimization method
 
-function optimize(_completionHandler?: undefined) {
+export function optimize(strategy: number) {
   ellipseMap = new Map();
 
   // completionHandlerFunc = completionHandler;
@@ -2077,7 +2076,7 @@ function optimize(_completionHandler?: undefined) {
   currentFitness = computeFitness();
   for (
     let elp = 0;
-    elp < ellipseLabel.length;
+    elp < sharedState.ellipseLabel.length;
     elp++ // for each ellipse
   ) {
     printEllipseInfo(elp);
@@ -2086,10 +2085,10 @@ function optimize(_completionHandler?: undefined) {
 
   if (animateOptimizer || optimizerUsesSetTimeout) {
     setTimeout(function () {
-      optimizeStep(OPTIMSER);
+      optimizeStep(strategy);
     }, animationDelay);
   } else {
-    optimizeStep(OPTIMSER);
+    optimizeStep(strategy);
   }
 }
 
@@ -2115,7 +2114,7 @@ function optimizeStep(opt: number) {
     bestMoveEllipse = -1;
     for (
       let elp = 0;
-      elp < ellipseLabel.length;
+      elp < sharedState.ellipseLabel.length;
       elp++ // for each ellipse
     ) {
       if (duplicatedEllipseIndexes.includes(elp)) {
@@ -2124,7 +2123,7 @@ function optimizeStep(opt: number) {
       }
 
       // For each ellipse check for best move.
-      logMessage(logOptimizerStep, ellipseLabel[elp]);
+      logMessage(logOptimizerStep, sharedState.ellipseLabel[elp]);
       const possibleFitness = selectBestCostMove(elp); // select the best move for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
       logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
       if (possibleFitness < bestMoveFitness && possibleFitness >= 0) {
@@ -2147,9 +2146,9 @@ function optimizeStep(opt: number) {
             canvasWidth(),
             canvasHeight()
           );
-          scaling = transformation.scaling;
-          translateX = transformation.translateX;
-          translateY = transformation.translateY;
+          sharedState.scaling = transformation.scaling;
+          sharedState.translateX = transformation.translateX;
+          sharedState.translateY = transformation.translateY;
         }
 
         logMessage(logOptimizerStep, "Fitness %s", currentFitness);
@@ -2159,9 +2158,9 @@ function optimizeStep(opt: number) {
           canvasHeight(),
           false,
           false,
-          translateX,
-          translateY,
-          scaling
+          sharedState.translateX,
+          sharedState.translateY,
+          sharedState.scaling
         );
 
         let tbody = areas!.zoneAreaTableBody();
@@ -2211,7 +2210,7 @@ function optimizeStep(opt: number) {
       let found = false; // if a solution that satisfies the annealing criteria is found
       for (
         let elp = 0;
-        elp < ellipseLabel.length && !found;
+        elp < sharedState.ellipseLabel.length && !found;
         elp++ // for each ellipse
       ) {
         if (duplicatedEllipseIndexes.includes(elp)) {
@@ -2220,7 +2219,7 @@ function optimizeStep(opt: number) {
         }
 
         // For each ellipse check for best move.
-        logMessage(logOptimizerStep, ellipseLabel[elp]);
+        logMessage(logOptimizerStep, sharedState.ellipseLabel[elp]);
         const possibleFitness = selectRandomMove(elp); // select a random move (between 1 and 10) for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
         logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
         const fitnessDifference = possibleFitness - bestMoveFitness; // difference between the bestFitness so far and the fitness of the selected random move
@@ -2249,9 +2248,9 @@ function optimizeStep(opt: number) {
             canvasHeight(),
             false,
             false,
-            translateX,
-            translateY,
-            scaling,
+            sharedState.translateX,
+            sharedState.translateY,
+            sharedState.scaling,
             areas
           );
           document.getElementById("areaTableBody")!.innerHTML =
@@ -2287,31 +2286,34 @@ function optimizeStep(opt: number) {
     if (animateOptimizer) {
       // Setup completion animation.
       scalingAnimationStep =
-        (transformation.scaling - scaling) / completionAnimationSteps;
+        (transformation.scaling - sharedState.scaling) /
+        completionAnimationSteps;
       translateXAnimationStep =
-        (transformation.translateX - translateX) / completionAnimationSteps;
+        (transformation.translateX - sharedState.translateX) /
+        completionAnimationSteps;
       translateYAnimationStep =
-        (transformation.translateY - translateY) / completionAnimationSteps;
+        (transformation.translateY - sharedState.translateY) /
+        completionAnimationSteps;
       progressAnimationStep =
         (progress.max - progress.value) / completionAnimationSteps;
       completionAnimationStepN = 0;
       setTimeout(completionAnimationStep, completionAnimationDelay);
       return;
     } else {
-      scaling += scalingAnimationStep;
-      translateX += translateXAnimationStep;
-      translateY += translateYAnimationStep;
+      sharedState.scaling += scalingAnimationStep;
+      sharedState.translateX += translateXAnimationStep;
+      sharedState.translateY += translateYAnimationStep;
     }
   }
 
   const svgText = generateSVG(
     canvasWidth(),
     canvasHeight(),
-    showSetLabels,
-    showIntersectionValues,
-    translateX,
-    translateY,
-    scaling
+    sharedState.showSetLabels,
+    sharedState.showIntersectionValues,
+    sharedState.translateX,
+    sharedState.translateY,
+    sharedState.scaling
   );
   document.getElementById("ellipsesSVG")!.innerHTML = svgText;
 
@@ -2343,19 +2345,19 @@ function completionAnimationStep() {
 
   completionAnimationStepN++;
 
-  scaling += scalingAnimationStep;
-  translateX += translateXAnimationStep;
-  translateY += translateYAnimationStep;
+  sharedState.scaling += scalingAnimationStep;
+  sharedState.translateX += translateXAnimationStep;
+  sharedState.translateY += translateYAnimationStep;
   progress.value = progress.value + progressAnimationStep;
 
   const svgText = generateSVG(
     canvasWidth(),
     canvasHeight(),
-    showSetLabels,
-    showIntersectionValues,
-    translateX,
-    translateY,
-    scaling
+    sharedState.showSetLabels,
+    sharedState.showIntersectionValues,
+    sharedState.translateX,
+    sharedState.translateY,
+    sharedState.scaling
   );
   document.getElementById("ellipsesSVG")!.innerHTML = svgText;
 
@@ -2366,12 +2368,12 @@ function printEllipseInfo(elp: number) {
   logMessage(
     logOptimizerStep,
     "Label = %s X = %s Y = %s A = %s B = %s R = %s",
-    ellipseLabel[elp],
-    ellipseParams[elp].X,
-    ellipseParams[elp].Y,
-    ellipseParams[elp].A,
-    ellipseParams[elp].B,
-    ellipseParams[elp].R
+    sharedState.ellipseLabel[elp],
+    sharedState.ellipseParams[elp].X,
+    sharedState.ellipseParams[elp].Y,
+    sharedState.ellipseParams[elp].A,
+    sharedState.ellipseParams[elp].B,
+    sharedState.ellipseParams[elp].R
   );
 }
 
@@ -2388,7 +2390,7 @@ function selectBestCostMove(elp: number) {
   move[5] = radiusA(elp, radiusLength); // use positive and negative values to increase/decrease the length of the A radius
   move[6] = radiusA(elp, -1 * radiusLength);
   // Only test rotation if the ellipse is not a circle.
-  if (ellipseParams[elp].A !== ellipseParams[elp].B) {
+  if (sharedState.ellipseParams[elp].A !== sharedState.ellipseParams[elp].B) {
     move[7] = rotateEllipse(elp, angle);
     move[8] = rotateEllipse(elp, -1 * angle);
   }
@@ -2564,42 +2566,43 @@ function computeFitness() {
 // computes the fitness value when we move the center point horizontally
 
 function centerX(elp: number, centerShift: number) {
-  const oldX = ellipseParams[elp].X;
-  ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
+  const oldX = sharedState.ellipseParams[elp].X;
+  sharedState.ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
   const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
-  ellipseParams[elp].X = oldX; // to return back to the state before the change
+  sharedState.ellipseParams[elp].X = oldX; // to return back to the state before the change
   return fit;
 }
 
 // computes the fitness value when we move the center point vertically
 
 function centerY(elp: number, centerShift: number) {
-  const oldY = ellipseParams[elp].Y;
-  ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
+  const oldY = sharedState.ellipseParams[elp].Y;
+  sharedState.ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
   const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
-  ellipseParams[elp].Y = oldY; // to return back to the state before the change
+  sharedState.ellipseParams[elp].Y = oldY; // to return back to the state before the change
   return fit;
 }
 
 // computes the fitness value when we increase/decrease the radius A
 
 function radiusA(elp: number, radiusLength: number) {
-  const oldA = ellipseParams[elp].A;
-  const oldB = ellipseParams[elp].B;
+  const oldA = sharedState.ellipseParams[elp].A;
+  const oldB = sharedState.ellipseParams[elp].B;
 
-  if (ellipseParams[elp].A + radiusLength <= 0) {
+  if (sharedState.ellipseParams[elp].A + radiusLength <= 0) {
     return Number.MAX_VALUE;
   }
 
-  ellipseParams[elp].A += radiusLength;
-  ellipseParams[elp].B = ellipseArea[elp] / (Math.PI * ellipseParams[elp].A);
+  sharedState.ellipseParams[elp].A += radiusLength;
+  sharedState.ellipseParams[elp].B =
+    sharedState.ellipseArea[elp] / (Math.PI * sharedState.ellipseParams[elp].A);
   const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
 
-  ellipseParams[elp].A = oldA;
-  ellipseParams[elp].B = oldB;
+  sharedState.ellipseParams[elp].A = oldA;
+  sharedState.ellipseParams[elp].B = oldB;
 
   return fit;
 }
@@ -2607,57 +2610,62 @@ function radiusA(elp: number, radiusLength: number) {
 // rotates the ellipse (if not a circle) by angle r
 
 function rotateEllipse(elp: number, r: number) {
-  const oldR = ellipseParams[elp].R;
-  ellipseParams[elp].R += r;
-  ellipseParams[elp].R = (ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
+  const oldR = sharedState.ellipseParams[elp].R;
+  sharedState.ellipseParams[elp].R += r;
+  sharedState.ellipseParams[elp].R =
+    (sharedState.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
   const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
-  ellipseParams[elp].R = oldR;
+  sharedState.ellipseParams[elp].R = oldR;
   return fit;
 }
 
 // increase/decrease radius A and rotate at the same time
 
 function RadiusAndRotateA(elp: number, radiusLength: number, angle: number) {
-  const oldA = ellipseParams[elp].A;
-  const oldB = ellipseParams[elp].B;
-  const oldR = ellipseParams[elp].R;
+  const oldA = sharedState.ellipseParams[elp].A;
+  const oldB = sharedState.ellipseParams[elp].B;
+  const oldR = sharedState.ellipseParams[elp].R;
 
-  ellipseParams[elp].A += radiusLength;
-  ellipseParams[elp].B = ellipseArea[elp] / (Math.PI * ellipseParams[elp].A);
-  ellipseParams[elp].R += angle;
-  ellipseParams[elp].R = (ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
+  sharedState.ellipseParams[elp].A += radiusLength;
+  sharedState.ellipseParams[elp].B =
+    sharedState.ellipseArea[elp] / (Math.PI * sharedState.ellipseParams[elp].A);
+  sharedState.ellipseParams[elp].R += angle;
+  sharedState.ellipseParams[elp].R =
+    (sharedState.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
   const fit = computeFitness();
   logMessage(logOptimizerChoice, "fit %s", fit);
 
-  ellipseParams[elp].A = oldA;
-  ellipseParams[elp].B = oldB;
-  ellipseParams[elp].R = oldR;
+  sharedState.ellipseParams[elp].A = oldA;
+  sharedState.ellipseParams[elp].B = oldB;
+  sharedState.ellipseParams[elp].R = oldR;
   return fit;
 }
 
 // apply the move on the center point of the ellipse elp horizontally
 function changeCenterX(elp: number, centerShift: number) {
-  const oldX = ellipseParams[elp].X;
-  ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
+  const oldX = sharedState.ellipseParams[elp].X;
+  sharedState.ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
 }
 
 // apply the move on the center point of the ellipse elp vertically
 function changeCenterY(elp: number, centerShift: number) {
-  const oldY = ellipseParams[elp].Y;
-  ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
+  const oldY = sharedState.ellipseParams[elp].Y;
+  sharedState.ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
 }
 
 // apply the move by increasing/decreasing radius A of ellipse elp
 function changeRadiusA(elp: number, radiusLength: number) {
-  ellipseParams[elp].A += radiusLength;
-  ellipseParams[elp].B = ellipseArea[elp] / (Math.PI * ellipseParams[elp].A);
+  sharedState.ellipseParams[elp].A += radiusLength;
+  sharedState.ellipseParams[elp].B =
+    sharedState.ellipseArea[elp] / (Math.PI * sharedState.ellipseParams[elp].A);
 }
 
 // apply rotation
 function changeRotation(elp: number, angle: number) {
-  ellipseParams[elp].R += angle;
-  ellipseParams[elp].R = (ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
+  sharedState.ellipseParams[elp].R += angle;
+  sharedState.ellipseParams[elp].R =
+    (sharedState.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
 }
 
 // apply radius A increase/decrease along with rotation
@@ -2670,164 +2678,3 @@ function changeRadiusAndRotationA(
   changeRadiusA(elp, radiusLength);
   changeRotation(elp, angle);
 }
-
-// --------------- main.js ------------------------
-
-function init() {
-  let areaSpecificationText =
-    gup("areaSpecification") ||
-    "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8";
-  let setLabelSize = parseFloat(gup("setLabelSize"));
-  let intersectionLabelSize = parseFloat(gup("intersectionLabelSize"));
-  let startingDiagram = gup("startingDiagram");
-  let optimizationMethod: string | number = gup("optimizationMethod");
-  // @ts-expect-error trust
-  colourPaletteName = gup("palette").replace("+", " ") || "Tableau10";
-
-  document.getElementById("svgDownload")?.addEventListener("click", saveSVG);
-  initUI({
-    colourPaletteName,
-    startingDiagram,
-    areaSpecificationText,
-    optimizationMethod,
-  });
-
-  if (optimizationMethod === "1" || optimizationMethod === "") {
-    OPTIMSER = HILL_CLIMBING;
-  } else {
-    OPTIMSER = SIMULATED_ANNEALING;
-  }
-
-  if (isNaN(setLabelSize)) {
-    (
-      document.getElementById("setLabelSizeEntry") as HTMLInputElement
-    ).placeholder = String(defaultLabelFontSize);
-    showSetLabels = true;
-  } else {
-    setLabelSize = Math.floor(setLabelSize);
-    (document.getElementById("setLabelSizeEntry") as HTMLInputElement).value =
-      String(setLabelSize);
-    labelFontSize = setLabelSize + "pt";
-    showSetLabels = setLabelSize > 0;
-  }
-
-  if (isNaN(intersectionLabelSize)) {
-    (
-      document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
-    ).placeholder = String(defaultValueFontSize);
-    showIntersectionValues = true;
-  } else {
-    intersectionLabelSize = Math.floor(intersectionLabelSize);
-    (
-      document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
-    ).value = String(intersectionLabelSize);
-    valueFontSize = intersectionLabelSize + "pt";
-    showIntersectionValues = intersectionLabelSize > 0;
-  }
-
-  setupGlobal(areaSpecificationText);
-
-  if (startingDiagram === "random") {
-    generateInitialRandomLayout(2, 2);
-  } else {
-    generateInitialLayout();
-  }
-
-  const labelSizes = findLabelSizes();
-  globalLabelWidths = labelSizes.lengths;
-  globalLabelHeights = labelSizes.heights;
-  const valueSizes = findValueSizes();
-  globalValueWidths = valueSizes.lengths;
-  globalValueHeights = valueSizes.heights;
-
-  if (ellipseLabel.length > colourPalettes[colourPaletteName].length) {
-    console.log(
-      `More ellipses than supported by ${colourPaletteName} colour palette. Using Tableau20 palette.`
-    );
-    colourPaletteName = "Tableau20";
-  }
-
-  // reproducability logging
-  logMessage(
-    logReproducability,
-    "// paste this into the abstract description:"
-  );
-  logMessage(
-    logReproducability,
-    decodeAbstractDescription(areaSpecificationText)
-  );
-  logMessage(
-    logReproducability,
-    "// paste this in index.html just before the reproducability logging:"
-  );
-  for (let i = 0; i < ellipseParams.length; i++) {
-    logMessage(logReproducability, `ellipseParams[${i}] = {};`);
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].X = " + ellipseParams[i].X + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].Y = " + ellipseParams[i].Y + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].A = " + ellipseParams[i].A + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].B = " + ellipseParams[i].B + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].R = " + ellipseParams[i].R + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseLabel[" + i + "] = '" + ellipseLabel[i] + "';"
-    );
-  }
-
-  optimize();
-
-  const transformation = findTransformationToFit(canvasWidth(), canvasHeight());
-  scaling = transformation.scaling;
-  translateX = transformation.translateX;
-  translateY = transformation.translateY;
-
-  document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-    canvasWidth(),
-    canvasHeight(),
-    showSetLabels,
-    showIntersectionValues,
-    translateX,
-    translateY,
-    scaling
-  );
-}
-
-function saveSVG() {
-  const transformation = findTransformationToFit(
-    widthForSvgDownload(),
-    heightForSvgDownload()
-  );
-  const outputScaling = transformation.scaling;
-  const outputTranslateX = transformation.translateX;
-  const outputTranslateY = transformation.translateY;
-
-  const forDownload = true;
-  const svgString = generateSVG(
-    canvasWidth(),
-    canvasHeight(),
-    showSetLabels,
-    showIntersectionValues,
-    outputTranslateX,
-    outputTranslateY,
-    outputScaling,
-    undefined,
-    forDownload
-  );
-  downloadFileFromText(getDownloadName() + ".svg", svgString);
-}
-
-init();
