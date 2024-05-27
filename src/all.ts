@@ -34,21 +34,17 @@ import {
   nextGridPoint,
 } from "./pure";
 import {
+  canvasHeight,
+  canvasWidth,
   downloadFileFromText,
   generateRandomDiagram,
   getDownloadName,
+  gup,
+  heightForSvgDownload,
   saveAreaSpecification,
+  widthForSvgDownload,
 } from "./ui";
 
-// let areaSpecification;
-let width: number;
-let height: number;
-let setLabelSize: number;
-let intersectionLabelSize: number;
-let startingDiagram: string;
-let optimizationMethod: string | number;
-let canvasWidth: number;
-let canvasHeight: number;
 let translateX = 0;
 let translateY = 0;
 let scaling = 100;
@@ -582,12 +578,9 @@ function findTransformationToFit(
 ) {
   if (typeof areas === "undefined") areas = new EdeapAreas();
 
-  canvasWidth = width;
-  canvasHeight = height;
-
   let sizes = findLabelSizes();
-  let idealWidth = canvasWidth - 15 - sizes.maxWidth * 2;
-  let idealHeight = canvasHeight - 15 - sizes.maxHeight * 2;
+  let idealWidth = width - 15 - sizes.maxWidth * 2;
+  let idealHeight = height - 15 - sizes.maxHeight * 2;
 
   let desiredCentreX = idealWidth / 2;
   const desiredWidth = idealWidth;
@@ -613,8 +606,8 @@ function findTransformationToFit(
   if (heightMultiplier > widthMultiplier) {
     scaling = widthMultiplier;
   }
-  desiredCentreX = canvasWidth / 2 / scaling;
-  desiredCentreY = canvasHeight / 2 / scaling;
+  desiredCentreX = width / 2 / scaling;
+  desiredCentreY = height / 2 / scaling;
   const translateX = desiredCentreX - currentCentreX;
   const translateY = desiredCentreY - currentCentreY;
 
@@ -623,18 +616,6 @@ function findTransformationToFit(
     translateX: translateX,
     translateY: translateY,
   };
-}
-
-function gup(name: string) {
-  const regexS = "[\\?&]" + name + "=([^&#]*)";
-  const regex = new RegExp(regexS);
-  const tmpURL = window.location.href;
-  const results = regex.exec(tmpURL);
-  if (results === null) {
-    return "";
-  } else {
-    return results[1];
-  }
 }
 
 function findLabelSizes() {
@@ -2185,8 +2166,8 @@ function optimizeStep(opt: number) {
       if (animateOptimizer) {
         if (zoomToFitAtEachStep) {
           const transformation = findTransformationToFit(
-            canvasWidth,
-            canvasHeight
+            canvasWidth(),
+            canvasHeight()
           );
           scaling = transformation.scaling;
           translateX = transformation.translateX;
@@ -2196,8 +2177,8 @@ function optimizeStep(opt: number) {
         logMessage(logOptimizerStep, "Fitness %s", currentFitness);
         printEllipseInfo(bestMoveEllipse);
         document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-          canvasWidth,
-          canvasHeight,
+          canvasWidth(),
+          canvasHeight(),
           false,
           false,
           translateX,
@@ -2286,8 +2267,8 @@ function optimizeStep(opt: number) {
           logMessage(logOptimizerStep, "Fitness %s", currentFitness);
           printEllipseInfo(bestMoveEllipse);
           document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-            canvasWidth,
-            canvasHeight,
+            canvasWidth(),
+            canvasHeight(),
             false,
             false,
             translateX,
@@ -2319,7 +2300,7 @@ function optimizeStep(opt: number) {
 
   // Optimizer finishes execution here
   // globalFinalFitness = currentFitness;
-  const transformation = findTransformationToFit(canvasWidth, canvasHeight);
+  const transformation = findTransformationToFit(canvasWidth(), canvasHeight());
   const progress = document.getElementById(
     "optimizerProgress"
   ) as HTMLProgressElement;
@@ -2346,8 +2327,8 @@ function optimizeStep(opt: number) {
   }
 
   const svgText = generateSVG(
-    canvasWidth,
-    canvasHeight,
+    canvasWidth(),
+    canvasHeight(),
     showSetLabels,
     showIntersectionValues,
     translateX,
@@ -2390,8 +2371,8 @@ function completionAnimationStep() {
   progress.value = progress.value + progressAnimationStep;
 
   const svgText = generateSVG(
-    canvasWidth,
-    canvasHeight,
+    canvasWidth(),
+    canvasHeight(),
     showSetLabels,
     showIntersectionValues,
     translateX,
@@ -2753,12 +2734,10 @@ function init() {
   });
 
   let areaSpecificationText = gup("areaSpecification");
-  width = parseFloat(gup("width"));
-  height = parseFloat(gup("height"));
-  setLabelSize = parseFloat(gup("setLabelSize"));
-  intersectionLabelSize = parseFloat(gup("intersectionLabelSize"));
-  startingDiagram = gup("startingDiagram");
-  optimizationMethod = gup("optimizationMethod");
+  let setLabelSize = parseFloat(gup("setLabelSize"));
+  let intersectionLabelSize = parseFloat(gup("intersectionLabelSize"));
+  let startingDiagram = gup("startingDiagram");
+  let optimizationMethod: string | number = gup("optimizationMethod");
   // @ts-expect-error trust
   colourPaletteName = gup("palette").replace("+", " ");
   // @ts-expect-error trust
@@ -2787,25 +2766,14 @@ function init() {
     areaSpecificationText =
       "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8";
   }
-  canvasWidth = document.getElementById("ellipsesSVG")!.offsetWidth;
-  canvasHeight = document.getElementById("ellipsesSVG")!.offsetHeight;
+
   const widthEntry = document.getElementById("widthEntry") as HTMLInputElement;
-  if (isNaN(width)) {
-    widthEntry.placeholder = String(canvasWidth);
-    width = canvasWidth;
-  } else {
-    widthEntry.value = String(width);
-  }
+  widthEntry.value = String(widthForSvgDownload());
 
   const heightEntry = document.getElementById(
     "heightEntry"
   ) as HTMLInputElement;
-  if (isNaN(height)) {
-    heightEntry.placeholder = String(canvasHeight);
-    height = canvasWidth;
-  } else {
-    heightEntry.value = String(height);
-  }
+  heightEntry.value = String(heightForSvgDownload());
 
   if (isNaN(setLabelSize)) {
     (
@@ -2920,7 +2888,7 @@ function init() {
 
   optimize();
 
-  const transformation = findTransformationToFit(canvasWidth, canvasHeight);
+  const transformation = findTransformationToFit(canvasWidth(), canvasHeight());
   scaling = transformation.scaling;
   translateX = transformation.translateX;
   translateY = transformation.translateY;
@@ -2929,8 +2897,8 @@ function init() {
     decodeAbstractDescription(areaSpecificationText);
 
   document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-    canvasWidth,
-    canvasHeight,
+    canvasWidth(),
+    canvasHeight(),
     showSetLabels,
     showIntersectionValues,
     translateX,
@@ -2943,15 +2911,18 @@ function init() {
 }
 
 function saveSVG() {
-  const transformation = findTransformationToFit(width, height);
+  const transformation = findTransformationToFit(
+    widthForSvgDownload(),
+    heightForSvgDownload()
+  );
   const outputScaling = transformation.scaling;
   const outputTranslateX = transformation.translateX;
   const outputTranslateY = transformation.translateY;
 
   const forDownload = true;
   const svgString = generateSVG(
-    canvasWidth,
-    canvasHeight,
+    canvasWidth(),
+    canvasHeight(),
     showSetLabels,
     showIntersectionValues,
     outputTranslateX,
