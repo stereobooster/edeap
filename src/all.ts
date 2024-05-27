@@ -1,5 +1,4 @@
 import type { RangeType, State } from "./types";
-
 import {
   distanceBetweenNodes,
   ellipseBoundaryPosition,
@@ -16,7 +15,6 @@ import {
   findColor,
   colourPalettes,
 } from "./pure";
-
 import { EdeapAreas } from "./ellipses";
 
 export function setupGlobal(areaSpecificationText: string) {
