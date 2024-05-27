@@ -1,7 +1,6 @@
-// downloadFileFromText function from:
-
 import { generateRandomZones } from "./pure";
 
+// downloadFileFromText function from:
 // https://stackoverflow.com/questions/4845215/making-a-chrome-extension-download-a-file
 export function downloadFileFromText(filename: string, content: string) {
   const a = document.createElement("a");
@@ -50,3 +49,32 @@ export function saveAreaSpecification() {
   ).value;
   downloadFileFromText(getDownloadName() + ".txt", areaSpecificationString);
 }
+
+export const canvasWidth = () =>
+  document.getElementById("ellipsesSVG")!.offsetWidth;
+export const canvasHeight = () =>
+  document.getElementById("ellipsesSVG")!.offsetHeight;
+
+export function gup(name: string) {
+  const regexS = "[\\?&]" + name + "=([^&#]*)";
+  const regex = new RegExp(regexS);
+  const tmpURL = window.location.href;
+  const results = regex.exec(tmpURL);
+  if (results === null) {
+    return "";
+  } else {
+    return results[1];
+  }
+}
+
+export const widthForSvgDownload = () => {
+  const width = parseFloat(gup("width"));
+  if (isNaN(width)) return canvasWidth();
+  return width;
+};
+
+export const heightForSvgDownload = () => {
+  const height = parseFloat(gup("height"));
+  if (isNaN(height)) return canvasHeight();
+  return height;
+};
