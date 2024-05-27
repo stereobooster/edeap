@@ -252,13 +252,13 @@ export function generateRandomZones(
   maxZones: number,
   maxZoneSize: number
 ) {
-  const retZones = new Array<string[]>();
+  const retZones: string[][] = [];
 
   let count = 0;
   while (retZones.length < maxZones) {
     const zoneCount = Math.floor(Math.random() * maxZoneSize + 1);
 
-    const zone = new Array<string>();
+    const zone: string[] = [];
     for (let i = 0; i < zoneCount; i++) {
       const contourNumber = Math.floor(Math.random() * maxContours + 1);
       const contourLabel = "e" + contourNumber;
