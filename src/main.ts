@@ -307,7 +307,12 @@ function init() {
     );
   }
 
-  optimize({ strategy, width: canvasWidth(), height: canvasHeight() });
+  optimize({
+    strategy,
+    width: canvasWidth(),
+    height: canvasHeight(),
+    state: sharedState,
+  });
 
   const transformation = findTransformationToFit(canvasWidth(), canvasHeight());
   sharedState.scaling = transformation.scaling;
