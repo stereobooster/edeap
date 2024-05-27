@@ -18,7 +18,9 @@ import {
   logMessage,
   logReproducability,
 } from "./pure";
-import { canvasHeight, canvasWidth } from "./ui";
+
+const canvasWidth = () => document.getElementById("ellipsesSVG")!.offsetWidth;
+const canvasHeight = () => document.getElementById("ellipsesSVG")!.offsetHeight;
 
 function gup(name: string) {
   const regexS = "[\\?&]" + name + "=([^&#]*)";
@@ -307,7 +309,7 @@ function init() {
     );
   }
 
-  optimize(strategy);
+  optimize({ strategy, width: canvasWidth(), height: canvasHeight() });
 
   const transformation = findTransformationToFit(canvasWidth(), canvasHeight());
   sharedState.scaling = transformation.scaling;

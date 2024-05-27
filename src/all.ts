@@ -38,8 +38,6 @@ import {
   logOptimizerChoice,
 } from "./pure";
 
-import { canvasHeight, canvasWidth } from "./ui";
-
 export const sharedState = {
   translateX: 0,
   translateY: 0,
@@ -61,22 +59,13 @@ export const sharedState = {
   globalLabelHeights: [] as number[],
   globalValueWidths: [] as number[],
   globalValueHeights: [] as number[],
+  globalContourAreas: [] as number[],
 };
 
 let globalZones: string[][] = []; // size of number of intersections
 let globalZoneStrings: string[] = []; // size of number of intersections, string version of globalZones
 let globalOriginalProportions: number[] = []; // proportions before scaling, size of number of intersections
 let globalProportions: number[] = []; // proportions after scaling, size of number of intersections
-// let globalOriginalContourAreas: number[] = []; // size of number of ellipses
-let globalContourAreas: number[] = []; // size of number of ellipses
-// let globalLabelWidths: number[] = []; // size of number of ellipses
-// let globalLabelHeights: number[] = []; // size of number of intersections
-// let globalValueWidths: number[] = []; // size of number of intersections
-// let globalValueHeights: number[] = []; // size of number of intersections
-let globalAbstractDescription: string;
-
-// let globalZoneAreaTableBody = ""; // to access table output from updateZoneAreaTable, not terribly elegant
-// let globalFinalFitness = -1; // access to fitness after optimizer has finished
 
 export function setupGlobal(areaSpecificationText: string) {
   sharedState.globalContours = [];
@@ -84,8 +73,7 @@ export function setupGlobal(areaSpecificationText: string) {
   globalZoneStrings = [];
   globalOriginalProportions = [];
   globalProportions = [];
-  // globalOriginalContourAreas = [];
-  globalContourAreas = [];
+  sharedState.globalContourAreas = [];
   sharedState.globalLabelWidths = [];
   sharedState.globalLabelHeights = [];
   sharedState.globalValueWidths = [];
@@ -95,7 +83,9 @@ export function setupGlobal(areaSpecificationText: string) {
   sharedState.ellipseLabel = [];
   sharedState.ellipseArea = [];
 
-  globalAbstractDescription = decodeAbstractDescription(areaSpecificationText);
+  let globalAbstractDescription = decodeAbstractDescription(
+    areaSpecificationText
+  );
   sharedState.globalContours = findContours(
     globalAbstractDescription,
     sharedState.globalContours
@@ -159,13 +149,6 @@ export function setupGlobal(areaSpecificationText: string) {
 
   sharedState.globalContours = findContoursFromZones(globalZones);
 
-  // values are before scaling
-  // globalOriginalContourAreas = findContourAreas(
-  //   globalContours,
-  //   globalZones,
-  //   globalProportions
-  // );
-
   let totalArea = 0.0;
   for (let i = 0; i < globalProportions.length; i++) {
     totalArea = totalArea + globalProportions[i];
@@ -180,7 +163,7 @@ export function setupGlobal(areaSpecificationText: string) {
   }
 
   // called again to get values after scaling
-  globalContourAreas = findContourAreas(
+  sharedState.globalContourAreas = findContourAreas(
     sharedState.globalContours,
     globalZones,
     globalProportions
@@ -210,8 +193,8 @@ export function generateInitialLayout() {
   let y = 1;
   // let increment = 0.3;
 
-  for (let i = 0; i < globalContourAreas.length; i++) {
-    const area = globalContourAreas[i];
+  for (let i = 0; i < sharedState.globalContourAreas.length; i++) {
+    const area = sharedState.globalContourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
     sharedState.ellipseParams[i] = {
       X: x,
@@ -271,8 +254,8 @@ export function generateInitialLayout() {
 }
 
 export function generateInitialRandomLayout(maxX: number, maxY: number) {
-  for (let i = 0; i < globalContourAreas.length; i++) {
-    const area = globalContourAreas[i];
+  for (let i = 0; i < sharedState.globalContourAreas.length; i++) {
+    const area = sharedState.globalContourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
     sharedState.ellipseParams[i] = {
       X: Math.random() * maxX,
@@ -2054,16 +2037,21 @@ let maxMeasures: Record<string, number[]> = {}; // to save the maximum value of 
 let HCEvalSolutions = 0; // a counter that stores number of solutions evaluated by Hill Climbing optimizer
 let SAEvalSolutions = 0; // a counter that stores number of solutions evaluated by Simulated Annealing optimizer
 
-// let completionHandlerFunc = null;
-
 let selectedMove: number;
 
 // the optimization method
 
-export function optimize(strategy: number) {
+export function optimize({
+  strategy,
+  width,
+  height,
+}: {
+  strategy: number;
+  width: number;
+  height: number;
+}) {
   ellipseMap = new Map();
 
-  // completionHandlerFunc = completionHandler;
   changeSearchSpace = false; // optimizer in first stage of search space
   maxMeasures = {}; // to save the maximum value of a meausure in a history of values of each measure to be used in the normalization process
   move = [];
@@ -2085,10 +2073,10 @@ export function optimize(strategy: number) {
 
   if (animateOptimizer || optimizerUsesSetTimeout) {
     setTimeout(function () {
-      optimizeStep(strategy);
+      optimizeStep({ strategy, width, height });
     }, animationDelay);
   } else {
-    optimizeStep(strategy);
+    optimizeStep({ strategy, width, height });
   }
 }
 
@@ -2104,12 +2092,20 @@ let translateXAnimationStep = 0;
 let translateYAnimationStep = 0;
 let progressAnimationStep = 0;
 
-function optimizeStep(opt: number) {
+function optimizeStep({
+  strategy,
+  width,
+  height,
+}: {
+  strategy: number;
+  width: number;
+  height: number;
+}) {
   let bestMoveFitness: number;
   let bestMoveEllipse: number;
   let bestMove: number;
 
-  if (opt === HILL_CLIMBING) {
+  if (strategy === HILL_CLIMBING) {
     bestMoveFitness = currentFitness;
     bestMoveEllipse = -1;
     for (
@@ -2142,10 +2138,7 @@ function optimizeStep(opt: number) {
       applyMove(bestMoveEllipse, bestMove);
       if (animateOptimizer) {
         if (zoomToFitAtEachStep) {
-          const transformation = findTransformationToFit(
-            canvasWidth(),
-            canvasHeight()
-          );
+          const transformation = findTransformationToFit(width, height);
           sharedState.scaling = transformation.scaling;
           sharedState.translateX = transformation.translateX;
           sharedState.translateY = transformation.translateY;
@@ -2154,8 +2147,8 @@ function optimizeStep(opt: number) {
         logMessage(logOptimizerStep, "Fitness %s", currentFitness);
         printEllipseInfo(bestMoveEllipse);
         document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-          canvasWidth(),
-          canvasHeight(),
+          width,
+          height,
           false,
           false,
           sharedState.translateX,
@@ -2170,10 +2163,10 @@ function optimizeStep(opt: number) {
       // Only continue if there were improvements.
       if (animateOptimizer || optimizerUsesSetTimeout) {
         setTimeout(function () {
-          optimizeStep(opt);
+          optimizeStep({ strategy, width, height });
         }, animationDelay);
       } else {
-        optimizeStep(opt);
+        optimizeStep({ strategy, width, height });
       }
       return;
     } else {
@@ -2193,7 +2186,7 @@ function optimizeStep(opt: number) {
 		  }
           */
     }
-  } else if (opt === SIMULATED_ANNEALING) {
+  } else if (strategy === SIMULATED_ANNEALING) {
     if (currentTemperatureIteration >= tempIterations) {
       currentAnnealingIteration++;
       currentTemperatureIteration = 0;
@@ -2244,8 +2237,8 @@ function optimizeStep(opt: number) {
           logMessage(logOptimizerStep, "Fitness %s", currentFitness);
           printEllipseInfo(bestMoveEllipse);
           document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-            canvasWidth(),
-            canvasHeight(),
+            width,
+            height,
             false,
             false,
             sharedState.translateX,
@@ -2266,18 +2259,17 @@ function optimizeStep(opt: number) {
 
       if (animateOptimizer || optimizerUsesSetTimeout) {
         setTimeout(function () {
-          optimizeStep(opt);
+          optimizeStep({ strategy, width, height });
         }, animationDelay);
       } else {
-        optimizeStep(opt);
+        optimizeStep({ strategy, width, height });
       }
       return;
     }
   }
 
   // Optimizer finishes execution here
-  // globalFinalFitness = currentFitness;
-  const transformation = findTransformationToFit(canvasWidth(), canvasHeight());
+  const transformation = findTransformationToFit(width, height);
   const progress = document.getElementById(
     "optimizerProgress"
   ) as HTMLProgressElement;
@@ -2297,7 +2289,10 @@ function optimizeStep(opt: number) {
       progressAnimationStep =
         (progress.max - progress.value) / completionAnimationSteps;
       completionAnimationStepN = 0;
-      setTimeout(completionAnimationStep, completionAnimationDelay);
+      setTimeout(
+        () => completionAnimationStep({ width, height }),
+        completionAnimationDelay
+      );
       return;
     } else {
       sharedState.scaling += scalingAnimationStep;
@@ -2307,8 +2302,8 @@ function optimizeStep(opt: number) {
   }
 
   const svgText = generateSVG(
-    canvasWidth(),
-    canvasHeight(),
+    width,
+    height,
     sharedState.showSetLabels,
     sharedState.showIntersectionValues,
     sharedState.translateX,
@@ -2321,13 +2316,15 @@ function optimizeStep(opt: number) {
     progress.value = progress.max;
   }
   logMessage(logOptimizerStep, "optimizer finished");
-
-  // if (typeof completionHandlerFunc === "function") {
-  //   completionHandlerFunc();
-  // }
 }
 
-function completionAnimationStep() {
+function completionAnimationStep({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}) {
   let progress = document.getElementById(
     "optimizerProgress"
   ) as HTMLProgressElement;
@@ -2335,11 +2332,6 @@ function completionAnimationStep() {
   if (completionAnimationStepN === completionAnimationSteps) {
     progress.value = progress.max;
     logMessage(logOptimizerStep, "optimizer finished");
-
-    // if (typeof completionHandlerFunc === "function") {
-    //   completionHandlerFunc();
-    // }
-
     return;
   }
 
@@ -2351,8 +2343,8 @@ function completionAnimationStep() {
   progress.value = progress.value + progressAnimationStep;
 
   const svgText = generateSVG(
-    canvasWidth(),
-    canvasHeight(),
+    width,
+    height,
     sharedState.showSetLabels,
     sharedState.showIntersectionValues,
     sharedState.translateX,
@@ -2361,7 +2353,10 @@ function completionAnimationStep() {
   );
   document.getElementById("ellipsesSVG")!.innerHTML = svgText;
 
-  setTimeout(completionAnimationStep, completionAnimationDelay);
+  setTimeout(
+    () => completionAnimationStep({ width, height }),
+    completionAnimationDelay
+  );
 }
 
 function printEllipseInfo(elp: number) {
@@ -2469,11 +2464,10 @@ function selectRandomMove(elp: number) {
   let randIndex: number;
 
   if (!changeSearchSpace)
-    // first search space
+    // first search space - generate a random number between 1 and 8
     randIndex = 1 + Math.floor(Math.random() * (8 - 1 + 1));
-  // generate a random number between 1 and 8
-  // second search space
-  else randIndex = 1 + Math.floor(Math.random() * (12 - 1 + 1)); // generate a random number between 1 and 12
+  // second search space - generate a random number between 1 and 12
+  else randIndex = 1 + Math.floor(Math.random() * (12 - 1 + 1));
 
   switch (randIndex) {
     case 1:
