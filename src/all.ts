@@ -43,6 +43,7 @@ export const sharedState = {
   colourPaletteName: "Tableau10" as keyof typeof colourPalettes,
   labelFontSize: "12pt",
   valueFontSize: "12pt",
+
   // if set fo an index, indicates the number of this ellipse as a duplicate.
   ellipseDuplication: [] as number[],
   ellipseArea: [] as number[],
@@ -51,30 +52,29 @@ export const sharedState = {
   duplicatedEllipseIndexes: [] as number[],
 
   // size of number of ellipses
-  globalContours: [] as string[],
-  globalLabelWidths: [] as number[],
-  globalLabelHeights: [] as number[],
-  globalValueWidths: [] as number[],
-  globalValueHeights: [] as number[],
-  globalContourAreas: [] as number[],
+  contours: [] as string[],
+  labelWidths: [] as number[],
+  labelHeights: [] as number[],
+  valueWidths: [] as number[],
+  valueHeights: [] as number[],
+  contourAreas: [] as number[],
+  proportions: [] as number[],
+  originalProportions: [] as number[],
+  zones: [] as string[][],
+  zoneStrings: [] as string[],
 };
 
-let globalZones: string[][] = []; // size of number of intersections
-let globalZoneStrings: string[] = []; // size of number of intersections, string version of globalZones
-let globalOriginalProportions: number[] = []; // proportions before scaling, size of number of intersections
-let globalProportions: number[] = []; // proportions after scaling, size of number of intersections
-
 export function setupGlobal(areaSpecificationText: string) {
-  sharedState.globalContours = [];
-  globalZones = [];
-  globalZoneStrings = [];
-  globalOriginalProportions = [];
-  globalProportions = [];
-  sharedState.globalContourAreas = [];
-  sharedState.globalLabelWidths = [];
-  sharedState.globalLabelHeights = [];
-  sharedState.globalValueWidths = [];
-  sharedState.globalValueHeights = [];
+  sharedState.contours = [];
+  sharedState.zones = [];
+  sharedState.zoneStrings = [];
+  sharedState.originalProportions = [];
+  sharedState.proportions = [];
+  sharedState.contourAreas = [];
+  sharedState.labelWidths = [];
+  sharedState.labelHeights = [];
+  sharedState.valueWidths = [];
+  sharedState.valueHeights = [];
 
   sharedState.ellipseParams = [];
   sharedState.ellipseLabel = [];
@@ -83,16 +83,16 @@ export function setupGlobal(areaSpecificationText: string) {
   let globalAbstractDescription = decodeAbstractDescription(
     areaSpecificationText
   );
-  sharedState.globalContours = findContours(
+  sharedState.contours = findContours(
     globalAbstractDescription,
-    sharedState.globalContours
+    sharedState.contours
   );
-  globalZones = findZones(globalAbstractDescription, globalZones);
+  sharedState.zones = findZones(globalAbstractDescription, sharedState.zones);
 
-  if (sharedState.globalContours.length === 0) return;
+  if (sharedState.contours.length === 0) return;
 
-  globalProportions = findProportions(globalZones);
-  globalZones = removeProportions(globalZones);
+  sharedState.proportions = findProportions(sharedState.zones);
+  sharedState.zones = removeProportions(sharedState.zones);
 
   function onlyUnique<T>(value: T, index: number, self: T[]) {
     return self.indexOf(value) === index;
@@ -100,31 +100,33 @@ export function setupGlobal(areaSpecificationText: string) {
 
   // remove zero zones and proportions
   const removeList = [];
-  for (let i = 0; i < globalProportions.length; i++) {
-    const proportion = globalProportions[i];
+  for (let i = 0; i < sharedState.proportions.length; i++) {
+    const proportion = sharedState.proportions[i];
     let problem = false;
     let lineNum = i + 1;
 
-    let globalZonesString = JSON.stringify(globalZones[i]);
+    let globalZonesString = JSON.stringify(sharedState.zones[i]);
     if (
-      JSON.stringify(globalZones[i].filter(onlyUnique)) != globalZonesString
+      JSON.stringify(sharedState.zones[i].filter(onlyUnique)) != globalZonesString
     ) {
       console.log(
         `ERROR:    ${lineNum}: Zone description has duplicated labels:`
       );
-      console.log(`          ${globalZones[i].join(" ")} ${proportion}`);
+      console.log(`          ${sharedState.zones[i].join(" ")} ${proportion}`);
     }
 
     for (let j = 0; j < i; j++) {
-      if (globalZonesString == JSON.stringify(globalZones[j])) {
-        if (globalProportions[i] != globalProportions[j]) {
+      if (globalZonesString == JSON.stringify(sharedState.zones[j])) {
+        if (
+          sharedState.proportions[i] != sharedState.proportions[j]
+        ) {
           console.log(
-            `ERROR:    ${lineNum}: Duplicated zone doesn't match previous area (${globalProportions[j]}):`
+            `ERROR:    ${lineNum}: Duplicated zone doesn't match previous area (${sharedState.proportions[j]}):`
           );
-          console.log(`          ${globalZones[i].join(" ")} ${proportion}`);
+          console.log(`          ${sharedState.zones[i].join(" ")} ${proportion}`);
         } else {
           console.log(`WARNING:  ${lineNum}: Unnecessary duplicated zone:`);
-          console.log(`          ${globalZones[i].join(" ")} ${proportion}`);
+          console.log(`          ${sharedState.zones[i].join(" ")} ${proportion}`);
         }
         removeList.push(i);
         problem = true;
@@ -133,47 +135,48 @@ export function setupGlobal(areaSpecificationText: string) {
     }
     if (proportion === 0.0 && !problem) {
       console.log("WARNING: " + lineNum + ": Unnecessary empty zone: ");
-      console.log("          " + globalZones[i].join(" ") + " " + proportion);
+      console.log("          " + sharedState.zones[i].join(" ") + " " + proportion);
       removeList.push(i);
       continue;
     }
   }
   for (let i = removeList.length - 1; i >= 0; i--) {
     const index = removeList[i];
-    globalProportions.splice(index, 1);
-    globalZones.splice(index, 1);
+    sharedState.proportions.splice(index, 1);
+    sharedState.zones.splice(index, 1);
   }
 
-  sharedState.globalContours = findContoursFromZones(globalZones);
+  sharedState.contours = findContoursFromZones(sharedState.zones);
 
   let totalArea = 0.0;
-  for (let i = 0; i < globalProportions.length; i++) {
-    totalArea = totalArea + globalProportions[i];
+  for (let i = 0; i < sharedState.proportions.length; i++) {
+    totalArea = totalArea + sharedState.proportions[i];
   }
 
   const scalingValue = 1 / totalArea;
 
-  globalOriginalProportions = [];
-  for (let i = 0; i < globalProportions.length; i++) {
-    globalOriginalProportions[i] = globalProportions[i];
-    globalProportions[i] = globalProportions[i] * scalingValue;
+  sharedState.originalProportions = [];
+  for (let i = 0; i < sharedState.proportions.length; i++) {
+    sharedState.originalProportions[i] = sharedState.proportions[i];
+    sharedState.proportions[i] =
+      sharedState.proportions[i] * scalingValue;
   }
 
   // called again to get values after scaling
-  sharedState.globalContourAreas = findContourAreas(
-    sharedState.globalContours,
-    globalZones,
-    globalProportions
+  sharedState.contourAreas = findContourAreas(
+    sharedState.contours,
+    sharedState.zones,
+    sharedState.proportions
   );
 
   // sort zone into order of ellipses as in the global ellipse list
-  globalZoneStrings = [];
-  for (let j = 0; j < globalZones.length; j++) {
-    const zone = globalZones[j];
+  sharedState.zoneStrings = [];
+  for (let j = 0; j < sharedState.zones.length; j++) {
+    const zone = sharedState.zones[j];
     const sortedZone = [];
     let zonePosition = 0;
-    for (let i = 0; i < sharedState.globalContours.length; i++) {
-      const contour = sharedState.globalContours[i];
+    for (let i = 0; i < sharedState.contours.length; i++) {
+      const contour = sharedState.contours[i];
       if (zone.indexOf(contour) != -1) {
         sortedZone[zonePosition] = contour;
         zonePosition++;
@@ -181,7 +184,7 @@ export function setupGlobal(areaSpecificationText: string) {
     }
     //			globalZones[j] = sortedZone;
     const sortedZoneString = sortedZone.toString();
-    globalZoneStrings[j] = sortedZoneString;
+    sharedState.zoneStrings[j] = sortedZoneString;
   }
 }
 
@@ -190,8 +193,8 @@ export function generateInitialLayout() {
   let y = 1;
   // let increment = 0.3;
 
-  for (let i = 0; i < sharedState.globalContourAreas.length; i++) {
-    const area = sharedState.globalContourAreas[i];
+  for (let i = 0; i < sharedState.contourAreas.length; i++) {
+    const area = sharedState.contourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
     sharedState.ellipseParams[i] = {
       X: x,
@@ -200,7 +203,7 @@ export function generateInitialLayout() {
       B: radius,
       R: 0,
     };
-    sharedState.ellipseLabel[i] = sharedState.globalContours[i];
+    sharedState.ellipseLabel[i] = sharedState.contours[i];
     sharedState.ellipseArea[i] = area;
 
     //x = x+increment;
@@ -218,7 +221,7 @@ export function generateInitialLayout() {
     }
 
     let count = 1;
-    let zonesWithA = globalZones
+    let zonesWithA = sharedState.zones
       .filter((element) => element.includes(sharedState.ellipseLabel[indexA]))
       .join("#");
     for (
@@ -226,7 +229,7 @@ export function generateInitialLayout() {
       indexB < sharedState.ellipseLabel.length;
       ++indexB
     ) {
-      let zonesWithB = globalZones
+      let zonesWithB = sharedState.zones
         .filter((element) => element.includes(sharedState.ellipseLabel[indexB]))
         .join("#");
       if (zonesWithA === zonesWithB) {
@@ -251,8 +254,8 @@ export function generateInitialLayout() {
 }
 
 export function generateInitialRandomLayout(maxX: number, maxY: number) {
-  for (let i = 0; i < sharedState.globalContourAreas.length; i++) {
-    const area = sharedState.globalContourAreas[i];
+  for (let i = 0; i < sharedState.contourAreas.length; i++) {
+    const area = sharedState.contourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
     sharedState.ellipseParams[i] = {
       X: Math.random() * maxX,
@@ -261,7 +264,7 @@ export function generateInitialRandomLayout(maxX: number, maxY: number) {
       B: radius,
       R: 0,
     };
-    sharedState.ellipseLabel[i] = sharedState.globalContours[i];
+    sharedState.ellipseLabel[i] = sharedState.contours[i];
     sharedState.ellipseArea[i] = area;
   }
 }
@@ -649,8 +652,8 @@ export function findValueSizes() {
 
   let lengths: number[] = [];
   let heights: number[] = [];
-  for (let i = 0; i < globalOriginalProportions.length; i++) {
-    let label = globalOriginalProportions[i];
+  for (let i = 0; i < sharedState.originalProportions.length; i++) {
+    let label = sharedState.originalProportions[i];
     text.textContent = String(label);
     lengths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
@@ -698,13 +701,13 @@ export class EdeapAreas {
     this.areaSampleStep = 0;
     this.maxTotalAreaDiff = 0;
 
-    this.globalZoneStrings = globalZoneStrings;
-    this.globalProportions = globalProportions;
-    this.globalValueWidths = sharedState.globalValueWidths;
-    this.globalValueHeights = sharedState.globalValueHeights;
-    this.globalLabelWidths = sharedState.globalLabelWidths;
-    this.globalLabelHeights = sharedState.globalLabelHeights;
-    this.globalOriginalProportions = globalOriginalProportions;
+    this.globalZoneStrings = sharedState.zoneStrings;
+    this.globalProportions = sharedState.proportions;
+    this.globalValueWidths = sharedState.valueWidths;
+    this.globalValueHeights = sharedState.valueHeights;
+    this.globalLabelWidths = sharedState.labelWidths;
+    this.globalLabelHeights = sharedState.labelHeights;
+    this.globalOriginalProportions = sharedState.originalProportions;
     this.ellipseLabel = sharedState.ellipseLabel;
     this.ellipseParams = sharedState.ellipseParams;
 

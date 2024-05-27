@@ -250,11 +250,11 @@ function init() {
   }
 
   const labelSizes = findLabelSizes();
-  sharedState.globalLabelWidths = labelSizes.lengths;
-  sharedState.globalLabelHeights = labelSizes.heights;
+  sharedState.labelWidths = labelSizes.lengths;
+  sharedState.labelHeights = labelSizes.heights;
   const valueSizes = findValueSizes();
-  sharedState.globalValueWidths = valueSizes.lengths;
-  sharedState.globalValueHeights = valueSizes.heights;
+  sharedState.valueWidths = valueSizes.lengths;
+  sharedState.valueHeights = valueSizes.heights;
 
   if (
     sharedState.ellipseLabel.length >
