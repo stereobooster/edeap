@@ -1,15 +1,4 @@
-import type { Point } from "./types";
-
-export function distanceBetweenNodes(node1: Point, node2: Point) {
-  const xDifferenceSquared = Math.pow(node1.x - node2.x, 2);
-  const yDifferenceSquared = Math.pow(node1.y - node2.y, 2);
-
-  const sumOfSquaredDifferences = xDifferenceSquared + yDifferenceSquared;
-
-  const distance = Math.sqrt(sumOfSquaredDifferences);
-
-  return distance;
-}
+import type { EllipseParams, Point } from "./types";
 
 export function ellipseBoundaryPosition(
   eA: number,
@@ -90,7 +79,7 @@ export function findContours(abstractDescription: string, contours: string[]) {
   }
 
   // sort contours
-  return sortContours(contours);
+  return contours.sort();
 }
 
 export function findZones(abstractDescription: string, zones: string[][]) {
@@ -184,11 +173,7 @@ export function findContoursFromZones(zones: string[][]) {
       }
     }
   }
-  return sortContours(ret);
-}
-
-function sortContours<T>(contours: T[]) {
-  return contours.sort();
+  return ret.sort();
 }
 
 export function decodeAbstractDescription(abstractDescriptionField: string) {
@@ -201,8 +186,7 @@ export function decodeAbstractDescription(abstractDescriptionField: string) {
 
 function contains<T>(arr: T[], e: T) {
   for (let i = 0; i < arr.length; i++) {
-    let current = arr[i];
-    if (e === current) return true;
+    if (e === arr[i]) return true;
   }
   return false;
 }
@@ -354,13 +338,13 @@ export function isInEllipse(
 // Based on mathematics described on this page:
 //   https://math.stackexchange.com/questions/91132/how-to-get-the-limits-of-rotated-ellipse
 //
-export function ellipseBoundingBox(
-  cx: number,
-  cy: number,
-  rx: number,
-  ry: number,
-  rot: number
-) {
+export function ellipseBoundingBox({
+  X: cx,
+  Y: cy,
+  A: rx,
+  B: ry,
+  R: rot,
+}: EllipseParams) {
   const acos = rx * Math.cos(rot);
   const bsin = ry * Math.sin(rot);
   const xRes = Math.sqrt(acos * acos + bsin * bsin);

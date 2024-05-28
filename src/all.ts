@@ -1,6 +1,5 @@
 import type { RangeType, State } from "./types";
 import {
-  distanceBetweenNodes,
   ellipseBoundaryPosition,
   findContours,
   decodeAbstractDescription,
@@ -14,6 +13,7 @@ import {
   isInEllipse,
   findColor,
   colourPalettes,
+  distanceBetween,
 } from "./pure";
 import { EdeapAreas } from "./ellipses";
 
@@ -290,7 +290,7 @@ export function generateSVG(
       const eB = areas.ellipseParams[i].B * scaling;
       const eR = areas.ellipseParams[i].R;
 
-      let minDepth = Number.MAX_SAFE_INTEGER;
+      let minDepth = Number.MAX_VALUE;
       let maxDepth = 0;
 
       // Compute the depth of each boundary point (i.e., how many
@@ -303,7 +303,7 @@ export function generateSVG(
         let { x, y } = ellipseBoundaryPosition(eA, eB, eR, angleRad);
 
         let isIn = 0;
-        let nearestPoint = Number.MAX_SAFE_INTEGER;
+        let nearestPoint = Number.MAX_VALUE;
         for (let j = 0; j < N; j++) {
           if (i === j) continue;
 
@@ -326,9 +326,11 @@ export function generateSVG(
               jAngleRad
             );
 
-            const distance = distanceBetweenNodes(
-              { x: jX + jBX, y: jY + jBY },
-              { x: eX + x, y: eY + y }
+            const distance = distanceBetween(
+              jX + jBX,
+              jY + jBY,
+              eX + x,
+              eY + y
             );
 
             nearestPoint = Math.min(distance, nearestPoint);
@@ -373,7 +375,7 @@ export function generateSVG(
     }
 
     for (let i = 0; i < N; i++) {
-      let ellipseRanges = ranges[i];
+      const ellipseRanges = ranges[i];
 
       const eX = (areas.ellipseParams[i].X + translateX) * scaling;
       const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
@@ -455,7 +457,6 @@ export function generateSVG(
       const halfWidth = textWidth / 2;
       const halfHeight = textHeight / 2;
       const finalLabelAngle = (angle + toDegrees(eR)) % 360;
-      // const quarterAngle = finalLabelAngle % 90;
 
       // Shift the label to allow for the label length.
       if (finalLabelAngle === 0) {
@@ -500,11 +501,8 @@ export function generateSVG(
       const zoneLabel = areas.zoneStrings[i];
       const labelPosition = areaInfo.zoneLabelPositions![zoneLabel];
       if (labelPosition !== undefined) {
-        //const labelPosition = computeLabelPosition(globalZones[i]);
         const labelX = (labelPosition.x + translateX) * scaling;
         const labelY = (labelPosition.y + translateY) * scaling;
-        // const textWidth = areas.globalValueWidths[i];
-        // const textHeight = areas.globalValueHeights[i];
         if (!isNaN(labelX)) {
           nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${state.valueFontSize};" fill="black">
               ${areas.originalProportions[i]}
