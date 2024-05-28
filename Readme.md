@@ -6,7 +6,7 @@ Fork of https://github.com/mjwybrow/edeap
 
 - optimizer.ts
   - [x] convert `optimizer.ts` to class 
-  - [ ] remove module level variables
+  - [x] remove module level variables
 - [ ] remove `document.getElementById` from `optimizer.ts`. It should use callback instead of modifying HTML directly
 
 ## Ideas
