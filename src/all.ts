@@ -144,7 +144,6 @@ export function setupGlobal(areaSpecificationText: string) {
         zonePosition++;
       }
     }
-    //			globalZones[j] = sortedZone;
     const sortedZoneString = sortedZone.toString();
     state.zoneStrings[j] = sortedZoneString;
   }
@@ -571,30 +570,33 @@ export function findTransformationToFit(
   };
 }
 
-export function findLabelSizes(state: State) {
-  document.getElementById("textLengthMeasure")!.innerHTML = ""; // clear the div
-  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+export function findTextSizes(
+  state: State,
+  filed: "ellipseLabel" | "originalProportions"
+) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
   text.setAttribute(
     "style",
-    "font-family: Helvetica; font-size: " + state.labelFontSize + ";"
+    `font-family: Helvetica; font-size: ${state.labelFontSize};`
   );
   svg.appendChild(text);
-  document.getElementById("textLengthMeasure")!.appendChild(svg);
-  // const spaceWidth = text.getComputedTextLength();
+  const textLengthMeasure = document.getElementById("textLengthMeasure")!;
+  textLengthMeasure.innerHTML = ""; // clear the div
+  textLengthMeasure.appendChild(svg);
 
-  let lengths: number[] = [];
-  let heights: number[] = [];
+  const lengths: number[] = [];
+  const heights: number[] = [];
   let maxHeight = 0;
   let maxWidth = 0;
-  for (let i = 0; i < state.ellipseLabel.length; i++) {
-    text.textContent = state.ellipseLabel[i];
+  for (let i = 0; i < state[filed].length; i++) {
+    text.textContent = String(state[filed][i]);
     lengths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
     maxHeight = Math.max(maxHeight, heights[i]);
     maxWidth = Math.max(maxWidth, lengths[i]);
   }
-  document.getElementById("textLengthMeasure")!.innerHTML = ""; // clear the div
+  textLengthMeasure.innerHTML = ""; // clear the div
 
   return {
     lengths,
@@ -604,29 +606,10 @@ export function findLabelSizes(state: State) {
   };
 }
 
+export function findLabelSizes(state: State) {
+  return findTextSizes(state, "ellipseLabel");
+}
+
 export function findValueSizes(state: State) {
-  document.getElementById("textLengthMeasure")!.innerHTML = ""; // clear the div
-  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  text.setAttribute(
-    "style",
-    "font-family: Helvetica; font-size: " + state.valueFontSize + ";"
-  );
-  svg.appendChild(text);
-  document.getElementById("textLengthMeasure")!.appendChild(svg);
-
-  let lengths: number[] = [];
-  let heights: number[] = [];
-  for (let i = 0; i < state.originalProportions.length; i++) {
-    let label = state.originalProportions[i];
-    text.textContent = String(label);
-    lengths[i] = text.getComputedTextLength();
-    heights[i] = text.getBBox().height;
-  }
-  document.getElementById("textLengthMeasure")!.innerHTML = ""; // clear the div
-
-  return {
-    lengths,
-    heights,
-  };
+  return findTextSizes(state, "originalProportions");
 }
