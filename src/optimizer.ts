@@ -90,29 +90,12 @@ let translateYAnimationStep = 0;
 let progressAnimationStep = 0;
 
 export class Optimizer {
-//   strategy: number;
-//   width: number;
-//   height: number;
-//   state: State;
+  strategy: number;
+  width: number;
+  height: number;
+  state: State;
 
-//   constructor({
-//     strategy,
-//     width,
-//     height,
-//     state,
-//   }: {
-//     strategy: number;
-//     width: number;
-//     height: number;
-//     state: State;
-//   }) {
-//     this.strategy = strategy;
-//     this.width = width;
-//     this.height = height;
-//     this.state = state;
-//   }
-
-  optimize({
+  constructor({
     strategy,
     width,
     height,
@@ -123,12 +106,19 @@ export class Optimizer {
     height: number;
     state: State;
   }) {
+    this.strategy = strategy;
+    this.width = width;
+    this.height = height;
+    this.state = state;
+  }
+
+  optimize() {
     changeSearchSpace = false; // optimizer in first stage of search space
     maxMeasures = {}; // to save the maximum value of a meausure in a history of values of each measure to be used in the normalization process
     move = [];
     HCEvalSolutions = 0; // initialize number of evaluated solutions (by hill climber) to zero
     SAEvalSolutions = 0; // initialize number of evaluated solutions (by simulated annealing) to zero
-    areas = new EdeapAreas(state);
+    areas = new EdeapAreas(this.state);
     // areas.ellipseMap = new Map();
     currentAnnealingIteration = 0;
     currentTemperatureIteration = 0;
@@ -139,51 +129,38 @@ export class Optimizer {
       elp < areas.ellipseLabel.length;
       elp++ // for each ellipse
     ) {
-      this.printEllipseInfo(elp, state);
+      this.printEllipseInfo(elp);
     }
     logMessage(logOptimizerStep, "Fitness %s", currentFitness);
 
     if (animateOptimizer || optimizerUsesSetTimeout) {
-      setTimeout(
-        () => this.optimizeStep({ strategy, width, height, state }),
-        animationDelay
-      );
+      setTimeout(() => this.optimizeStep(), animationDelay);
     } else {
-      this.optimizeStep({ strategy, width, height, state });
+      this.optimizeStep();
     }
   }
 
-  optimizeStep({
-    strategy,
-    width,
-    height,
-    state,
-  }: {
-    strategy: number;
-    width: number;
-    height: number;
-    state: State;
-  }) {
+  optimizeStep() {
     let bestMoveFitness: number;
     let bestMoveEllipse: number;
     let bestMove: number;
 
-    if (strategy === HILL_CLIMBING) {
+    if (this.strategy === HILL_CLIMBING) {
       bestMoveFitness = currentFitness;
       bestMoveEllipse = -1;
       for (
         let elp = 0;
-        elp < state.ellipseLabel.length;
+        elp < this.state.ellipseLabel.length;
         elp++ // for each ellipse
       ) {
-        if (state.duplicatedEllipseIndexes.includes(elp)) {
+        if (this.state.duplicatedEllipseIndexes.includes(elp)) {
           // Skip duplicated ellipses.
           continue;
         }
 
         // For each ellipse check for best move.
-        logMessage(logOptimizerStep, state.ellipseLabel[elp]);
-        const possibleFitness = this.selectBestCostMove(elp, state); // select the best move for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
+        logMessage(logOptimizerStep, this.state.ellipseLabel[elp]);
+        const possibleFitness = this.selectBestCostMove(elp); // select the best move for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
         logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
         if (possibleFitness < bestMoveFitness && possibleFitness >= 0) {
           // There is an improvement, remember it.
@@ -197,30 +174,30 @@ export class Optimizer {
         changeSearchSpace = false; // use first search space
         // There is a move better than the current fitness.
         currentFitness = bestMoveFitness;
-        this.applyMove(bestMoveEllipse, bestMove!, state);
+        this.applyMove(bestMoveEllipse, bestMove!);
         if (animateOptimizer) {
           if (zoomToFitAtEachStep) {
             const transformation = findTransformationToFit(
-              width,
-              height,
-              state
+              this.width,
+              this.height,
+              this.state
             );
-            state.scaling = transformation.scaling;
-            state.translateX = transformation.translateX;
-            state.translateY = transformation.translateY;
+            this.state.scaling = transformation.scaling;
+            this.state.translateX = transformation.translateX;
+            this.state.translateY = transformation.translateY;
           }
 
           logMessage(logOptimizerStep, "Fitness %s", currentFitness);
-          this.printEllipseInfo(bestMoveEllipse, state);
+          this.printEllipseInfo(bestMoveEllipse);
           document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-            state,
-            width,
-            height,
+            this.state,
+            this.width,
+            this.height,
             false,
             false,
-            state.translateX,
-            state.translateY,
-            state.scaling
+            this.state.translateX,
+            this.state.translateY,
+            this.state.scaling
           );
 
           let tbody = areas!.zoneAreaTableBody();
@@ -229,18 +206,15 @@ export class Optimizer {
 
         // Only continue if there were improvements.
         if (animateOptimizer || optimizerUsesSetTimeout) {
-          setTimeout(
-            () => this.optimizeStep({ strategy, width, height, state }),
-            animationDelay
-          );
+          setTimeout(() => this.optimizeStep(), animationDelay);
         } else {
-          this.optimizeStep({ strategy, width, height, state });
+          this.optimizeStep();
         }
         return;
       } else {
         /* Disable this: */
       }
-    } else if (strategy === SIMULATED_ANNEALING) {
+    } else if (this.strategy === SIMULATED_ANNEALING) {
       if (currentTemperatureIteration >= tempIterations) {
         currentAnnealingIteration++;
         currentTemperatureIteration = 0;
@@ -257,17 +231,17 @@ export class Optimizer {
         let found = false; // if a solution that satisfies the annealing criteria is found
         for (
           let elp = 0;
-          elp < state.ellipseLabel.length && !found;
+          elp < this.state.ellipseLabel.length && !found;
           elp++ // for each ellipse
         ) {
-          if (state.duplicatedEllipseIndexes.includes(elp)) {
+          if (this.state.duplicatedEllipseIndexes.includes(elp)) {
             // Skip duplicated ellipses.
             continue;
           }
 
           // For each ellipse check for best move.
-          logMessage(logOptimizerStep, state.ellipseLabel[elp]);
-          const possibleFitness = this.selectRandomMove(elp, state); // select a random move (between 1 and 10) for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
+          logMessage(logOptimizerStep, this.state.ellipseLabel[elp]);
+          const possibleFitness = this.selectRandomMove(elp); // select a random move (between 1 and 10) for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
           logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
           const fitnessDifference = possibleFitness - bestMoveFitness; // difference between the bestFitness so far and the fitness of the selected random move
           const SAAccept = Math.exp((-1 * fitnessDifference) / temp); // Simulated annealing acceptance function
@@ -285,19 +259,19 @@ export class Optimizer {
           // if a move is taken
           changeSearchSpace = false; // first search space
           currentFitness = bestMoveFitness;
-          this.applyMove(bestMoveEllipse, bestMove!, state);
+          this.applyMove(bestMoveEllipse, bestMove!);
           if (animateOptimizer) {
             logMessage(logOptimizerStep, "Fitness %s", currentFitness);
-            this.printEllipseInfo(bestMoveEllipse, state);
+            this.printEllipseInfo(bestMoveEllipse);
             document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-              state,
-              width,
-              height,
+              this.state,
+              this.width,
+              this.height,
               false,
               false,
-              state.translateX,
-              state.translateY,
-              state.scaling
+              this.state.translateX,
+              this.state.translateY,
+              this.state.scaling
             );
             document.getElementById("areaTableBody")!.innerHTML =
               areas!.zoneAreaTableBody();
@@ -311,19 +285,20 @@ export class Optimizer {
         currentTemperatureIteration++;
 
         if (animateOptimizer || optimizerUsesSetTimeout) {
-          setTimeout(
-            () => this.optimizeStep({ strategy, width, height, state }),
-            animationDelay
-          );
+          setTimeout(() => this.optimizeStep(), animationDelay);
         } else {
-          this.optimizeStep({ strategy, width, height, state });
+          this.optimizeStep();
         }
         return;
       }
     }
 
     // Optimizer finishes execution here
-    const transformation = findTransformationToFit(width, height, state);
+    const transformation = findTransformationToFit(
+      this.width,
+      this.height,
+      this.state
+    );
     const progress = document.getElementById(
       "optimizerProgress"
     ) as HTMLProgressElement;
@@ -332,37 +307,38 @@ export class Optimizer {
       if (animateOptimizer) {
         // Setup completion animation.
         scalingAnimationStep =
-          (transformation.scaling - state.scaling) / completionAnimationSteps;
+          (transformation.scaling - this.state.scaling) /
+          completionAnimationSteps;
         translateXAnimationStep =
-          (transformation.translateX - state.translateX) /
+          (transformation.translateX - this.state.translateX) /
           completionAnimationSteps;
         translateYAnimationStep =
-          (transformation.translateY - state.translateY) /
+          (transformation.translateY - this.state.translateY) /
           completionAnimationSteps;
         progressAnimationStep =
           (progress.max - progress.value) / completionAnimationSteps;
         completionAnimationStepN = 0;
         setTimeout(
-          () => this.completionAnimationStep({ width, height, state }),
+          () => this.completionAnimationStep(),
           completionAnimationDelay
         );
         return;
       } else {
-        state.scaling += scalingAnimationStep;
-        state.translateX += translateXAnimationStep;
-        state.translateY += translateYAnimationStep;
+        this.state.scaling += scalingAnimationStep;
+        this.state.translateX += translateXAnimationStep;
+        this.state.translateY += translateYAnimationStep;
       }
     }
 
     const svgText = generateSVG(
-      state,
-      width,
-      height,
-      state.showSetLabels,
-      state.showIntersectionValues,
-      state.translateX,
-      state.translateY,
-      state.scaling
+      this.state,
+      this.width,
+      this.height,
+      this.state.showSetLabels,
+      this.state.showIntersectionValues,
+      this.state.translateX,
+      this.state.translateY,
+      this.state.scaling
     );
     document.getElementById("ellipsesSVG")!.innerHTML = svgText;
 
@@ -372,15 +348,7 @@ export class Optimizer {
     logMessage(logOptimizerStep, "optimizer finished");
   }
 
-  completionAnimationStep({
-    width,
-    height,
-    state,
-  }: {
-    width: number;
-    height: number;
-    state: State;
-  }) {
+  completionAnimationStep() {
     let progress = document.getElementById(
       "optimizerProgress"
     ) as HTMLProgressElement;
@@ -393,71 +361,63 @@ export class Optimizer {
 
     completionAnimationStepN++;
 
-    state.scaling += scalingAnimationStep;
-    state.translateX += translateXAnimationStep;
-    state.translateY += translateYAnimationStep;
+    this.state.scaling += scalingAnimationStep;
+    this.state.translateX += translateXAnimationStep;
+    this.state.translateY += translateYAnimationStep;
     progress.value = progress.value + progressAnimationStep;
 
     const svgText = generateSVG(
-      state,
-      width,
-      height,
-      state.showSetLabels,
-      state.showIntersectionValues,
-      state.translateX,
-      state.translateY,
-      state.scaling
+      this.state,
+      this.width,
+      this.height,
+      this.state.showSetLabels,
+      this.state.showIntersectionValues,
+      this.state.translateX,
+      this.state.translateY,
+      this.state.scaling
     );
     document.getElementById("ellipsesSVG")!.innerHTML = svgText;
 
-    setTimeout(
-      () => this.completionAnimationStep({ width, height, state }),
-      completionAnimationDelay
-    );
+    setTimeout(() => this.completionAnimationStep(), completionAnimationDelay);
   }
 
-  printEllipseInfo(elp: number, state: State) {
+  printEllipseInfo(elp: number) {
     logMessage(
       logOptimizerStep,
       "Label = %s X = %s Y = %s A = %s B = %s R = %s",
-      state.ellipseLabel[elp],
-      state.ellipseParams[elp].X,
-      state.ellipseParams[elp].Y,
-      state.ellipseParams[elp].A,
-      state.ellipseParams[elp].B,
-      state.ellipseParams[elp].R
+      this.state.ellipseLabel[elp],
+      this.state.ellipseParams[elp].X,
+      this.state.ellipseParams[elp].Y,
+      this.state.ellipseParams[elp].A,
+      this.state.ellipseParams[elp].B,
+      this.state.ellipseParams[elp].R
     );
   }
 
   // This method takes ellipse number (elp) as a parameter, and checks which move gives the best fitness. it returns the fitness value along with the ID
   // of the move returned in the global variable selectedMove
 
-  selectBestCostMove(elp: number, state: State) {
+  selectBestCostMove(elp: number) {
     // select the best move of a given ellipse (elp)
     move = [];
-    move[1] = this.centerX(elp, centerShift, state); // use positive and negative values to move right and left
-    move[2] = this.centerX(elp, -1 * centerShift, state);
-    move[3] = this.centerY(elp, centerShift, state); // use positive and negative values to move up and down
-    move[4] = this.centerY(elp, -1 * centerShift, state);
-    move[5] = this.radiusA(elp, radiusLength, state); // use positive and negative values to increase/decrease the length of the A radius
-    move[6] = this.radiusA(elp, -1 * radiusLength, state);
+    move[1] = this.centerX(elp, centerShift); // use positive and negative values to move right and left
+    move[2] = this.centerX(elp, -1 * centerShift);
+    move[3] = this.centerY(elp, centerShift); // use positive and negative values to move up and down
+    move[4] = this.centerY(elp, -1 * centerShift);
+    move[5] = this.radiusA(elp, radiusLength); // use positive and negative values to increase/decrease the length of the A radius
+    move[6] = this.radiusA(elp, -1 * radiusLength);
     // Only test rotation if the ellipse is not a circle.
-    if (state.ellipseParams[elp].A !== state.ellipseParams[elp].B) {
-      move[7] = this.rotateEllipse(elp, angle, state);
-      move[8] = this.rotateEllipse(elp, -1 * angle, state);
+    if (this.state.ellipseParams[elp].A !== this.state.ellipseParams[elp].B) {
+      move[7] = this.rotateEllipse(elp, angle);
+      move[8] = this.rotateEllipse(elp, -1 * angle);
     }
 
     if (changeSearchSpace) {
       // second search space
-      move[9] = this.RadiusAndRotateA(elp, radiusLength, angle, state); // increase A positive rotation
-      move[10] = this.RadiusAndRotateA(elp, -1 * radiusLength, angle, state); // decrease A positive rotation
-      move[11] = this.RadiusAndRotateA(elp, radiusLength, -1 * angle, state); // increase A positive rotation
-      move[12] = this.RadiusAndRotateA(
-        elp,
-        -1 * radiusLength,
-        -1 * angle,
-        state
-      ); // decrease A negative rotation
+      move[9] = this.RadiusAndRotateA(elp, radiusLength, angle); // increase A positive rotation
+      move[10] = this.RadiusAndRotateA(elp, -1 * radiusLength, angle); // decrease A positive rotation
+      move[11] = this.RadiusAndRotateA(elp, radiusLength, -1 * angle); // increase A positive rotation
+      move[12] = this.RadiusAndRotateA(elp, -1 * radiusLength, -1 * angle); // decrease A negative rotation
     }
     return this.costMinMove();
   }
@@ -475,49 +435,44 @@ export class Optimizer {
   }
 
   // apply the move with ID (number) = index of the ellipse number elp
-  applyMove(elp: number, index: number, state: State) {
+  applyMove(elp: number, index: number) {
     switch (index) {
       case 1:
-        this.changeCenterX(elp, centerShift, state);
+        this.changeCenterX(elp, centerShift);
         break;
       case 2:
-        this.changeCenterX(elp, -1 * centerShift, state);
+        this.changeCenterX(elp, -1 * centerShift);
         break;
       case 3:
-        this.changeCenterY(elp, centerShift, state);
+        this.changeCenterY(elp, centerShift);
         break;
       case 4:
-        this.changeCenterY(elp, -1 * centerShift, state);
+        this.changeCenterY(elp, -1 * centerShift);
         break;
       case 5:
-        this.changeRadiusA(elp, radiusLength, state);
+        this.changeRadiusA(elp, radiusLength);
         break;
       case 6:
-        this.changeRadiusA(elp, -1 * radiusLength, state);
+        this.changeRadiusA(elp, -1 * radiusLength);
         break;
       case 7:
-        this.changeRotation(elp, angle, state);
+        this.changeRotation(elp, angle);
         break;
       case 8:
-        this.changeRotation(elp, -1 * angle, state);
+        this.changeRotation(elp, -1 * angle);
         break;
       case 9:
-        this.changeRadiusAndRotationA(elp, radiusLength, angle, state);
+        this.changeRadiusAndRotationA(elp, radiusLength, angle);
         break;
       case 10:
-        this.changeRadiusAndRotationA(elp, -1 * radiusLength, angle, state);
+        this.changeRadiusAndRotationA(elp, -1 * radiusLength, angle);
         break;
       case 11:
-        this.changeRadiusAndRotationA(elp, radiusLength, -1 * angle, state);
+        this.changeRadiusAndRotationA(elp, radiusLength, -1 * angle);
         break;
       case 12:
       default:
-        this.changeRadiusAndRotationA(
-          elp,
-          -1 * radiusLength,
-          -1 * angle,
-          state
-        );
+        this.changeRadiusAndRotationA(elp, -1 * radiusLength, -1 * angle);
         break;
     }
   }
@@ -525,7 +480,7 @@ export class Optimizer {
   // This method is used for Simulated annealing optimizer. It takes ellipse number (elp) as a parameter, and selects a random move (between 1 and 10).
   // it returns the fitness value along with the ID of the move returned in the global variable selectedMove
 
-  selectRandomMove(elp: number, state: State) {
+  selectRandomMove(elp: number) {
     // select the best move of a given ellipse (elp)
     let fit: number;
     let randIndex: number;
@@ -538,41 +493,41 @@ export class Optimizer {
 
     switch (randIndex) {
       case 1:
-        fit = this.centerX(elp, centerShift, state);
+        fit = this.centerX(elp, centerShift);
         break;
       case 2:
-        fit = this.centerX(elp, -1 * centerShift, state);
+        fit = this.centerX(elp, -1 * centerShift);
         break;
       case 3:
-        fit = this.centerY(elp, centerShift, state);
+        fit = this.centerY(elp, centerShift);
         break;
       case 4:
-        fit = this.centerY(elp, -1 * centerShift, state);
+        fit = this.centerY(elp, -1 * centerShift);
         break;
       case 5:
-        fit = this.radiusA(elp, radiusLength, state);
+        fit = this.radiusA(elp, radiusLength);
         break;
       case 6:
-        fit = this.radiusA(elp, -1 * radiusLength, state);
+        fit = this.radiusA(elp, -1 * radiusLength);
         break;
       case 7:
-        fit = this.rotateEllipse(elp, angle, state);
+        fit = this.rotateEllipse(elp, angle);
         break;
       case 8:
-        fit = this.rotateEllipse(elp, -1 * angle, state);
+        fit = this.rotateEllipse(elp, -1 * angle);
         break;
       case 9:
-        fit = this.RadiusAndRotateA(elp, radiusLength, angle, state);
+        fit = this.RadiusAndRotateA(elp, radiusLength, angle);
         break;
       case 10:
-        fit = this.RadiusAndRotateA(elp, -1 * radiusLength, angle, state);
+        fit = this.RadiusAndRotateA(elp, -1 * radiusLength, angle);
         break;
       case 11:
-        fit = this.RadiusAndRotateA(elp, radiusLength, -1 * angle, state);
+        fit = this.RadiusAndRotateA(elp, radiusLength, -1 * angle);
         break;
       case 12:
       default:
-        fit = this.RadiusAndRotateA(elp, -1 * radiusLength, -1 * angle, state);
+        fit = this.RadiusAndRotateA(elp, -1 * radiusLength, -1 * angle);
         break;
     }
     selectedMove = randIndex;
@@ -626,120 +581,113 @@ export class Optimizer {
 
   // computes the fitness value when we move the center point horizontally
 
-  centerX(elp: number, centerShift: number, state: State) {
-    const oldX = state.ellipseParams[elp].X;
-    state.ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
+  centerX(elp: number, centerShift: number) {
+    const oldX = this.state.ellipseParams[elp].X;
+    this.state.ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
     const fit = this.computeFitness();
     logMessage(logOptimizerChoice, "fit %s", fit);
-    state.ellipseParams[elp].X = oldX; // to return back to the state before the change
+    this.state.ellipseParams[elp].X = oldX; // to return back to the state before the change
     return fit;
   }
 
   // computes the fitness value when we move the center point vertically
 
-  centerY(elp: number, centerShift: number, state: State) {
-    const oldY = state.ellipseParams[elp].Y;
-    state.ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
+  centerY(elp: number, centerShift: number) {
+    const oldY = this.state.ellipseParams[elp].Y;
+    this.state.ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
     const fit = this.computeFitness();
     logMessage(logOptimizerChoice, "fit %s", fit);
-    state.ellipseParams[elp].Y = oldY; // to return back to the state before the change
+    this.state.ellipseParams[elp].Y = oldY; // to return back to the state before the change
     return fit;
   }
 
   // computes the fitness value when we increase/decrease the radius A
 
-  radiusA(elp: number, radiusLength: number, state: State) {
-    const oldA = state.ellipseParams[elp].A;
-    const oldB = state.ellipseParams[elp].B;
+  radiusA(elp: number, radiusLength: number) {
+    const oldA = this.state.ellipseParams[elp].A;
+    const oldB = this.state.ellipseParams[elp].B;
 
-    if (state.ellipseParams[elp].A + radiusLength <= 0) {
+    if (this.state.ellipseParams[elp].A + radiusLength <= 0) {
       return Number.MAX_VALUE;
     }
 
-    state.ellipseParams[elp].A += radiusLength;
-    state.ellipseParams[elp].B =
-      state.ellipseArea[elp] / (Math.PI * state.ellipseParams[elp].A);
+    this.state.ellipseParams[elp].A += radiusLength;
+    this.state.ellipseParams[elp].B =
+      this.state.ellipseArea[elp] / (Math.PI * this.state.ellipseParams[elp].A);
     const fit = this.computeFitness();
     logMessage(logOptimizerChoice, "fit %s", fit);
 
-    state.ellipseParams[elp].A = oldA;
-    state.ellipseParams[elp].B = oldB;
+    this.state.ellipseParams[elp].A = oldA;
+    this.state.ellipseParams[elp].B = oldB;
 
     return fit;
   }
 
   // rotates the ellipse (if not a circle) by angle r
 
-  rotateEllipse(elp: number, r: number, state: State) {
-    const oldR = state.ellipseParams[elp].R;
-    state.ellipseParams[elp].R += r;
-    state.ellipseParams[elp].R = (state.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
+  rotateEllipse(elp: number, r: number) {
+    const oldR = this.state.ellipseParams[elp].R;
+    this.state.ellipseParams[elp].R += r;
+    this.state.ellipseParams[elp].R =
+      (this.state.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
     const fit = this.computeFitness();
     logMessage(logOptimizerChoice, "fit %s", fit);
-    state.ellipseParams[elp].R = oldR;
+    this.state.ellipseParams[elp].R = oldR;
     return fit;
   }
 
   // increase/decrease radius A and rotate at the same time
 
-  RadiusAndRotateA(
-    elp: number,
-    radiusLength: number,
-    angle: number,
-    state: State
-  ) {
-    const oldA = state.ellipseParams[elp].A;
-    const oldB = state.ellipseParams[elp].B;
-    const oldR = state.ellipseParams[elp].R;
+  RadiusAndRotateA(elp: number, radiusLength: number, angle: number) {
+    const oldA = this.state.ellipseParams[elp].A;
+    const oldB = this.state.ellipseParams[elp].B;
+    const oldR = this.state.ellipseParams[elp].R;
 
-    state.ellipseParams[elp].A += radiusLength;
-    state.ellipseParams[elp].B =
-      state.ellipseArea[elp] / (Math.PI * state.ellipseParams[elp].A);
-    state.ellipseParams[elp].R += angle;
-    state.ellipseParams[elp].R = (state.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
+    this.state.ellipseParams[elp].A += radiusLength;
+    this.state.ellipseParams[elp].B =
+      this.state.ellipseArea[elp] / (Math.PI * this.state.ellipseParams[elp].A);
+    this.state.ellipseParams[elp].R += angle;
+    this.state.ellipseParams[elp].R =
+      (this.state.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
     const fit = this.computeFitness();
     logMessage(logOptimizerChoice, "fit %s", fit);
 
-    state.ellipseParams[elp].A = oldA;
-    state.ellipseParams[elp].B = oldB;
-    state.ellipseParams[elp].R = oldR;
+    this.state.ellipseParams[elp].A = oldA;
+    this.state.ellipseParams[elp].B = oldB;
+    this.state.ellipseParams[elp].R = oldR;
     return fit;
   }
 
   // apply the move on the center point of the ellipse elp horizontally
-  changeCenterX(elp: number, centerShift: number, state: State) {
-    const oldX = state.ellipseParams[elp].X;
-    state.ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
+  changeCenterX(elp: number, centerShift: number) {
+    const oldX = this.state.ellipseParams[elp].X;
+    this.state.ellipseParams[elp].X = fixNumberPrecision(oldX + centerShift);
   }
 
   // apply the move on the center point of the ellipse elp vertically
-  changeCenterY(elp: number, centerShift: number, state: State) {
-    const oldY = state.ellipseParams[elp].Y;
-    state.ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
+  changeCenterY(elp: number, centerShift: number) {
+    const oldY = this.state.ellipseParams[elp].Y;
+    this.state.ellipseParams[elp].Y = fixNumberPrecision(oldY + centerShift);
   }
 
   // apply the move by increasing/decreasing radius A of ellipse elp
-  changeRadiusA(elp: number, radiusLength: number, state: State) {
-    state.ellipseParams[elp].A += radiusLength;
-    state.ellipseParams[elp].B =
-      state.ellipseArea[elp] / (Math.PI * state.ellipseParams[elp].A);
+  changeRadiusA(elp: number, radiusLength: number) {
+    this.state.ellipseParams[elp].A += radiusLength;
+    this.state.ellipseParams[elp].B =
+      this.state.ellipseArea[elp] / (Math.PI * this.state.ellipseParams[elp].A);
   }
 
   // apply rotation
-  changeRotation(elp: number, angle: number, state: State) {
-    state.ellipseParams[elp].R += angle;
-    state.ellipseParams[elp].R = (state.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
+  changeRotation(elp: number, angle: number) {
+    this.state.ellipseParams[elp].R += angle;
+    this.state.ellipseParams[elp].R =
+      (this.state.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
   }
 
   // apply radius A increase/decrease along with rotation
 
-  changeRadiusAndRotationA(
-    elp: number,
-    radiusLength: number,
-    angle: number,
-    state: State
-  ) {
-    this.changeRadiusA(elp, radiusLength, state);
-    this.changeRotation(elp, angle, state);
+  changeRadiusAndRotationA(elp: number, radiusLength: number, angle: number) {
+    this.changeRadiusA(elp, radiusLength);
+    this.changeRotation(elp, angle);
   }
 }
