@@ -305,12 +305,12 @@ function init() {
     );
   }
 
-  new Optimizer().optimize({
+  new Optimizer({
     strategy,
     width: canvasWidth(),
     height: canvasHeight(),
     state: sharedState,
-  });
+  }).optimize();
 
   const transformation = findTransformationToFit(
     canvasWidth(),
