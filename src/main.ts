@@ -4,13 +4,12 @@ import {
   generateInitialLayout,
   generateInitialRandomLayout,
   generateSVG,
-  setupGlobal,
-} from "./all";
+} from "./other";
 import { colourPalettes } from "./colors";
 import { generateRandomZones } from "./generateRandomZones";
 import { logMessage, logReproducability } from "./logMessage";
 import { HILL_CLIMBING, SIMULATED_ANNEALING, optimize } from "./optimizer";
-import { decodeAbstractDescription } from "./pure";
+import { decodeAbstractDescription, setupGlobal } from "./parse";
 
 import { State } from "./types";
 
