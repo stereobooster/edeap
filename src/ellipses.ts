@@ -1184,37 +1184,28 @@ export class EdeapAreas {
 
   zoneAreaTableBody() {
     const areaData = this.computeAreasAndBoundingBoxesFromEllipses();
-    // const veStress = -1;
 
     // Build up a set of all desired and actual zones.
-    const allZones = new Set<string>();
-    for (const zone in areaData.zoneAreaProportions) {
-      allZones.add(zone);
-    }
-    for (let i = 0; i < this.zoneStrings.length; ++i) {
-      const zone = this.zoneStrings[i];
-      allZones.add(zone);
-    }
-    const closureGlobalZoneStrings = this.zoneStrings;
-    const closureGlobalProportions = this.proportions;
-    const zonesArray = Array.from(allZones);
-    zonesArray.sort(function (a: string, b: string) {
-      let desiredAreaProportionA = 0;
-      let zoneIndex = closureGlobalZoneStrings.indexOf(a);
-      if (zoneIndex !== -1) {
-        desiredAreaProportionA = closureGlobalProportions[zoneIndex];
-      }
+    const zonesArray = [
+      ...new Set([
+        ...Object.keys(areaData.zoneAreaProportions),
+        ...this.zoneStrings,
+      ]),
+    ];
 
-      let desiredAreaProportionB = 0;
-      zoneIndex = closureGlobalZoneStrings.indexOf(b);
-      if (zoneIndex !== -1) {
-        desiredAreaProportionB = closureGlobalProportions[zoneIndex];
-      }
+    const closureZoneStrings = this.zoneStrings;
+    const closureProportions = this.proportions;
+    zonesArray.sort((a: string, b: string) => {
+      let zoneIndex = closureZoneStrings.indexOf(a);
+      const desiredAreaProportionA =
+        zoneIndex !== -1 ? closureProportions[zoneIndex] : 0;
+
+      zoneIndex = closureZoneStrings.indexOf(b);
+      const desiredAreaProportionB =
+        zoneIndex !== -1 ? closureProportions[zoneIndex] : 0;
 
       const result = desiredAreaProportionB - desiredAreaProportionA;
-      if (result === 0) {
-        return a.localeCompare(b);
-      }
+      if (result === 0) return a.localeCompare(b);
       return result;
     });
 
