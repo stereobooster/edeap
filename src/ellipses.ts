@@ -63,10 +63,6 @@ export class EdeapAreas {
     this.ellipseMap = new Map<string, HitInfo>();
   }
 
-  useEllipseParams(ellipseParams: EllipseParams[]) {
-    this["ellipseParams"] = ellipseParams.slice();
-  }
-
   // This function uses the ellipses definitions to return various
   // data needed to compute the fitness function.  It returns:
   //   *  The overall bounding box of all ellipses.
@@ -450,7 +446,7 @@ export class EdeapAreas {
 
     const splitZoneAreaProportions: Record<string, number> = {};
 
-    const result = {
+    const result: FitnessData = {
       overallBoundingBox: totalBB,
       boundingBoxes: ellipseBoundingBoxes,
       zoneAreaProportions: zoneProportions,
@@ -468,10 +464,8 @@ export class EdeapAreas {
       // ### AREA TEST DEBUG START
       splitZoneAreaProportions: splitZoneAreaProportions,
       expandedZoneAreaProportions: expandedZoneProportions,
-      zoneLabelPositions: undefined as Record<string, Point> | undefined,
-      zoneAveragePositions: undefined as
-        | Record<string, ZoneInfo["avgPos"]>
-        | undefined,
+      zoneLabelPositions: undefined,
+      zoneAveragePositions: undefined,
     };
 
     // Return the point in each zone with the widest x and y coord.
@@ -734,13 +728,11 @@ export class EdeapAreas {
   }
 
   // This is experimental
-  //
   _missingZonePenalty(
     missingZone: string,
     fitnessData: FitnessData,
     fitness: Fitness
   ) {
-    // let actualZones = fitnessData.zoneAreaProportions;
     const zonePositions = fitnessData.zoneAveragePositions!;
 
     const labelsInZoneB = missingZone.split(",");
@@ -902,12 +894,7 @@ export class EdeapAreas {
   }
 
   // This is experimental
-  _unwantedZonePenalty(
-    zone: string,
-    difference: number,
-    _actualZones: any,
-    fitness: Fitness
-  ) {
+  _unwantedZonePenalty(zone: string, difference: number, fitness: Fitness) {
     logMessage(logFitnessDetails, `   + Unwanted zone: ${zone}`);
     const zonesArray = zone.split(",");
 
@@ -1121,8 +1108,7 @@ export class EdeapAreas {
         }
 
         if (iIsOnlyContainedInJ && jExistsOutsideOfI) {
-          // Ellipse with label I is fully contained in ellipse with
-          // label J.
+          // Ellipse with label I is fully contained in ellipse with label J.
           // console.log(labelI + " is fully contained within " + labelJ);
           const pair = labelI + "," + labelJ;
           fullyContainedPairs.push(pair);
@@ -1162,12 +1148,7 @@ export class EdeapAreas {
 
       const difference = Math.abs(actualAreaProportion - desiredAreaProportion);
       if (zoneIsUnwanted) {
-        this._unwantedZonePenalty(
-          zone,
-          difference,
-          fitnessData.zoneAreaProportions,
-          fitness
-        );
+        this._unwantedZonePenalty(zone, difference, fitness);
       }
 
       fitness.zoneAreaDifference += difference;
