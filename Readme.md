@@ -4,11 +4,14 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- optimizer.ts
-  - [x] convert `optimizer.ts` to class
-  - [x] remove module level variables
-  - [x] callback for steps
-  - [x] remove `document.getElementById` from `optimizer.ts`. It should use callback instead of modifying HTML directly
+- [ ] decopule parser and initializer
+- [ ] write one "big" function to get result
+- [ ] untangle mutable state
+  - [ ] save each step for optimization, so it would be possible to "time travel"
+- [ ] check if it is possible to implement server side version of `findTextSizes`
+  - pass it as param so it would be possible to have versions for server and client
+- [ ] npm package
+- [ ] new demo
 
 ## Ideas
 
