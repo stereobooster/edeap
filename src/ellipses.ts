@@ -114,8 +114,11 @@ export class EdeapAreas {
 
     let maxAOrB = 0;
     for (let i = 0; i < this.ellipseParams.length; i++) {
-      maxAOrB = Math.max(this.ellipseParams[i].A, maxAOrB);
-      maxAOrB = Math.max(this.ellipseParams[i].B, maxAOrB);
+      maxAOrB = Math.max(
+        this.ellipseParams[i].A,
+        this.ellipseParams[i].B,
+        maxAOrB
+      );
     }
     const ellipseNonOverlapPadding = 0.15 * maxAOrB;
 
@@ -136,13 +139,7 @@ export class EdeapAreas {
       // Expand the total bounding box edges to accomodate this
       // ellipse.
       const ellipse = this.ellipseParams[i];
-      const bb = ellipseBoundingBox(
-        ellipse.X,
-        ellipse.Y,
-        ellipse.A,
-        ellipse.B,
-        ellipse.R
-      );
+      const bb = ellipseBoundingBox(ellipse);
       ellipseBoundingBoxes.push(bb);
       totalBB.p1.x = Math.min(totalBB.p1.x, bb.p1.x);
       totalBB.p1.y = Math.min(totalBB.p1.y, bb.p1.y);
@@ -223,13 +220,7 @@ export class EdeapAreas {
       if (ellipseHitInfo === undefined) {
         // Expand the total bounding box edges to accomodate this
         // ellipse.
-        let bb = ellipseBoundingBox(
-          ellipse.X,
-          ellipse.Y,
-          ellipse.A,
-          ellipse.B,
-          ellipse.R
-        );
+        const bb = ellipseBoundingBox(ellipse);
 
         let oversizedBB = {
           p1: {
@@ -774,9 +765,10 @@ export class EdeapAreas {
           const ea = ellipseE.A;
           const eb = ellipseE.B;
           const separation = Math.max(ea, eb) + Math.max(ca, cb);
-
-          let dist = separation - distanceBetween(cx, cy, ex, ey);
-          dist = Math.max(0, dist);
+          const dist = Math.max(
+            0,
+            separation - distanceBetween(cx, cy, ex, ey)
+          );
           fitness.missingOneLabelZone += dist;
         }
       }
