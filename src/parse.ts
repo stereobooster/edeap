@@ -1,6 +1,6 @@
 import { State } from "./types";
 
-export function setupGlobal(areaSpecificationText: string) {
+export function initialState(areaSpecificationText: string) {
   const state: State = {
     translateX: 0,
     translateY: 0,
@@ -31,7 +31,7 @@ export function setupGlobal(areaSpecificationText: string) {
     zoneStrings: [],
   };
 
-  let abstractDescription = decodeAbstractDescription(areaSpecificationText);
+  const abstractDescription = decodeAbstractDescription(areaSpecificationText);
   state.contours = findContours(abstractDescription);
   if (state.contours.length === 0) return state;
   state.zones = findZones(abstractDescription);

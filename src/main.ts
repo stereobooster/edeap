@@ -9,7 +9,7 @@ import { colourPalettes } from "./colors";
 import { generateRandomZones } from "./generateRandomZones";
 import { logMessage, logReproducability } from "./logMessage";
 import { HILL_CLIMBING, SIMULATED_ANNEALING, optimize } from "./optimizer";
-import { decodeAbstractDescription, setupGlobal } from "./parse";
+import { decodeAbstractDescription, initialState } from "./parse";
 
 import { State } from "./types";
 
@@ -191,7 +191,7 @@ function init() {
   let areaSpecificationText =
     gup("areaSpecification") ||
     "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8";
-  sharedState = setupGlobal(areaSpecificationText);
+  sharedState = initialState(areaSpecificationText);
 
   let setLabelSize = parseFloat(gup("setLabelSize"));
   let intersectionLabelSize = parseFloat(gup("intersectionLabelSize"));
