@@ -2,16 +2,6 @@
 // Author:  Michael Wybrow <Michael.Wybrow@monash.edu>
 //
 
-import { distanceBetween, ellipseBoundingBox, isInEllipse } from "./geometry";
-import { logFitnessDetails, logMessage } from "./logMessage";
-import {
-  gridSize,
-  nextGridPoint,
-  nextGridValue,
-  prevGridPoint,
-  prevGridValue,
-} from "./grid";
-
 import {
   EllipseParams,
   Fitness,
@@ -21,6 +11,15 @@ import {
   ZoneInfo,
   State,
 } from "./types";
+import { distanceBetween, ellipseBoundingBox, isInEllipse } from "./geometry";
+import { logFitnessDetails, logMessage } from "./logMessage";
+import {
+  gridSize,
+  nextGridPoint,
+  nextGridValue,
+  prevGridPoint,
+  prevGridValue,
+} from "./grid";
 
 // ### AREA TEST DEBUG START
 //let paramsArray = [];
@@ -1147,10 +1146,7 @@ export class EdeapAreas {
       );
 
       const difference = Math.abs(actualAreaProportion - desiredAreaProportion);
-      if (zoneIsUnwanted) {
-        this._unwantedZonePenalty(zone, difference, fitness);
-      }
-
+      if (zoneIsUnwanted) this._unwantedZonePenalty(zone, difference, fitness);
       fitness.zoneAreaDifference += difference;
 
       // Fitness component for split zones.
