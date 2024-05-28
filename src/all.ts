@@ -530,44 +530,29 @@ export function findTransformationToFit(
 ) {
   const areas = new EdeapAreas(state);
 
-  let sizes = findLabelSizes(state);
-  let idealWidth = width - 15 - sizes.maxWidth * 2;
-  let idealHeight = height - 15 - sizes.maxHeight * 2;
+  const labelSizes = findTextSizes(state, "ellipseLabel");
+  const idealWidth = width - 15 - labelSizes.maxWidth * 2;
+  const idealHeight = height - 15 - labelSizes.maxHeight * 2;
 
-  let desiredCentreX = idealWidth / 2;
-  const desiredWidth = idealWidth;
+  const bb = areas.computeAreasAndBoundingBoxesFromEllipses();
 
-  let desiredCentreY = idealHeight / 2;
-  const desiredHeight = idealHeight;
-
-  const compute = areas.computeAreasAndBoundingBoxesFromEllipses();
-
-  const currentWidth =
-    compute.overallBoundingBox.p2.x - compute.overallBoundingBox.p1.x;
-  const currentHeight =
-    compute.overallBoundingBox.p2.y - compute.overallBoundingBox.p1.y;
+  const currentWidth = bb.overallBoundingBox.p2.x - bb.overallBoundingBox.p1.x;
+  const currentHeight = bb.overallBoundingBox.p2.y - bb.overallBoundingBox.p1.y;
   const currentCentreX =
-    (compute.overallBoundingBox.p1.x + compute.overallBoundingBox.p2.x) / 2;
+    (bb.overallBoundingBox.p1.x + bb.overallBoundingBox.p2.x) / 2;
   const currentCentreY =
-    (compute.overallBoundingBox.p1.y + compute.overallBoundingBox.p2.y) / 2;
+    (bb.overallBoundingBox.p1.y + bb.overallBoundingBox.p2.y) / 2;
 
-  const heightMultiplier = desiredHeight / currentHeight;
-  const widthMultiplier = desiredWidth / currentWidth;
+  const widthMultiplier = idealWidth / currentWidth;
+  const heightMultiplier = idealHeight / currentHeight;
 
-  let scaling = heightMultiplier;
-  if (heightMultiplier > widthMultiplier) {
-    scaling = widthMultiplier;
-  }
-  desiredCentreX = width / 2 / scaling;
-  desiredCentreY = height / 2 / scaling;
+  const scaling = Math.min(heightMultiplier, widthMultiplier);
+  const desiredCentreX = width / 2 / scaling;
+  const desiredCentreY = height / 2 / scaling;
   const translateX = desiredCentreX - currentCentreX;
   const translateY = desiredCentreY - currentCentreY;
 
-  return {
-    scaling: scaling,
-    translateX: translateX,
-    translateY: translateY,
-  };
+  return { scaling, translateX, translateY };
 }
 
 export function findTextSizes(
@@ -604,12 +589,4 @@ export function findTextSizes(
     maxHeight,
     maxWidth,
   };
-}
-
-export function findLabelSizes(state: State) {
-  return findTextSizes(state, "ellipseLabel");
-}
-
-export function findValueSizes(state: State) {
-  return findTextSizes(state, "originalProportions");
 }

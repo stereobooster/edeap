@@ -1,7 +1,6 @@
 import {
-  findLabelSizes,
+  findTextSizes,
   findTransformationToFit,
-  findValueSizes,
   generateInitialLayout,
   generateInitialRandomLayout,
   generateSVG,
@@ -251,10 +250,10 @@ function init() {
     generateInitialLayout(sharedState);
   }
 
-  const labelSizes = findLabelSizes(sharedState);
+  const labelSizes = findTextSizes(sharedState, 'ellipseLabel');
   sharedState.labelWidths = labelSizes.lengths;
   sharedState.labelHeights = labelSizes.heights;
-  const valueSizes = findValueSizes(sharedState);
+  const valueSizes = findTextSizes(sharedState, 'originalProportions');
   sharedState.valueWidths = valueSizes.lengths;
   sharedState.valueHeights = valueSizes.heights;
 
