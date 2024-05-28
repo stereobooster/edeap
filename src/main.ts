@@ -6,14 +6,12 @@ import {
   generateSVG,
   setupGlobal,
 } from "./all";
+import { colourPalettes } from "./colors";
+import { generateRandomZones } from "./generateRandomZones";
+import { logMessage, logReproducability } from "./logMessage";
 import { HILL_CLIMBING, SIMULATED_ANNEALING, optimize } from "./optimizer";
-import {
-  colourPalettes,
-  decodeAbstractDescription,
-  generateRandomZones,
-  logMessage,
-  logReproducability,
-} from "./pure";
+import { decodeAbstractDescription } from "./pure";
+
 import { State } from "./types";
 
 let sharedState: State;
@@ -250,10 +248,10 @@ function init() {
     generateInitialLayout(sharedState);
   }
 
-  const labelSizes = findTextSizes(sharedState, 'ellipseLabel');
+  const labelSizes = findTextSizes(sharedState, "ellipseLabel");
   sharedState.labelWidths = labelSizes.lengths;
   sharedState.labelHeights = labelSizes.heights;
-  const valueSizes = findTextSizes(sharedState, 'originalProportions');
+  const valueSizes = findTextSizes(sharedState, "originalProportions");
   sharedState.valueWidths = valueSizes.lengths;
   sharedState.valueHeights = valueSizes.heights;
 

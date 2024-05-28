@@ -4,7 +4,7 @@
 
 import { findTransformationToFit, generateSVG } from "./all";
 import { EdeapAreas } from "./ellipses";
-import { logMessage, logOptimizerStep, logOptimizerChoice } from "./pure";
+import { logMessage, logOptimizerStep, logOptimizerChoice } from "./logMessage";
 import { State } from "./types";
 
 function fixNumberPrecision(value: any) {
