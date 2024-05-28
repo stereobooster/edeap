@@ -64,36 +64,41 @@ const zoomToFitAtEachStep = true; // If animating, keep adjusting zoom.
 
 const PI = Math.PI;
 
-let temp = 0.75; // annealing temperature
-
-let move: number[] = []; // array to track the fitness value computed at each move
-let currentFitness: number; // the value of the current computed fitness
-
-let currentAnnealingIteration = 0;
-let currentTemperatureIteration = 0;
-
-let changeSearchSpace = false; // a variable which indicates whether the optimizer should change its search space or not
-let areas: EdeapAreas | undefined;
-
-let maxMeasures: Record<string, number[]> = {}; // to save the maximum value of a measure in a history of values of each measure to be used in the normalization process
-
-let HCEvalSolutions = 0; // a counter that stores number of solutions evaluated by Hill Climbing optimizer
-let SAEvalSolutions = 0; // a counter that stores number of solutions evaluated by Simulated Annealing optimizer
-
-let selectedMove: number;
-
-// Variables to track animation steps.
-let completionAnimationStepN = 0;
-let scalingAnimationStep = 0;
-let translateXAnimationStep = 0;
-let translateYAnimationStep = 0;
-let progressAnimationStep = 0;
-
 export class Optimizer {
   strategy: number;
   width: number;
   height: number;
   state: State;
+  // a variable which indicates whether the optimizer should change its search space or not
+  changeSearchSpace: boolean = false;
+  areas: EdeapAreas;
+
+  // array to track the fitness value computed at each move
+  move: number[] = [];
+  // the value of the current computed fitness
+  currentFitness: number | undefined;
+  // annealing temperature
+  temp = 0.75;
+  currentAnnealingIteration = 0;
+  currentTemperatureIteration = 0;
+
+  selectedMove: number | undefined;
+
+  // to save the maximum value of a measure in a history of values of each measure to be used in the normalization process
+  maxMeasures: Record<string, number[]> = {};
+
+  // a counter that stores number of solutions evaluated by Hill Climbing optimizer
+  HCEvalSolutions = 0;
+
+  // a counter that stores number of solutions evaluated by Simulated Annealing optimizer
+  SAEvalSolutions = 0;
+
+  // Variables to track animation steps.
+  completionAnimationStepN = 0;
+  scalingAnimationStep = 0;
+  translateXAnimationStep = 0;
+  translateYAnimationStep = 0;
+  progressAnimationStep = 0;
 
   constructor({
     strategy,
@@ -110,28 +115,30 @@ export class Optimizer {
     this.width = width;
     this.height = height;
     this.state = state;
+
+    this.areas = new EdeapAreas(this.state);
   }
 
   optimize() {
-    changeSearchSpace = false; // optimizer in first stage of search space
-    maxMeasures = {}; // to save the maximum value of a meausure in a history of values of each measure to be used in the normalization process
-    move = [];
-    HCEvalSolutions = 0; // initialize number of evaluated solutions (by hill climber) to zero
-    SAEvalSolutions = 0; // initialize number of evaluated solutions (by simulated annealing) to zero
-    areas = new EdeapAreas(this.state);
-    // areas.ellipseMap = new Map();
-    currentAnnealingIteration = 0;
-    currentTemperatureIteration = 0;
+    this.changeSearchSpace = false; // optimizer in first stage of search space
+    this.maxMeasures = {}; // to save the maximum value of a meausure in a history of values of each measure to be used in the normalization process
+    this.move = [];
+    this.HCEvalSolutions = 0; // initialize number of evaluated solutions (by hill climber) to zero
+    this.SAEvalSolutions = 0; // initialize number of evaluated solutions (by simulated annealing) to zero
 
-    currentFitness = this.computeFitness();
+    // areas.ellipseMap = new Map();
+    this.currentAnnealingIteration = 0;
+    this.currentTemperatureIteration = 0;
+
+    this.currentFitness = this.computeFitness();
     for (
       let elp = 0;
-      elp < areas.ellipseLabel.length;
+      elp < this.areas.ellipseLabel.length;
       elp++ // for each ellipse
     ) {
       this.printEllipseInfo(elp);
     }
-    logMessage(logOptimizerStep, "Fitness %s", currentFitness);
+    logMessage(logOptimizerStep, "Fitness %s", this.currentFitness);
 
     if (animateOptimizer || optimizerUsesSetTimeout) {
       setTimeout(() => this.optimizeStep(), animationDelay);
@@ -146,7 +153,7 @@ export class Optimizer {
     let bestMove: number;
 
     if (this.strategy === HILL_CLIMBING) {
-      bestMoveFitness = currentFitness;
+      bestMoveFitness = this.currentFitness!;
       bestMoveEllipse = -1;
       for (
         let elp = 0;
@@ -164,16 +171,16 @@ export class Optimizer {
         logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
         if (possibleFitness < bestMoveFitness && possibleFitness >= 0) {
           // There is an improvement, remember it.
-          bestMove = selectedMove;
+          bestMove = this.selectedMove!;
           bestMoveEllipse = elp;
           bestMoveFitness = possibleFitness;
         }
       }
 
       if (bestMoveEllipse >= 0) {
-        changeSearchSpace = false; // use first search space
+        this.changeSearchSpace = false; // use first search space
         // There is a move better than the current fitness.
-        currentFitness = bestMoveFitness;
+        this.currentFitness = bestMoveFitness;
         this.applyMove(bestMoveEllipse, bestMove!);
         if (animateOptimizer) {
           if (zoomToFitAtEachStep) {
@@ -187,7 +194,7 @@ export class Optimizer {
             this.state.translateY = transformation.translateY;
           }
 
-          logMessage(logOptimizerStep, "Fitness %s", currentFitness);
+          logMessage(logOptimizerStep, "Fitness %s", this.currentFitness);
           this.printEllipseInfo(bestMoveEllipse);
           document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
             this.state,
@@ -200,7 +207,7 @@ export class Optimizer {
             this.state.scaling
           );
 
-          let tbody = areas!.zoneAreaTableBody();
+          let tbody = this.areas.zoneAreaTableBody();
           document.getElementById("areaTableBody")!.innerHTML = tbody;
         }
 
@@ -215,18 +222,18 @@ export class Optimizer {
         /* Disable this: */
       }
     } else if (this.strategy === SIMULATED_ANNEALING) {
-      if (currentTemperatureIteration >= tempIterations) {
-        currentAnnealingIteration++;
-        currentTemperatureIteration = 0;
+      if (this.currentTemperatureIteration >= tempIterations) {
+        this.currentAnnealingIteration++;
+        this.currentTemperatureIteration = 0;
 
-        temp = temp * coolDown;
+        this.temp = this.temp * coolDown;
       }
 
       if (
-        currentAnnealingIteration < maxIterations &&
-        currentTemperatureIteration < tempIterations
+        this.currentAnnealingIteration < maxIterations &&
+        this.currentTemperatureIteration < tempIterations
       ) {
-        bestMoveFitness = currentFitness;
+        bestMoveFitness = this.currentFitness!;
         bestMoveEllipse = -1;
         let found = false; // if a solution that satisfies the annealing criteria is found
         for (
@@ -244,12 +251,12 @@ export class Optimizer {
           const possibleFitness = this.selectRandomMove(elp); // select a random move (between 1 and 10) for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
           logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
           const fitnessDifference = possibleFitness - bestMoveFitness; // difference between the bestFitness so far and the fitness of the selected random move
-          const SAAccept = Math.exp((-1 * fitnessDifference) / temp); // Simulated annealing acceptance function
+          const SAAccept = Math.exp((-1 * fitnessDifference) / this.temp); // Simulated annealing acceptance function
           const SARand = Math.random(); // a random number between [0,1)
           if (fitnessDifference < 0 || (SAAccept <= 1 && SARand < SAAccept)) {
             // solution acceptance criteria
             // move to a solution that satisfies the acceptance criteria of SA
-            bestMove = selectedMove;
+            bestMove = this.selectedMove!;
             bestMoveEllipse = elp;
             bestMoveFitness = possibleFitness;
             found = true;
@@ -257,11 +264,11 @@ export class Optimizer {
         }
         if (found) {
           // if a move is taken
-          changeSearchSpace = false; // first search space
-          currentFitness = bestMoveFitness;
+          this.changeSearchSpace = false; // first search space
+          this.currentFitness = bestMoveFitness;
           this.applyMove(bestMoveEllipse, bestMove!);
           if (animateOptimizer) {
-            logMessage(logOptimizerStep, "Fitness %s", currentFitness);
+            logMessage(logOptimizerStep, "Fitness %s", this.currentFitness);
             this.printEllipseInfo(bestMoveEllipse);
             document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
               this.state,
@@ -274,15 +281,15 @@ export class Optimizer {
               this.state.scaling
             );
             document.getElementById("areaTableBody")!.innerHTML =
-              areas!.zoneAreaTableBody();
+              this.areas.zoneAreaTableBody();
           }
         } // if no move is taken
-        else if (!changeSearchSpace) {
+        else if (!this.changeSearchSpace) {
           // switch to second search space
-          changeSearchSpace = true;
+          this.changeSearchSpace = true;
         }
 
-        currentTemperatureIteration++;
+        this.currentTemperatureIteration++;
 
         if (animateOptimizer || optimizerUsesSetTimeout) {
           setTimeout(() => this.optimizeStep(), animationDelay);
@@ -306,27 +313,27 @@ export class Optimizer {
     if (!zoomToFitAtEachStep) {
       if (animateOptimizer) {
         // Setup completion animation.
-        scalingAnimationStep =
+        this.scalingAnimationStep =
           (transformation.scaling - this.state.scaling) /
           completionAnimationSteps;
-        translateXAnimationStep =
+        this.translateXAnimationStep =
           (transformation.translateX - this.state.translateX) /
           completionAnimationSteps;
-        translateYAnimationStep =
+        this.translateYAnimationStep =
           (transformation.translateY - this.state.translateY) /
           completionAnimationSteps;
-        progressAnimationStep =
+        this.progressAnimationStep =
           (progress.max - progress.value) / completionAnimationSteps;
-        completionAnimationStepN = 0;
+        this.completionAnimationStepN = 0;
         setTimeout(
           () => this.completionAnimationStep(),
           completionAnimationDelay
         );
         return;
       } else {
-        this.state.scaling += scalingAnimationStep;
-        this.state.translateX += translateXAnimationStep;
-        this.state.translateY += translateYAnimationStep;
+        this.state.scaling += this.scalingAnimationStep;
+        this.state.translateX += this.translateXAnimationStep;
+        this.state.translateY += this.translateYAnimationStep;
       }
     }
 
@@ -353,18 +360,18 @@ export class Optimizer {
       "optimizerProgress"
     ) as HTMLProgressElement;
 
-    if (completionAnimationStepN === completionAnimationSteps) {
+    if (this.completionAnimationStepN === completionAnimationSteps) {
       progress.value = progress.max;
       logMessage(logOptimizerStep, "optimizer finished");
       return;
     }
 
-    completionAnimationStepN++;
+    this.completionAnimationStepN++;
 
-    this.state.scaling += scalingAnimationStep;
-    this.state.translateX += translateXAnimationStep;
-    this.state.translateY += translateYAnimationStep;
-    progress.value = progress.value + progressAnimationStep;
+    this.state.scaling += this.scalingAnimationStep;
+    this.state.translateX += this.translateXAnimationStep;
+    this.state.translateY += this.translateYAnimationStep;
+    progress.value = progress.value + this.progressAnimationStep;
 
     const svgText = generateSVG(
       this.state,
@@ -399,25 +406,25 @@ export class Optimizer {
 
   selectBestCostMove(elp: number) {
     // select the best move of a given ellipse (elp)
-    move = [];
-    move[1] = this.centerX(elp, centerShift); // use positive and negative values to move right and left
-    move[2] = this.centerX(elp, -1 * centerShift);
-    move[3] = this.centerY(elp, centerShift); // use positive and negative values to move up and down
-    move[4] = this.centerY(elp, -1 * centerShift);
-    move[5] = this.radiusA(elp, radiusLength); // use positive and negative values to increase/decrease the length of the A radius
-    move[6] = this.radiusA(elp, -1 * radiusLength);
+    this.move = [];
+    this.move[1] = this.centerX(elp, centerShift); // use positive and negative values to move right and left
+    this.move[2] = this.centerX(elp, -1 * centerShift);
+    this.move[3] = this.centerY(elp, centerShift); // use positive and negative values to move up and down
+    this.move[4] = this.centerY(elp, -1 * centerShift);
+    this.move[5] = this.radiusA(elp, radiusLength); // use positive and negative values to increase/decrease the length of the A radius
+    this.move[6] = this.radiusA(elp, -1 * radiusLength);
     // Only test rotation if the ellipse is not a circle.
     if (this.state.ellipseParams[elp].A !== this.state.ellipseParams[elp].B) {
-      move[7] = this.rotateEllipse(elp, angle);
-      move[8] = this.rotateEllipse(elp, -1 * angle);
+      this.move[7] = this.rotateEllipse(elp, angle);
+      this.move[8] = this.rotateEllipse(elp, -1 * angle);
     }
 
-    if (changeSearchSpace) {
+    if (this.changeSearchSpace) {
       // second search space
-      move[9] = this.RadiusAndRotateA(elp, radiusLength, angle); // increase A positive rotation
-      move[10] = this.RadiusAndRotateA(elp, -1 * radiusLength, angle); // decrease A positive rotation
-      move[11] = this.RadiusAndRotateA(elp, radiusLength, -1 * angle); // increase A positive rotation
-      move[12] = this.RadiusAndRotateA(elp, -1 * radiusLength, -1 * angle); // decrease A negative rotation
+      this.move[9] = this.RadiusAndRotateA(elp, radiusLength, angle); // increase A positive rotation
+      this.move[10] = this.RadiusAndRotateA(elp, -1 * radiusLength, angle); // decrease A positive rotation
+      this.move[11] = this.RadiusAndRotateA(elp, radiusLength, -1 * angle); // increase A positive rotation
+      this.move[12] = this.RadiusAndRotateA(elp, -1 * radiusLength, -1 * angle); // decrease A negative rotation
     }
     return this.costMinMove();
   }
@@ -426,12 +433,12 @@ export class Optimizer {
     let minimumCostMoveID = 1; // 1 is the id of the first move
     for (
       let i = 2;
-      i <= move.length;
+      i <= this.move.length;
       i++ // find the ID (number of the move that gives the minimum fitness
     )
-      if (move[i] < move[minimumCostMoveID]) minimumCostMoveID = i;
-    selectedMove = minimumCostMoveID; // index of move with minimum cost
-    return move[minimumCostMoveID]; // return the cost at that move
+      if (this.move[i] < this.move[minimumCostMoveID]) minimumCostMoveID = i;
+    this.selectedMove = minimumCostMoveID; // index of move with minimum cost
+    return this.move[minimumCostMoveID]; // return the cost at that move
   }
 
   // apply the move with ID (number) = index of the ellipse number elp
@@ -485,7 +492,7 @@ export class Optimizer {
     let fit: number;
     let randIndex: number;
 
-    if (!changeSearchSpace)
+    if (!this.changeSearchSpace)
       // first search space - generate a random number between 1 and 8
       randIndex = 1 + Math.floor(Math.random() * (8 - 1 + 1));
     // second search space - generate a random number between 1 and 12
@@ -530,31 +537,31 @@ export class Optimizer {
         fit = this.RadiusAndRotateA(elp, -1 * radiusLength, -1 * angle);
         break;
     }
-    selectedMove = randIndex;
+    this.selectedMove = randIndex;
     return fit;
   }
 
   computeFitness() {
-    HCEvalSolutions++; // when computeFitness function is called, that means a solution has been evaluated (increase counter of evaluated solutions by 1) Hill Climbing
-    SAEvalSolutions++; // Simulated annealing
+    this.HCEvalSolutions++; // when computeFitness function is called, that means a solution has been evaluated (increase counter of evaluated solutions by 1) Hill Climbing
+    this.SAEvalSolutions++; // Simulated annealing
     let normalizedMeasures: Record<string, number> = {};
-    const fitnessComponents = areas!.computeFitnessComponents(); // get the measures (criteria)
+    const fitnessComponents = this.areas.computeFitnessComponents(); // get the measures (criteria)
 
     let fitness = 0;
 
-    logMessage(logOptimizerStep, `- move[${move.length + 1}]`);
+    logMessage(logOptimizerStep, `- move[${this.move.length + 1}]`);
     let fitnessComponentN = 0;
     for (const component in fitnessComponents) {
-      if (maxMeasures.hasOwnProperty(component) === false) {
+      if (this.maxMeasures.hasOwnProperty(component) === false) {
         // track the maximum value computed so far for each component to be used in the normalisation process.
-        maxMeasures[component] = [];
-        maxMeasures[component][0] = 0;
+        this.maxMeasures[component] = [];
+        this.maxMeasures[component][0] = 0;
       }
 
       // the value of the measure before normalization
       let m = fitnessComponents[component as keyof typeof fitnessComponents];
       // the value of the measure after normalization
-      m = normalizeMeasure(m, maxMeasures[component]);
+      m = normalizeMeasure(m, this.maxMeasures[component]);
       logMessage(logOptimizerStep, `    ${component} = ${m}`);
 
       normalizedMeasures[component] = m; // store the normalized measures to use in fitness computation after equalizing their effect
