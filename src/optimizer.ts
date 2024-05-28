@@ -2,7 +2,7 @@
 // Author:  Fadi Dib <deeb.f@gust.edu.kw>
 //
 
-import { findTransformationToFit, generateSVG } from "./all";
+import { findTransformationToFit, generateSVG } from "./other";
 import { EdeapAreas } from "./ellipses";
 import { logMessage, logOptimizerStep, logOptimizerChoice } from "./logMessage";
 import { State } from "./types";
