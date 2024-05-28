@@ -8,7 +8,7 @@ import {
 import { colourPalettes } from "./colors";
 import { generateRandomZones } from "./generateRandomZones";
 import { logMessage, logReproducability } from "./logMessage";
-import { HILL_CLIMBING, SIMULATED_ANNEALING, optimize } from "./optimizer";
+import { HILL_CLIMBING, SIMULATED_ANNEALING, Optimizer } from "./optimizer";
 import { decodeAbstractDescription, initialState } from "./parse";
 
 import { State } from "./types";
@@ -305,7 +305,7 @@ function init() {
     );
   }
 
-  optimize({
+  new Optimizer().optimize({
     strategy,
     width: canvasWidth(),
     height: canvasHeight(),
