@@ -1,21 +1,22 @@
 import type { RangeType, State } from "./types";
 import {
-  ellipseBoundaryPosition,
   findContours,
   decodeAbstractDescription,
-  toRadians,
   findProportions,
   removeProportions,
   findZones,
   findContoursFromZones,
   findContourAreas,
-  toDegrees,
-  isInEllipse,
-  findColor,
-  colourPalettes,
-  distanceBetween,
 } from "./pure";
 import { EdeapAreas } from "./ellipses";
+import {
+  distanceBetween,
+  ellipseBoundaryPosition,
+  isInEllipse,
+  toDegrees,
+  toRadians,
+} from "./geometry";
+import { colourPalettes, findColor } from "./colors";
 
 export function setupGlobal(areaSpecificationText: string) {
   const state: State = {

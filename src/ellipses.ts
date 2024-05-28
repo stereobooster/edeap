@@ -2,18 +2,15 @@
 // Author:  Michael Wybrow <Michael.Wybrow@monash.edu>
 //
 
+import { distanceBetween, ellipseBoundingBox, isInEllipse } from "./geometry";
+import { logFitnessDetails, logMessage } from "./logMessage";
 import {
-  distanceBetween,
-  ellipseBoundingBox,
   gridSize,
-  isInEllipse,
-  logFitnessDetails,
-  logMessage,
   nextGridPoint,
   nextGridValue,
   prevGridPoint,
   prevGridValue,
-} from "./pure";
+} from "./grid";
 
 import {
   EllipseParams,
