@@ -336,30 +336,17 @@ function init() {
 
       const tbody = opt.areas.zoneAreaTableBody();
       document.getElementById("areaTableBody")!.innerHTML = tbody;
+
+      if (final) {
+        const progress = document.getElementById(
+          "optimizerProgress"
+        ) as HTMLProgressElement;
+        progress.value = progress.max;
+      }
     },
   });
 
   opt.optimize(false);
-
-  const transformation = findTransformationToFit(
-    canvasWidth(),
-    canvasHeight(),
-    sharedState
-  );
-  sharedState.scaling = transformation.scaling;
-  sharedState.translateX = transformation.translateX;
-  sharedState.translateY = transformation.translateY;
-
-  document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-    sharedState,
-    canvasWidth(),
-    canvasHeight(),
-    sharedState.showSetLabels,
-    sharedState.showIntersectionValues,
-    sharedState.translateX,
-    sharedState.translateY,
-    sharedState.scaling
-  );
 }
 
 function saveSVG() {
