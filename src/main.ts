@@ -305,12 +305,41 @@ function init() {
     );
   }
 
-  new Optimizer({
+  const width = canvasWidth();
+  const height = canvasHeight();
+  const opt = new Optimizer({
     strategy,
-    width: canvasWidth(),
-    height: canvasHeight(),
+    width,
+    height,
     state: sharedState,
-  }).optimize();
+    onStep: (final) => {
+      // zoomToFitAtEachStep
+      const transformation = findTransformationToFit(
+        width,
+        height,
+        sharedState
+      );
+      sharedState.scaling = transformation.scaling;
+      sharedState.translateX = transformation.translateX;
+      sharedState.translateY = transformation.translateY;
+
+      document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
+        sharedState,
+        width,
+        height,
+        final,
+        final,
+        sharedState.translateX,
+        sharedState.translateY,
+        sharedState.scaling
+      );
+
+      const tbody = opt.areas.zoneAreaTableBody();
+      document.getElementById("areaTableBody")!.innerHTML = tbody;
+    },
+  });
+
+  opt.optimize(false);
 
   const transformation = findTransformationToFit(
     canvasWidth(),

@@ -2,7 +2,6 @@
 // Author:  Fadi Dib <deeb.f@gust.edu.kw>
 //
 
-import { findTransformationToFit, generateSVG } from "./other";
 import { EdeapAreas } from "./ellipses";
 import { logMessage, logOptimizerStep, logOptimizerChoice } from "./logMessage";
 import { State } from "./types";
@@ -47,20 +46,14 @@ const centerShift = 0.13; // previous value = 0.035  value of shifting the cente
 const radiusLength = 0.03; // previous value = 0.005  value of increasing/decreasing the length of the major/minor axis of the ellipse
 const angle = 0.1; // previous value = 0.02 value of angle rotation
 
-// Once the optimizer has finished, animate the progress, scaling and
-// translation over half a second.
-const completionAnimationSteps = 13.0;
-const completionAnimationDelay = 500 / completionAnimationSteps;
-
 // Simulated annealing parameters
 const coolDown = 0.8; // annealing cooling down
 const maxIterations = 45; // annealing process maximum number of iterations
 const tempIterations = 15; // number of annealing iterations at each temperature
 
-const animationDelay = 0; // In msec
-const optimizerUsesSetTimeout = true;
-const animateOptimizer = true; // if false, does not display till end.  Implies optimizerUsesSetTimeout = true.
-const zoomToFitAtEachStep = true; // If animating, keep adjusting zoom.
+function timeoutPromise(t = 0) {
+  return new Promise<void>((succees) => setTimeout(succees, t));
+}
 
 const PI = Math.PI;
 
@@ -100,26 +93,31 @@ export class Optimizer {
   translateYAnimationStep = 0;
   progressAnimationStep = 0;
 
+  onStep?: (final: boolean) => void;
+
   constructor({
     strategy,
     width,
     height,
     state,
+    onStep,
   }: {
     strategy: number;
     width: number;
     height: number;
     state: State;
+    onStep?: (final: boolean) => void;
   }) {
     this.strategy = strategy;
     this.width = width;
     this.height = height;
     this.state = state;
+    this.onStep = onStep;
 
     this.areas = new EdeapAreas(this.state);
   }
 
-  optimize() {
+  optimize(sync = true) {
     this.changeSearchSpace = false; // optimizer in first stage of search space
     this.maxMeasures = {}; // to save the maximum value of a meausure in a history of values of each measure to be used in the normalization process
     this.move = [];
@@ -140,14 +138,18 @@ export class Optimizer {
     }
     logMessage(logOptimizerStep, "Fitness %s", this.currentFitness);
 
-    if (animateOptimizer || optimizerUsesSetTimeout) {
-      setTimeout(() => this.optimizeStep(), animationDelay);
+    return this.nextStep(sync);
+  }
+
+  nextStep(sync: boolean): void | Promise<void> {
+    if (sync) {
+      return this.optimizeStep(sync);
     } else {
-      this.optimizeStep();
+      return timeoutPromise().then(() => this.optimizeStep(sync));
     }
   }
 
-  optimizeStep() {
+  optimizeStep(sync: boolean) {
     let bestMoveFitness: number;
     let bestMoveEllipse: number;
     let bestMove: number;
@@ -182,42 +184,9 @@ export class Optimizer {
         // There is a move better than the current fitness.
         this.currentFitness = bestMoveFitness;
         this.applyMove(bestMoveEllipse, bestMove!);
-        if (animateOptimizer) {
-          if (zoomToFitAtEachStep) {
-            const transformation = findTransformationToFit(
-              this.width,
-              this.height,
-              this.state
-            );
-            this.state.scaling = transformation.scaling;
-            this.state.translateX = transformation.translateX;
-            this.state.translateY = transformation.translateY;
-          }
 
-          logMessage(logOptimizerStep, "Fitness %s", this.currentFitness);
-          this.printEllipseInfo(bestMoveEllipse);
-          document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-            this.state,
-            this.width,
-            this.height,
-            false,
-            false,
-            this.state.translateX,
-            this.state.translateY,
-            this.state.scaling
-          );
-
-          let tbody = this.areas.zoneAreaTableBody();
-          document.getElementById("areaTableBody")!.innerHTML = tbody;
-        }
-
-        // Only continue if there were improvements.
-        if (animateOptimizer || optimizerUsesSetTimeout) {
-          setTimeout(() => this.optimizeStep(), animationDelay);
-        } else {
-          this.optimizeStep();
-        }
-        return;
+        if (this.onStep) this.onStep(false);
+        return this.nextStep(sync);
       } else {
         /* Disable this: */
       }
@@ -267,22 +236,6 @@ export class Optimizer {
           this.changeSearchSpace = false; // first search space
           this.currentFitness = bestMoveFitness;
           this.applyMove(bestMoveEllipse, bestMove!);
-          if (animateOptimizer) {
-            logMessage(logOptimizerStep, "Fitness %s", this.currentFitness);
-            this.printEllipseInfo(bestMoveEllipse);
-            document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-              this.state,
-              this.width,
-              this.height,
-              false,
-              false,
-              this.state.translateX,
-              this.state.translateY,
-              this.state.scaling
-            );
-            document.getElementById("areaTableBody")!.innerHTML =
-              this.areas.zoneAreaTableBody();
-          }
         } // if no move is taken
         else if (!this.changeSearchSpace) {
           // switch to second search space
@@ -291,101 +244,13 @@ export class Optimizer {
 
         this.currentTemperatureIteration++;
 
-        if (animateOptimizer || optimizerUsesSetTimeout) {
-          setTimeout(() => this.optimizeStep(), animationDelay);
-        } else {
-          this.optimizeStep();
-        }
-        return;
+        if (this.onStep) this.onStep(false);
+        return this.nextStep(sync);
       }
     }
 
-    // Optimizer finishes execution here
-    const transformation = findTransformationToFit(
-      this.width,
-      this.height,
-      this.state
-    );
-    const progress = document.getElementById(
-      "optimizerProgress"
-    ) as HTMLProgressElement;
-
-    if (!zoomToFitAtEachStep) {
-      if (animateOptimizer) {
-        // Setup completion animation.
-        this.scalingAnimationStep =
-          (transformation.scaling - this.state.scaling) /
-          completionAnimationSteps;
-        this.translateXAnimationStep =
-          (transformation.translateX - this.state.translateX) /
-          completionAnimationSteps;
-        this.translateYAnimationStep =
-          (transformation.translateY - this.state.translateY) /
-          completionAnimationSteps;
-        this.progressAnimationStep =
-          (progress.max - progress.value) / completionAnimationSteps;
-        this.completionAnimationStepN = 0;
-        setTimeout(
-          () => this.completionAnimationStep(),
-          completionAnimationDelay
-        );
-        return;
-      } else {
-        this.state.scaling += this.scalingAnimationStep;
-        this.state.translateX += this.translateXAnimationStep;
-        this.state.translateY += this.translateYAnimationStep;
-      }
-    }
-
-    const svgText = generateSVG(
-      this.state,
-      this.width,
-      this.height,
-      this.state.showSetLabels,
-      this.state.showIntersectionValues,
-      this.state.translateX,
-      this.state.translateY,
-      this.state.scaling
-    );
-    document.getElementById("ellipsesSVG")!.innerHTML = svgText;
-
-    if (animateOptimizer && progress) {
-      progress.value = progress.max;
-    }
+    if (this.onStep) this.onStep(true);
     logMessage(logOptimizerStep, "optimizer finished");
-  }
-
-  completionAnimationStep() {
-    let progress = document.getElementById(
-      "optimizerProgress"
-    ) as HTMLProgressElement;
-
-    if (this.completionAnimationStepN === completionAnimationSteps) {
-      progress.value = progress.max;
-      logMessage(logOptimizerStep, "optimizer finished");
-      return;
-    }
-
-    this.completionAnimationStepN++;
-
-    this.state.scaling += this.scalingAnimationStep;
-    this.state.translateX += this.translateXAnimationStep;
-    this.state.translateY += this.translateYAnimationStep;
-    progress.value = progress.value + this.progressAnimationStep;
-
-    const svgText = generateSVG(
-      this.state,
-      this.width,
-      this.height,
-      this.state.showSetLabels,
-      this.state.showIntersectionValues,
-      this.state.translateX,
-      this.state.translateY,
-      this.state.scaling
-    );
-    document.getElementById("ellipsesSVG")!.innerHTML = svgText;
-
-    setTimeout(() => this.completionAnimationStep(), completionAnimationDelay);
   }
 
   printEllipseInfo(elp: number) {
