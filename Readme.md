@@ -21,6 +21,13 @@ Alternatives to clientside `findTextSizes`:
 - [canvas](https://github.com/Brooooooklyn/canvas)
   - [measureText](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/measureText)
 
+npm packages:
+
+- https://www.npmjs.com/package/get-text-width
+- https://github.com/Evgenus/js-server-text-width
+- https://www.npmjs.com/package/text-width
+- https://github.com/adambisek/string-pixel-width
+
 ## Desired API
 
 ```ts
