@@ -1,6 +1,12 @@
 import { expect, test } from "vitest";
 
-import { check, parse, SetOverlaps, transform } from "../src/parse";
+import {
+  calculateInitial,
+  check,
+  parse,
+  SetOverlaps,
+  transform,
+} from "../src/parse";
 
 // maybe https://github.com/upsetjs/venn.js/blob/main/src/index.d.ts
 // export interface ISetOverlap {
@@ -52,7 +58,7 @@ test("filters out duplicate rows", () => {
   ]);
 });
 
-test("transforms sets", () => {
+test("transform", () => {
   expect(
     transform([
       ["a", "b", 1],
@@ -65,5 +71,19 @@ test("transforms sets", () => {
       ["a", "b"],
       ["c", "d"],
     ],
+  });
+});
+
+test("calculateInitial", () => {
+  const x = transform([
+    ["a", 1],
+    ["a", "b", 1],
+    ["a", "b", "c", 1],
+  ]);
+  expect(calculateInitial(x)).toEqual({
+    contourAreas: [1, 0.6666666666666666, 0.3333333333333333],
+    originalProportions: [1, 1, 1],
+    proportions: [0.3333333333333333, 0.3333333333333333, 0.3333333333333333],
+    zoneStrings: ["a", "a,b", "a,b,c"],
   });
 });
