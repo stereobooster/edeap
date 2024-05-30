@@ -79,8 +79,6 @@ type ColourPalettes =
   | "ColorBrewer";
 
 export type State = {
-  showSetLabels: boolean;
-  showIntersectionValues: boolean;
   colourPaletteName: ColourPalettes;
   labelFontSize: string;
   valueFontSize: string;

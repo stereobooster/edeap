@@ -222,27 +222,23 @@ function init() {
     (
       document.getElementById("setLabelSizeEntry") as HTMLInputElement
     ).placeholder = String(defaultLabelFontSize);
-    sharedState.showSetLabels = true;
   } else {
     setLabelSize = Math.floor(setLabelSize);
     (document.getElementById("setLabelSizeEntry") as HTMLInputElement).value =
       String(setLabelSize);
     sharedState.labelFontSize = setLabelSize + "pt";
-    sharedState.showSetLabels = setLabelSize > 0;
   }
 
   if (isNaN(intersectionLabelSize)) {
     (
       document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
     ).placeholder = String(defaultValueFontSize);
-    sharedState.showIntersectionValues = true;
   } else {
     intersectionLabelSize = Math.floor(intersectionLabelSize);
     (
       document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
     ).value = String(intersectionLabelSize);
     sharedState.valueFontSize = intersectionLabelSize + "pt";
-    sharedState.showIntersectionValues = intersectionLabelSize > 0;
   }
 
   if (startingDiagram === "random") {
@@ -346,8 +342,8 @@ function saveSVG() {
     sharedState,
     canvasWidth(),
     canvasHeight(),
-    sharedState.showSetLabels,
-    sharedState.showIntersectionValues,
+    true,
+    true,
     forDownload
   );
   downloadFileFromText(getDownloadName() + ".svg", svgString);

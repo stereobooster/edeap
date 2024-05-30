@@ -1,8 +1,6 @@
 import { State } from "./types";
 
 const defaultState: State = {
-  showSetLabels: true,
-  showIntersectionValues: true,
   colourPaletteName: "Tableau10",
   labelFontSize: "12pt",
   valueFontSize: "12pt",
