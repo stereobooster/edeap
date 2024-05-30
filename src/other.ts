@@ -384,7 +384,7 @@ export function generateSVG(
 /**
  * This returns a transformation to fit the diagram in the given size
  */
-export function findTransformationToFit(
+function findTransformationToFit(
   width: number,
   height: number,
   areas: EdeapAreas,
