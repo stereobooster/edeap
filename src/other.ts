@@ -1,4 +1,4 @@
-import type { RangeType, State } from "./types";
+import type { ColourPalettes, RangeType, SetOverlaps, State } from "./types";
 import { EdeapAreas } from "./EdeapAreas";
 import {
   distanceBetween,
@@ -8,8 +8,85 @@ import {
   toRadians,
 } from "./geometry";
 import { colourPalettes, findColor } from "./colors";
+import { check, transform, calculateInitial } from "./parse";
 
-export function generateInitialLayout(state: State) {
+const defaultState: State = {
+  colourPaletteName: "Tableau10",
+  labelFontSize: "12pt",
+  valueFontSize: "12pt",
+
+  // if set fo an index, indicates the number of this ellipse as a duplicate.
+  ellipseDuplication: [],
+  ellipseArea: [],
+  ellipseParams: [],
+  ellipseLabel: [],
+  duplicatedEllipseIndexes: [],
+
+  labelWidths: [],
+  labelHeights: [],
+  valueWidths: [],
+  valueHeights: [],
+
+  // this come from initialState
+  contours: [],
+  proportions: [],
+  zones: [],
+  originalProportions: [],
+  zoneStrings: [],
+  contourAreas: [],
+};
+
+type Config = {
+  overlaps: SetOverlaps;
+  colourPaletteName?: ColourPalettes;
+  setLabelSize?: number;
+  intersectionLabelSize?: number;
+  startingDiagram?: "default" | "random";
+};
+
+export function initialState({
+  overlaps,
+  colourPaletteName,
+  setLabelSize,
+  intersectionLabelSize,
+  startingDiagram,
+}: Config) {
+  const parsed = transform(check(overlaps));
+  const state: State = {
+    ...defaultState,
+    ...parsed,
+    ...calculateInitial(parsed),
+  };
+
+  state.colourPaletteName = colourPaletteName || state.colourPaletteName;
+  if (state.contours.length > colourPalettes[state.colourPaletteName].length) {
+    console.log(
+      `More ellipses than supported by ${state.colourPaletteName} colour palette. Using Tableau20 palette.`
+    );
+    state.colourPaletteName = "Tableau20";
+  }
+
+  if (setLabelSize !== undefined) state.labelFontSize = setLabelSize + "pt";
+  if (intersectionLabelSize !== undefined)
+    state.valueFontSize = intersectionLabelSize + "pt";
+
+  if (startingDiagram === "random") {
+    generateInitialRandomLayout(state, 2, 2);
+  } else {
+    generateInitialLayout(state);
+  }
+
+  const labelSizes = findTextSizes(state, "ellipseLabel");
+  state.labelWidths = labelSizes.lengths;
+  state.labelHeights = labelSizes.heights;
+  const valueSizes = findTextSizes(state, "originalProportions");
+  state.valueWidths = valueSizes.lengths;
+  state.valueHeights = valueSizes.heights;
+
+  return state;
+}
+
+function generateInitialLayout(state: State) {
   let x = 1;
   let y = 1;
   // let increment = 0.3;
@@ -74,11 +151,7 @@ export function generateInitialLayout(state: State) {
   }
 }
 
-export function generateInitialRandomLayout(
-  state: State,
-  maxX: number,
-  maxY: number
-) {
+function generateInitialRandomLayout(state: State, maxX: number, maxY: number) {
   for (let i = 0; i < state.contourAreas.length; i++) {
     const area = state.contourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
