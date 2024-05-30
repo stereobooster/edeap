@@ -99,7 +99,7 @@ export class Optimizer {
     onStep,
     areas,
   }: OptimizerConfig & { state: State; areas: EdeapAreas }) {
-    this.strategy = strategy;
+    this.strategy = strategy || HILL_CLIMBING;
     this.state = state;
     this.onStep = onStep;
     this.areas = areas;

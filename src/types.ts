@@ -112,7 +112,7 @@ export type Config = {
 };
 
 export type OptimizerConfig = {
-  strategy: number;
+  strategy?: 1 | 2;
   onStep?: (final: boolean) => void;
 };
 
