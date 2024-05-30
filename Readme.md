@@ -18,6 +18,14 @@ Fork of https://github.com/mjwybrow/edeap
 - [ ] memoization
 - [ ] add test for `generateDefaultLayout`
 
+```ts
+// https://github.com/upsetjs/venn.js/blob/main/src/index.d.ts
+export interface ISetOverlap {
+  sets: string[];
+  size: number;
+}
+```
+
 ## Ideas
 
 Alternatives to clientside `textDimentsions`:

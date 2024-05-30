@@ -1,18 +1,7 @@
 import { expect, test } from "vitest";
 
-import {
-  calculateInitial,
-  check,
-  parse,
-  SetOverlaps,
-  transform,
-} from "../src/parse";
-
-// maybe https://github.com/upsetjs/venn.js/blob/main/src/index.d.ts
-// export interface ISetOverlap {
-//   sets: string[];
-//   size: number;
-// }
+import { calculateInitial, check, parse, transform } from "../src/parse";
+import { SetOverlaps } from "../src/types";
 
 test("parses basic example", () => {
   const str = `a b 1
