@@ -122,6 +122,7 @@ function generateRandomLayout(state: State, maxX: number, maxY: number) {
 // generate svg from ellipses
 export function generateSVG({
   state,
+  areas,
   width,
   height,
   showLabels,
@@ -130,7 +131,7 @@ export function generateSVG({
   palette,
   labelSize,
   valueSize,
-}: SVGConfig & { state: State }) {
+}: SVGConfig & { state: State; areas: EdeapAreas }) {
   palette = palette || "Tableau10";
   labelSize = labelSize || "12pt";
   valueSize = valueSize || "12pt";
@@ -142,7 +143,6 @@ export function generateSVG({
   // }
 
   const labelDimensions = textDimentsions(state.ellipseLabel, labelSize);
-  const areas = new EdeapAreas(state);
   const { translateX, translateY, scaling } = findTransformationToFit(
     width,
     height,

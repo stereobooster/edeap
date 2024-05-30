@@ -50,12 +50,12 @@ export class Edeap {
     // }
   }
   optimizie(cfg: OptimizerConfig) {
-    const opt = new Optimizer({ state: this.state, ...cfg });
+    const opt = new Optimizer({ state: this.state, areas: this.areas, ...cfg });
     // TODO: expose option
     return opt.optimize(false);
   }
   svg(cfg: SVGConfig) {
-    return generateSVG({ state: this.state, ...cfg });
+    return generateSVG({ state: this.state, areas: this.areas, ...cfg });
   }
   htmlReport() {
     return this.areas.zoneAreaTableBody();
