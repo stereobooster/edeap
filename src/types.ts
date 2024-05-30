@@ -79,9 +79,6 @@ type ColourPalettes =
   | "ColorBrewer";
 
 export type State = {
-  translateX: number;
-  translateY: number;
-  scaling: number;
   showSetLabels: boolean;
   showIntersectionValues: boolean;
   colourPaletteName: ColourPalettes;

@@ -1,9 +1,6 @@
 import { State } from "./types";
 
 const defaultState: State = {
-  translateX: 0,
-  translateY: 0,
-  scaling: 100,
   showSetLabels: true,
   showIntersectionValues: true,
   colourPaletteName: "Tableau10",
@@ -31,8 +28,7 @@ const defaultState: State = {
   contourAreas: [],
 };
 
-export function initialState(areaSpecificationText: string) {
-  const abstractDescription = decodeAbstractDescription(areaSpecificationText);
+export function initialState(abstractDescription: string) {
   const parsed = transform(check(parse(abstractDescription)));
   const state: State = {
     ...defaultState,
@@ -40,10 +36,6 @@ export function initialState(areaSpecificationText: string) {
     ...calculateInitial(parsed),
   };
   return state;
-}
-
-export function decodeAbstractDescription(abstractDescriptionField: string) {
-  return decodeURIComponent(abstractDescriptionField).replaceAll("+", " ");
 }
 
 export type SetOverlaps = Array<Array<string | number>>;

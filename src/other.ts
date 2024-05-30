@@ -101,12 +101,17 @@ export function generateSVG(
   height: number,
   setLabels: boolean,
   intersectionValues: boolean,
-  translateX: number,
-  translateY: number,
-  scaling: number,
   forDownload: boolean = false
 ) {
   const areas = new EdeapAreas(state);
+  // const labelSizes = findTextSizes(state, "ellipseLabel");
+  const { translateX, translateY, scaling } = findTransformationToFit(
+    width,
+    height,
+    areas,
+    Math.max(...state.labelWidths), // labelSizes.maxWidth,
+    Math.max(...state.labelHeights) // labelSizes.maxHeight
+  );
 
   let svgString = "";
 
@@ -382,13 +387,12 @@ export function generateSVG(
 export function findTransformationToFit(
   width: number,
   height: number,
-  state: State
+  areas: EdeapAreas,
+  labelMaxWidth: number,
+  labelMaxHeight: number
 ) {
-  const areas = new EdeapAreas(state);
-
-  const labelSizes = findTextSizes(state, "ellipseLabel");
-  const idealWidth = width - 15 - labelSizes.maxWidth * 2;
-  const idealHeight = height - 15 - labelSizes.maxHeight * 2;
+  const idealWidth = width - 15 - labelMaxWidth * 2;
+  const idealHeight = height - 15 - labelMaxHeight * 2;
 
   const bb = areas.computeAreasAndBoundingBoxesFromEllipses();
 
