@@ -6,8 +6,8 @@ Fork of https://github.com/mjwybrow/edeap
 
 - [x] decopule parser and initializer
 - `main.ts`
-  - [ ] query to config (use `qs`)
-  - [ ] config to UI
+  - [x] query to config (use `qs`)
+  - [x] config to UI
   - [ ] config to generator
 - [ ] write one "big" function to get result
 - [ ] untangle mutable state
