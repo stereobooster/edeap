@@ -1,10 +1,4 @@
-import type {
-  ColourPalettes,
-  Config,
-  RangeType,
-  SVGConfig,
-  State,
-} from "./types";
+import type { Config, RangeType, SVGConfig, State } from "./types";
 import { EdeapAreas } from "./EdeapAreas";
 import {
   distanceBetween,
@@ -17,14 +11,12 @@ import { colourPalettes, findColor } from "./colors";
 import { check, transform, calculateInitial } from "./parse";
 
 const defaults = {
-  palette: "Tableau10" as ColourPalettes,
   labelSize: "12pt",
   valueSize: "12pt",
 };
 
 export function initialState({
   overlaps,
-  palette,
   labelSize,
   valueSize,
   initialLayout,
@@ -46,14 +38,6 @@ export function initialState({
     valueWidths: [],
     valueHeights: [],
   };
-
-  state.palette = palette || state.palette;
-  if (state.contours.length > colourPalettes[state.palette].length) {
-    console.log(
-      `More ellipses than supported by ${state.palette} colour palette. Using Tableau20 palette.`
-    );
-    state.palette = "Tableau20";
-  }
 
   if (labelSize !== undefined) state.labelSize = labelSize + "pt";
   if (valueSize !== undefined) state.valueSize = valueSize + "pt";
@@ -163,7 +147,16 @@ export function generateSVG({
   showLabels,
   showValues,
   standalone,
+  palette,
 }: SVGConfig & { state: State }) {
+  palette = palette || "Tableau10";
+  // if (state.contours.length > colourPalettes[palette].length) {
+  //   console.log(
+  //     `More ellipses than supported by ${palette} colour palette. Using Tableau20 palette.`
+  //   );
+  //   palette = "Tableau20";
+  // }
+
   const areas = new EdeapAreas(state);
   const { translateX, translateY, scaling } = findTransformationToFit(
     width,
@@ -187,7 +180,7 @@ export function generateSVG({
   let nextSVG = "";
   const N = areas.ellipseLabel.length;
   for (let i = 0; i < N; i++) {
-    const color = findColor(i, colourPalettes[state.palette]);
+    const color = findColor(i, colourPalettes[palette]);
     const eX = (areas.ellipseParams[i].X + translateX) * scaling;
     const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
     const eA = areas.ellipseParams[i].A * scaling;
@@ -404,7 +397,7 @@ export function generateSVG({
         y -= halfHeight;
       }
 
-      const color = findColor(i, colourPalettes[state.palette]);
+      const color = findColor(i, colourPalettes[palette]);
       nextSVG = `<text style="font-family: Helvetica; font-size: ${
         state.labelSize
       };" x="${x + eX - textWidth / 2}" y="${y + eY}" fill="${color}">

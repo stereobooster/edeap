@@ -9,8 +9,14 @@ import { Edeap } from ".";
 function init() {
   initUI();
 
-  const { overlaps, optimizationMethod, labelSize, valueSize, ...rest } =
-    getParams();
+  const {
+    overlaps,
+    optimizationMethod,
+    labelSize,
+    valueSize,
+    palette,
+    ...rest
+  } = getParams();
 
   const diagram = new Edeap({
     overlaps: parse(overlaps),
@@ -30,6 +36,7 @@ function init() {
         height,
         showLabels: final && labelSize > 0,
         showValues: final && valueSize > 0,
+        palette,
       });
 
       const tbody = diagram.htmlReport();
@@ -52,6 +59,7 @@ function init() {
       showLabels: labelSize > 0,
       showValues: valueSize > 0,
       standalone: true,
+      palette,
     });
 
     downloadFileFromText(getDownloadName("svg"), svgString);

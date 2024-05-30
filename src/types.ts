@@ -80,7 +80,6 @@ export type ColourPalettes =
 
 export type State = {
   // TODO: move this to SVGConfig
-  palette: ColourPalettes;
   // font size for labels aka name of set
   labelSize: string;
   // font size for set volume aka set size
@@ -130,6 +129,7 @@ export type OptimizerConfig = {
 export type SVGConfig = {
   width: number;
   height: number;
+  palette?: ColourPalettes;
   showLabels?: boolean;
   showValues?: boolean;
   standalone?: boolean;
