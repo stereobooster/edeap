@@ -20,8 +20,6 @@ function init() {
 
   const diagram = new Edeap({
     overlaps: parse(overlaps),
-    labelSize,
-    valueSize,
     ...rest,
   });
 
@@ -37,6 +35,8 @@ function init() {
         showLabels: final && labelSize > 0,
         showValues: final && valueSize > 0,
         palette,
+        labelSize: labelSize + "pt",
+        valueSize: valueSize + "pt",
       });
 
       const tbody = diagram.htmlReport();
@@ -60,6 +60,8 @@ function init() {
       showValues: valueSize > 0,
       standalone: true,
       palette,
+      labelSize: labelSize + "pt",
+      valueSize: valueSize + "pt",
     });
 
     downloadFileFromText(getDownloadName("svg"), svgString);
