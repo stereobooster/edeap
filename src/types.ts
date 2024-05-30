@@ -79,7 +79,7 @@ export type ColourPalettes =
   | "ColorBrewer";
 
 export type State = {
-  colourPaletteName: ColourPalettes;
+  palette: ColourPalettes;
   // TODO: remove sizes from shared state
   labelFontSize: string;
   valueFontSize: string;

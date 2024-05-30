@@ -22,7 +22,7 @@ function init() {
 
   const sharedState: State = initialState({
     overlaps: parse(areaSpecification),
-    colourPaletteName: palette,
+    palette,
     setLabelSize,
     intersectionLabelSize,
     startingDiagram,
