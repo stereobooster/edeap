@@ -79,6 +79,7 @@ export type ColourPalettes =
   | "ColorBrewer";
 
 export type State = {
+  // TODO: move this to SVGConfig
   palette: ColourPalettes;
   // font size for labels aka name of set
   labelSize: string;

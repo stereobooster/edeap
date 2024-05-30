@@ -1,4 +1,4 @@
-import type { Config, RangeType, State } from "./types";
+import type { ColourPalettes, Config, RangeType, State } from "./types";
 import { EdeapAreas } from "./EdeapAreas";
 import {
   distanceBetween,
@@ -10,30 +10,10 @@ import {
 import { colourPalettes, findColor } from "./colors";
 import { check, transform, calculateInitial } from "./parse";
 
-const defaultState: State = {
-  palette: "Tableau10",
+const defaults = {
+  palette: "Tableau10" as ColourPalettes,
   labelSize: "12pt",
   valueSize: "12pt",
-
-  // if set fo an index, indicates the number of this ellipse as a duplicate.
-  ellipseDuplication: [],
-  ellipseArea: [],
-  ellipseParams: [],
-  ellipseLabel: [],
-  duplicatedEllipseIndexes: [],
-
-  labelWidths: [],
-  labelHeights: [],
-  valueWidths: [],
-  valueHeights: [],
-
-  // this come from initialState
-  contours: [],
-  proportions: [],
-  zones: [],
-  originalProportions: [],
-  zoneStrings: [],
-  contourAreas: [],
 };
 
 export function initialState({
@@ -45,9 +25,20 @@ export function initialState({
 }: Config) {
   const parsed = transform(check(overlaps));
   const state: State = {
-    ...defaultState,
+    ...defaults,
     ...parsed,
     ...calculateInitial(parsed),
+
+    ellipseDuplication: [],
+    ellipseArea: [],
+    ellipseParams: [],
+    ellipseLabel: [],
+    duplicatedEllipseIndexes: [],
+
+    labelWidths: [],
+    labelHeights: [],
+    valueWidths: [],
+    valueHeights: [],
   };
 
   state.palette = palette || state.palette;

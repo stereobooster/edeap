@@ -1,11 +1,8 @@
 import { EdeapAreas } from "./EdeapAreas";
 import { Optimizer } from "./optimizer";
 import { generateSVG, initialState } from "./other";
-import { Config, OptimizerConfig, SetOverlaps, State } from "./types";
-
-export type EdeapOptions = {
-  overlaps: SetOverlaps;
-};
+import { Config, OptimizerConfig, State } from "./types";
+// import { logMessage, logReproducability } from "./logMessage";
 
 type SVGConfig = {
   width: number;
