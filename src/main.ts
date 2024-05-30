@@ -1,6 +1,5 @@
 import {
   findTextSizes,
-  findTransformationToFit,
   generateInitialLayout,
   generateInitialRandomLayout,
   generateSVG,
@@ -9,9 +8,13 @@ import { colourPalettes } from "./colors";
 import { generateRandomZones } from "./generateRandomZones";
 import { logMessage, logReproducability } from "./logMessage";
 import { HILL_CLIMBING, SIMULATED_ANNEALING, Optimizer } from "./optimizer";
-import { decodeAbstractDescription, initialState } from "./parse";
+import { initialState } from "./parse";
 
 import { State } from "./types";
+
+function decodeAbstractDescription(abstractDescriptionField: string) {
+  return decodeURIComponent(abstractDescriptionField).replaceAll("+", " ");
+}
 
 let sharedState: State;
 
@@ -106,6 +109,7 @@ function initUI({
   areaSpecificationText: string;
   optimizationMethod: string;
 }) {
+  document.getElementById("svgDownload")?.addEventListener("click", saveSVG);
   document
     .getElementById("areaSpecDownload")
     ?.addEventListener("click", saveAreaSpecification);
@@ -172,7 +176,7 @@ function initUI({
   }
 
   document.getElementById("areaSpecification")!.innerHTML =
-    decodeAbstractDescription(areaSpecificationText);
+    areaSpecificationText;
 
   if (optimizationMethod === "1" || optimizationMethod === "") {
     (document.getElementById("optimizationHill") as HTMLInputElement).checked =
@@ -188,9 +192,10 @@ function initUI({
 }
 
 function init() {
-  let areaSpecificationText =
+  let areaSpecificationText = decodeAbstractDescription(
     gup("areaSpecification") ||
-    "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8";
+      "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8"
+  );
   sharedState = initialState(areaSpecificationText);
 
   let setLabelSize = parseFloat(gup("setLabelSize"));
@@ -201,7 +206,6 @@ function init() {
   sharedState.colourPaletteName =
     gup("palette").replace("+", " ") || "Tableau10";
 
-  document.getElementById("svgDownload")?.addEventListener("click", saveSVG);
   initUI({
     colourPaletteName: sharedState.colourPaletteName,
     startingDiagram,
@@ -313,25 +317,12 @@ function init() {
     height,
     state: sharedState,
     onStep: (final) => {
-      // zoomToFitAtEachStep
-      const transformation = findTransformationToFit(
-        width,
-        height,
-        sharedState
-      );
-      sharedState.scaling = transformation.scaling;
-      sharedState.translateX = transformation.translateX;
-      sharedState.translateY = transformation.translateY;
-
       document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
         sharedState,
         width,
         height,
         final,
-        final,
-        sharedState.translateX,
-        sharedState.translateY,
-        sharedState.scaling
+        final
       );
 
       const tbody = opt.areas.zoneAreaTableBody();
@@ -350,15 +341,6 @@ function init() {
 }
 
 function saveSVG() {
-  const transformation = findTransformationToFit(
-    widthForSvgDownload(),
-    heightForSvgDownload(),
-    sharedState
-  );
-  const outputScaling = transformation.scaling;
-  const outputTranslateX = transformation.translateX;
-  const outputTranslateY = transformation.translateY;
-
   const forDownload = true;
   const svgString = generateSVG(
     sharedState,
@@ -366,9 +348,6 @@ function saveSVG() {
     canvasHeight(),
     sharedState.showSetLabels,
     sharedState.showIntersectionValues,
-    outputTranslateX,
-    outputTranslateY,
-    outputScaling,
     forDownload
   );
   downloadFileFromText(getDownloadName() + ".svg", svgString);
