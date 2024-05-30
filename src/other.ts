@@ -30,14 +30,11 @@ export function initialState({ overlaps, initialLayout }: Config) {
 }
 
 function generateDefaultLayout(state: State) {
-  let x = 1;
-  let y = 1;
-
   for (let i = 0; i < state.contourAreas.length; i++) {
     const radius = Math.sqrt(state.contourAreas[i] / Math.PI); // start as a circle
     state.ellipseParams[i] = {
-      X: x,
-      Y: y,
+      X: 1,
+      Y: 1,
       A: radius,
       B: radius,
       R: 0,
@@ -45,12 +42,11 @@ function generateDefaultLayout(state: State) {
   }
 
   // Check for ellipses that must be the same:
-  state.ellipseDuplication = [];
   // state.duplicatedEllipseIndexes = [];
   const ellipseEquivilenceSet: Record<string, number> = {};
   let ellipseEquivilenceSetCount = 0;
   for (let indexA = 0; indexA < state.contours.length; ++indexA) {
-    if (state.ellipseDuplication[indexA] != undefined) {
+    if (state.ellipseDuplication[indexA] !== undefined) {
       // Already processed.
       continue;
     }
@@ -64,7 +60,7 @@ function generateDefaultLayout(state: State) {
         .filter((element) => element.includes(state.contours[indexB]))
         .join("#");
       if (zonesWithA === zonesWithB) {
-        if (typeof ellipseEquivilenceSet[zonesWithA] === "undefined") {
+        if (ellipseEquivilenceSet[zonesWithA] === undefined) {
           ellipseEquivilenceSetCount++;
           console.log("Eqivalence set " + ellipseEquivilenceSetCount);
           ellipseEquivilenceSet[zonesWithA] = ellipseEquivilenceSetCount;
@@ -443,6 +439,7 @@ export function textDimentsions(
     `font-family: ${fontName}; font-size: ${fontSize};`
   );
   svg.appendChild(text);
+  // TODO: do not use Id, instead insert directly to body hidden div
   const textLengthMeasure = document.getElementById("textLengthMeasure")!;
   textLengthMeasure.innerHTML = ""; // clear the div
   textLengthMeasure.appendChild(svg);
