@@ -16,6 +16,7 @@ Fork of https://github.com/mjwybrow/edeap
 - [ ] callback for color
 - [ ] demo (host online)
 - [ ] memoization
+- [ ] add test for `generateDefaultLayout`
 
 ## Ideas
 

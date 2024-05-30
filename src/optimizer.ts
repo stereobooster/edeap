@@ -150,7 +150,8 @@ export class Optimizer {
         elp < this.state.contours.length;
         elp++ // for each ellipse
       ) {
-        if (this.state.duplicatedEllipseIndexes.includes(elp)) {
+        // if (this.state.duplicatedEllipseIndexes.includes(elp)) {
+        if (this.state.ellipseDuplication[elp] !== undefined) {
           // Skip duplicated ellipses.
           continue;
         }
@@ -198,7 +199,8 @@ export class Optimizer {
           elp < this.state.contours.length && !found;
           elp++ // for each ellipse
         ) {
-          if (this.state.duplicatedEllipseIndexes.includes(elp)) {
+          // if (this.state.duplicatedEllipseIndexes.includes(elp)) {
+          if (this.state.ellipseDuplication[elp] !== undefined) {
             // Skip duplicated ellipses.
             continue;
           }

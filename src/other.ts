@@ -23,7 +23,7 @@ export function initialState({ overlaps, initialLayout }: Config) {
     ...calculateInitial(parsed),
     ellipseParams: [],
     ellipseDuplication: [],
-    duplicatedEllipseIndexes: [],
+    // duplicatedEllipseIndexes: [],
   };
 
   if (initialLayout === "random") {
@@ -52,7 +52,7 @@ function generateDefaultLayout(state: State) {
 
   // Check for ellipses that must be the same:
   state.ellipseDuplication = [];
-  state.duplicatedEllipseIndexes = [];
+  // state.duplicatedEllipseIndexes = [];
   const ellipseEquivilenceSet: Record<string, number> = {};
   let ellipseEquivilenceSetCount = 0;
   for (let indexA = 0; indexA < state.contours.length; ++indexA) {
@@ -81,7 +81,7 @@ function generateDefaultLayout(state: State) {
 
         // Set ellipse B as a duplicate of ellipse A
         state.ellipseParams[indexB] = state.ellipseParams[indexA];
-        state.duplicatedEllipseIndexes.push(indexB);
+        // state.duplicatedEllipseIndexes.push(indexB);
 
         count++;
         state.ellipseDuplication[indexB] = count;
