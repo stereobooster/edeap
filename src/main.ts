@@ -12,6 +12,73 @@ import { initialState } from "./parse";
 
 import { State } from "./types";
 
+// new URLSearchParams
+import qs from "qs";
+import { z } from "zod";
+
+const qsNumber = (def: any = undefined) =>
+  z.preprocess(
+    (x) => (x === "" || x === undefined ? def : parseFloat(x as any)),
+    z.number().optional()
+    // def === undefined ? z.number().optional() : z.number()
+  );
+
+const qsString = (def: any = undefined) =>
+  z.preprocess(
+    (x) => (x === "" || x === undefined ? def : String(x as any)),
+    z.string().optional()
+  );
+
+const qsSchema = z.object({
+  areaSpecification: qsString(),
+  height: qsNumber(),
+  width: qsNumber(),
+  setLabelSize: qsNumber(),
+  intersectionLabelSize: qsNumber(),
+  palette: qsString().pipe(
+    z
+      .union([
+        z.literal("Tableau10"),
+        z.literal("Tableau20"),
+        z.literal("Tableau ColorBlind"),
+        z.literal("ColorBrewer"),
+      ])
+      .optional()
+  ),
+  optimizationMethod: qsNumber().pipe(
+    z
+      .union([z.literal(HILL_CLIMBING), z.literal(SIMULATED_ANNEALING)])
+      .optional()
+  ),
+  startingDiagram: qsString().pipe(
+    z.union([z.literal("default"), z.literal("random")]).optional()
+  ),
+});
+
+type QueryParams = z.infer<typeof qsSchema>;
+
+const defaultParams = {
+  areaSpecification:
+    "pet 5\r\nmammal 32.7\r\npet mammal 12.1\r\nmammal dog 21.7\r\ndog mammal pet 12.8",
+  intersectionLabelSize: 12,
+  optimizationMethod: HILL_CLIMBING,
+  palette: "Tableau10",
+  setLabelSize: 12,
+  startingDiagram: "default",
+} satisfies QueryParams;
+
+function getParams() {
+  const parsed = qsSchema.parse(qs.parse(window.location.search.substring(1)));
+  Object.keys(parsed).forEach(
+    // @ts-ignore
+    (key) => parsed[key] === undefined && delete parsed[key]
+  );
+  return {
+    ...defaultParams,
+    ...parsed,
+  };
+}
+
 function decodeAbstractDescription(abstractDescriptionField: string) {
   return decodeURIComponent(abstractDescriptionField).replaceAll("+", " ");
 }
@@ -21,32 +88,15 @@ let sharedState: State;
 const canvasWidth = () => document.getElementById("ellipsesSVG")!.offsetWidth;
 const canvasHeight = () => document.getElementById("ellipsesSVG")!.offsetHeight;
 
-function gup(name: string) {
-  const regexS = "[\\?&]" + name + "=([^&#]*)";
-  const regex = new RegExp(regexS);
-  const tmpURL = window.location.href;
-  const results = regex.exec(tmpURL);
-  if (results === null) {
-    return "";
-  } else {
-    return results[1];
-  }
-}
-
 const widthForSvgDownload = () => {
-  const width = parseFloat(gup("width"));
-  if (isNaN(width)) return canvasWidth();
-  return width;
+  const { width } = getParams();
+  return width === undefined ? canvasWidth() : width;
 };
 
 const heightForSvgDownload = () => {
-  const height = parseFloat(gup("height"));
-  if (isNaN(height)) return canvasHeight();
-  return height;
+  const { height } = getParams();
+  return height === undefined ? canvasHeight() : height;
 };
-
-const defaultLabelFontSize = 12;
-const defaultValueFontSize = 12;
 
 // downloadFileFromText function from:
 // https://stackoverflow.com/questions/4845215/making-a-chrome-extension-download-a-file
@@ -99,16 +149,13 @@ function saveAreaSpecification() {
 }
 
 function initUI({
-  colourPaletteName,
+  palette,
   startingDiagram,
-  areaSpecificationText,
+  areaSpecification,
   optimizationMethod,
-}: {
-  colourPaletteName: string;
-  startingDiagram: string;
-  areaSpecificationText: string;
-  optimizationMethod: string;
-}) {
+  setLabelSize,
+  intersectionLabelSize,
+}: QueryParams) {
   document.getElementById("svgDownload")?.addEventListener("click", saveSVG);
   document
     .getElementById("areaSpecDownload")
@@ -117,17 +164,24 @@ function initUI({
     .getElementById("generateRandomDiagram")
     ?.addEventListener("click", generateRandomDiagram);
 
-  const palette = document.getElementById("palette") as HTMLSelectElement;
+  (document.getElementById("setLabelSizeEntry") as HTMLInputElement).value =
+    String(setLabelSize);
+
+  (
+    document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
+  ).value = String(intersectionLabelSize);
+
+  const paletteSelect = document.getElementById("palette") as HTMLSelectElement;
   // Add colour palette options to HTML select element.
   for (const paletteName in colourPalettes) {
     const option = document.createElement("option");
     option.text = paletteName;
-    palette.add(option);
+    paletteSelect.add(option);
   }
   // Select the chosen colour palette.
-  for (let i = 0; i < palette.length; i++) {
-    if (colourPaletteName == palette.options[i].text) {
-      palette.selectedIndex = i;
+  for (let i = 0; i < paletteSelect.length; i++) {
+    if (palette == paletteSelect.options[i].text) {
+      paletteSelect.selectedIndex = i;
     }
   }
 
@@ -175,78 +229,36 @@ function initUI({
       false;
   }
 
-  document.getElementById("areaSpecification")!.innerHTML =
-    areaSpecificationText;
+  document.getElementById("areaSpecification")!.innerHTML = areaSpecification!;
 
-  if (optimizationMethod === "1" || optimizationMethod === "") {
-    (document.getElementById("optimizationHill") as HTMLInputElement).checked =
-      true;
-    (document.getElementById("optimizationSE") as HTMLInputElement).checked =
-      false;
-  } else {
-    (document.getElementById("optimizationHill") as HTMLInputElement).checked =
-      false;
-    (document.getElementById("optimizationSE") as HTMLInputElement).checked =
-      true;
-  }
+  (document.getElementById("optimizationHill") as HTMLInputElement).checked =
+    optimizationMethod === HILL_CLIMBING;
+  (document.getElementById("optimizationSE") as HTMLInputElement).checked =
+    optimizationMethod !== HILL_CLIMBING;
 }
 
 function init() {
-  let areaSpecificationText = decodeAbstractDescription(
-    gup("areaSpecification") ||
-      "pet+5%0D%0Amammal+32.7%0D%0Apet+mammal+12.1%0D%0Amammal+dog+21.7%0D%0Adog+mammal+pet+12.8"
-  );
-  sharedState = initialState(areaSpecificationText);
-
-  let setLabelSize = parseFloat(gup("setLabelSize"));
-  let intersectionLabelSize = parseFloat(gup("intersectionLabelSize"));
-  let startingDiagram = gup("startingDiagram");
-  let optimizationMethod: string | number = gup("optimizationMethod");
-  // @ts-expect-error trust
-  sharedState.colourPaletteName =
-    gup("palette").replace("+", " ") || "Tableau10";
-
-  initUI({
-    colourPaletteName: sharedState.colourPaletteName,
+  const params = getParams();
+  initUI(params);
+  const {
+    areaSpecification,
+    setLabelSize,
+    intersectionLabelSize,
     startingDiagram,
-    areaSpecificationText,
     optimizationMethod,
-  });
+    palette,
+  } = params;
 
-  const strategy =
-    optimizationMethod === "1" || optimizationMethod === ""
-      ? HILL_CLIMBING
-      : SIMULATED_ANNEALING;
+  sharedState = initialState(areaSpecification);
 
-  if (isNaN(setLabelSize)) {
-    (
-      document.getElementById("setLabelSizeEntry") as HTMLInputElement
-    ).placeholder = String(defaultLabelFontSize);
-  } else {
-    setLabelSize = Math.floor(setLabelSize);
-    (document.getElementById("setLabelSizeEntry") as HTMLInputElement).value =
-      String(setLabelSize);
-    sharedState.labelFontSize = setLabelSize + "pt";
-  }
-
-  if (isNaN(intersectionLabelSize)) {
-    (
-      document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
-    ).placeholder = String(defaultValueFontSize);
-  } else {
-    intersectionLabelSize = Math.floor(intersectionLabelSize);
-    (
-      document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
-    ).value = String(intersectionLabelSize);
-    sharedState.valueFontSize = intersectionLabelSize + "pt";
-  }
-
+  sharedState.colourPaletteName = palette;
+  sharedState.labelFontSize = setLabelSize + "pt";
+  sharedState.valueFontSize = intersectionLabelSize + "pt";
   if (startingDiagram === "random") {
     generateInitialRandomLayout(sharedState, 2, 2);
   } else {
     generateInitialLayout(sharedState);
   }
-
   const labelSizes = findTextSizes(sharedState, "ellipseLabel");
   sharedState.labelWidths = labelSizes.lengths;
   sharedState.labelHeights = labelSizes.heights;
@@ -269,10 +281,7 @@ function init() {
     logReproducability,
     "// paste this into the abstract description:"
   );
-  logMessage(
-    logReproducability,
-    decodeAbstractDescription(areaSpecificationText)
-  );
+  logMessage(logReproducability, decodeAbstractDescription(areaSpecification));
   logMessage(
     logReproducability,
     "// paste this in index.html just before the reproducability logging:"
@@ -308,7 +317,7 @@ function init() {
   const width = canvasWidth();
   const height = canvasHeight();
   const opt = new Optimizer({
-    strategy,
+    strategy: optimizationMethod,
     width,
     height,
     state: sharedState,
