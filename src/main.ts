@@ -20,44 +20,6 @@ function init() {
     ...rest,
   });
 
-  // reproducability logging
-  // logMessage(
-  //   logReproducability,
-  //   "// paste this into the abstract description:"
-  // );
-  // logMessage(logReproducability, overlaps);
-  // logMessage(
-  //   logReproducability,
-  //   "// paste this in index.html just before the reproducability logging:"
-  // );
-  // for (let i = 0; i < sharedState.ellipseParams.length; i++) {
-  //   logMessage(logReproducability, `ellipseParams[${i}] = {};`);
-  //   logMessage(
-  //     logReproducability,
-  //     "ellipseParams[" + i + "].X = " + sharedState.ellipseParams[i].X + ";"
-  //   );
-  //   logMessage(
-  //     logReproducability,
-  //     "ellipseParams[" + i + "].Y = " + sharedState.ellipseParams[i].Y + ";"
-  //   );
-  //   logMessage(
-  //     logReproducability,
-  //     "ellipseParams[" + i + "].A = " + sharedState.ellipseParams[i].A + ";"
-  //   );
-  //   logMessage(
-  //     logReproducability,
-  //     "ellipseParams[" + i + "].B = " + sharedState.ellipseParams[i].B + ";"
-  //   );
-  //   logMessage(
-  //     logReproducability,
-  //     "ellipseParams[" + i + "].R = " + sharedState.ellipseParams[i].R + ";"
-  //   );
-  //   logMessage(
-  //     logReproducability,
-  //     "ellipseLabel[" + i + "] = '" + sharedState.ellipseLabel[i] + "';"
-  //   );
-  // }
-
   const width = canvasWidth();
   const height = canvasHeight();
 
@@ -71,15 +33,15 @@ function init() {
         showValues: final && valueSize > 0,
       });
 
-      // TODO: restore
-      // const tbody = opt.areas.zoneAreaTableBody();
-      // document.getElementById("areaTableBody")!.innerHTML = tbody;
-      // if (final) {
-      //   const progress = document.getElementById(
-      //     "optimizerProgress"
-      //   ) as HTMLProgressElement;
-      //   progress.value = progress.max;
-      // }
+      const tbody = diagram.htmlReport();
+      document.getElementById("areaTableBody")!.innerHTML = tbody;
+
+      if (final) {
+        const progress = document.getElementById(
+          "optimizerProgress"
+        ) as HTMLProgressElement;
+        progress.value = progress.max;
+      }
     },
   });
 
