@@ -119,13 +119,13 @@ function init() {
   document.getElementById("svgDownload")?.addEventListener("click", () => {
     const svgString = generateSVG(
       sharedState,
-      canvasWidth(),
-      canvasHeight(),
+      widthForSvgDownload(),
+      heightForSvgDownload(),
       true,
       true,
       true //forDownload
     );
-    downloadFileFromText(getDownloadName() + ".svg", svgString);
+    downloadFileFromText(getDownloadName("svg"), svgString);
   });
 }
 
@@ -241,18 +241,16 @@ function generateRandomDiagram() {
   areaSpecificationEl.value = adString;
 }
 
-function getDownloadName() {
+function getDownloadName(ext: string = "svg") {
   const date = new Date();
-  return (
-    "edeap-" + date.getMinutes() + date.getSeconds() + date.getMilliseconds()
-  );
+  return `edeap-${date.getMinutes()}${date.getSeconds()}${date.getMilliseconds()}.${ext}`;
 }
 
 function saveAreaSpecification() {
   const areaSpecificationString = (
     document.getElementById("areaSpecification") as HTMLTextAreaElement
   ).value;
-  downloadFileFromText(getDownloadName() + ".txt", areaSpecificationString);
+  downloadFileFromText(getDownloadName("txt"), areaSpecificationString);
 }
 
 function initUI({
@@ -262,20 +260,25 @@ function initUI({
   optimizationMethod,
   setLabelSize,
   intersectionLabelSize,
+  width,
+  height,
 }: QueryParams) {
-  document
-    .getElementById("areaSpecDownload")
-    ?.addEventListener("click", saveAreaSpecification);
-  document
-    .getElementById("generateRandomDiagram")
-    ?.addEventListener("click", generateRandomDiagram);
-
   (document.getElementById("setLabelSizeEntry") as HTMLInputElement).value =
     String(setLabelSize);
 
   (
     document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
   ).value = String(intersectionLabelSize);
+
+  const widthEntry = document.getElementById("widthEntry") as HTMLInputElement;
+  widthEntry.value = width === undefined ? "" : String(width);
+  widthEntry.placeholder = String(canvasWidth());
+
+  const heightEntry = document.getElementById(
+    "heightEntry"
+  ) as HTMLInputElement;
+  heightEntry.value = height === undefined ? "" : String(height);
+  heightEntry.placeholder = String(canvasHeight());
 
   const paletteSelect = document.getElementById("palette") as HTMLSelectElement;
   // Add colour palette options to HTML select element.
@@ -290,6 +293,30 @@ function initUI({
       paletteSelect.selectedIndex = i;
     }
   }
+
+  document.getElementById("downloadName")!.innerHTML = getDownloadName();
+
+  document.getElementById("areaSpecification")!.innerHTML =
+    areaSpecification === undefined ? "" : areaSpecification;
+
+  (document.getElementById("startingDefault") as HTMLInputElement).checked =
+    startingDiagram !== "random";
+  (document.getElementById("startingRandom") as HTMLInputElement).checked =
+    startingDiagram === "random";
+
+  (document.getElementById("optimizationHill") as HTMLInputElement).checked =
+    optimizationMethod === HILL_CLIMBING;
+  (document.getElementById("optimizationSE") as HTMLInputElement).checked =
+    optimizationMethod !== HILL_CLIMBING;
+
+  // event listeners
+
+  document
+    .getElementById("areaSpecDownload")
+    ?.addEventListener("click", saveAreaSpecification);
+  document
+    .getElementById("generateRandomDiagram")
+    ?.addEventListener("click", generateRandomDiagram);
 
   const filePickerRef = document.getElementById(
     "areaSpecFilePicker"
@@ -311,36 +338,6 @@ function initUI({
     const file = event.target.files[0];
     reader.readAsText(file);
   });
-
-  document.getElementById("downloadName")!.innerHTML =
-    getDownloadName() + ".svg";
-
-  const widthEntry = document.getElementById("widthEntry") as HTMLInputElement;
-  widthEntry.value = String(widthForSvgDownload());
-
-  const heightEntry = document.getElementById(
-    "heightEntry"
-  ) as HTMLInputElement;
-  heightEntry.value = String(heightForSvgDownload());
-
-  if (startingDiagram === "random") {
-    (document.getElementById("startingDefault") as HTMLInputElement).checked =
-      false;
-    (document.getElementById("startingRandom") as HTMLInputElement).checked =
-      true;
-  } else {
-    (document.getElementById("startingDefault") as HTMLInputElement).checked =
-      true;
-    (document.getElementById("startingRandom") as HTMLInputElement).checked =
-      false;
-  }
-
-  document.getElementById("areaSpecification")!.innerHTML = areaSpecification!;
-
-  (document.getElementById("optimizationHill") as HTMLInputElement).checked =
-    optimizationMethod === HILL_CLIMBING;
-  (document.getElementById("optimizationSE") as HTMLInputElement).checked =
-    optimizationMethod !== HILL_CLIMBING;
 }
 
 init();
