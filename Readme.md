@@ -15,6 +15,7 @@ Fork of https://github.com/mjwybrow/edeap
   - pass it as param so it would be possible to have versions for server and client
 - [ ] callback for color
 - [ ] demo (host online)
+- [ ] memoization
 
 ## Ideas
 

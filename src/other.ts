@@ -21,11 +21,8 @@ export function initialState({ overlaps, initialLayout }: Config) {
     ...defaults,
     ...parsed,
     ...calculateInitial(parsed),
-
-    ellipseDuplication: [],
-    ellipseArea: [],
     ellipseParams: [],
-    ellipseLabel: [],
+    ellipseDuplication: [],
     duplicatedEllipseIndexes: [],
   };
 
@@ -41,11 +38,9 @@ export function initialState({ overlaps, initialLayout }: Config) {
 function generateDefaultLayout(state: State) {
   let x = 1;
   let y = 1;
-  // let increment = 0.3;
 
   for (let i = 0; i < state.contourAreas.length; i++) {
-    const area = state.contourAreas[i];
-    const radius = Math.sqrt(area / Math.PI); // start as a circle
+    const radius = Math.sqrt(state.contourAreas[i] / Math.PI); // start as a circle
     state.ellipseParams[i] = {
       X: x,
       Y: y,
@@ -53,10 +48,6 @@ function generateDefaultLayout(state: State) {
       B: radius,
       R: 0,
     };
-    state.ellipseLabel[i] = state.contours[i];
-    state.ellipseArea[i] = area;
-
-    //x = x+increment;
   }
 
   // Check for ellipses that must be the same:
@@ -64,7 +55,7 @@ function generateDefaultLayout(state: State) {
   state.duplicatedEllipseIndexes = [];
   const ellipseEquivilenceSet: Record<string, number> = {};
   let ellipseEquivilenceSetCount = 0;
-  for (let indexA = 0; indexA < state.ellipseLabel.length; ++indexA) {
+  for (let indexA = 0; indexA < state.contours.length; ++indexA) {
     if (state.ellipseDuplication[indexA] != undefined) {
       // Already processed.
       continue;
@@ -72,25 +63,21 @@ function generateDefaultLayout(state: State) {
 
     let count = 1;
     let zonesWithA = state.zones
-      .filter((element) => element.includes(state.ellipseLabel[indexA]))
+      .filter((element) => element.includes(state.contours[indexA]))
       .join("#");
-    for (
-      let indexB = indexA + 1;
-      indexB < state.ellipseLabel.length;
-      ++indexB
-    ) {
+    for (let indexB = indexA + 1; indexB < state.contours.length; ++indexB) {
       let zonesWithB = state.zones
-        .filter((element) => element.includes(state.ellipseLabel[indexB]))
+        .filter((element) => element.includes(state.contours[indexB]))
         .join("#");
       if (zonesWithA === zonesWithB) {
         if (typeof ellipseEquivilenceSet[zonesWithA] === "undefined") {
           ellipseEquivilenceSetCount++;
           console.log("Eqivalence set " + ellipseEquivilenceSetCount);
           ellipseEquivilenceSet[zonesWithA] = ellipseEquivilenceSetCount;
-          console.log(" -- " + state.ellipseLabel[indexA]);
+          console.log(" -- " + state.contours[indexA]);
         }
         ellipseEquivilenceSet[zonesWithB] = ellipseEquivilenceSetCount;
-        console.log(" -- " + state.ellipseLabel[indexB]);
+        console.log(" -- " + state.contours[indexB]);
 
         // Set ellipse B as a duplicate of ellipse A
         state.ellipseParams[indexB] = state.ellipseParams[indexA];
@@ -105,8 +92,7 @@ function generateDefaultLayout(state: State) {
 
 function generateRandomLayout(state: State, maxX: number, maxY: number) {
   for (let i = 0; i < state.contourAreas.length; i++) {
-    const area = state.contourAreas[i];
-    const radius = Math.sqrt(area / Math.PI); // start as a circle
+    const radius = Math.sqrt(state.contourAreas[i] / Math.PI); // start as a circle
     state.ellipseParams[i] = {
       X: Math.random() * maxX,
       Y: Math.random() * maxY,
@@ -114,8 +100,6 @@ function generateRandomLayout(state: State, maxX: number, maxY: number) {
       B: radius,
       R: 0,
     };
-    state.ellipseLabel[i] = state.contours[i];
-    state.ellipseArea[i] = area;
   }
 }
 
@@ -142,7 +126,7 @@ export function generateSVG({
   //   palette = "Tableau20";
   // }
 
-  const labelDimensions = textDimentsions(state.ellipseLabel, labelSize);
+  const labelDimensions = textDimentsions(state.contours, labelSize);
   const { translateX, translateY, scaling } = findTransformationToFit(
     width,
     height,
@@ -163,7 +147,7 @@ export function generateSVG({
   svgString += `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">\n`;
 
   let nextSVG = "";
-  const N = areas.ellipseLabel.length;
+  const N = areas.contours.length;
   for (let i = 0; i < N; i++) {
     const color = findColor(i, colourPalettes[palette]);
     const eX = (areas.ellipseParams[i].X + translateX) * scaling;
@@ -386,7 +370,7 @@ export function generateSVG({
       nextSVG = `<text style="font-family: Helvetica; font-size: ${labelSize};" x="${
         x + eX - textWidth / 2
       }" y="${y + eY}" fill="${color}">
-          ${areas.ellipseLabel[i]}
+          ${areas.contours[i]}
         </text>\n`;
       svgString += nextSVG;
     }
