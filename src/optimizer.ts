@@ -93,12 +93,16 @@ export class Optimizer {
 
   onStep?: (final: boolean) => void;
 
-  constructor({ strategy, state, onStep }: OptimizerConfig & { state: State }) {
+  constructor({
+    strategy,
+    state,
+    onStep,
+    areas,
+  }: OptimizerConfig & { state: State; areas: EdeapAreas }) {
     this.strategy = strategy;
     this.state = state;
     this.onStep = onStep;
-
-    this.areas = new EdeapAreas(this.state);
+    this.areas = areas;
   }
 
   optimize(sync = true) {
