@@ -8,7 +8,7 @@ import { colourPalettes } from "./colors";
 import { generateRandomZones } from "./generateRandomZones";
 // import { logMessage, logReproducability } from "./logMessage";
 import { HILL_CLIMBING, SIMULATED_ANNEALING, Optimizer } from "./optimizer";
-import { initialState } from "./parse";
+import { initialState, parse } from "./parse";
 import { State } from "./types";
 import qs from "qs"; // new URLSearchParams
 import { z } from "zod";
@@ -24,29 +24,14 @@ function init() {
     optimizationMethod,
     palette,
   } = getParams();
-  const sharedState: State = initialState(areaSpecification);
 
-  // TODO: move this to init function
-  sharedState.colourPaletteName = palette;
-  if (sharedState.contours.length > colourPalettes[palette].length) {
-    console.log(
-      `More ellipses than supported by ${palette} colour palette. Using Tableau20 palette.`
-    );
-    sharedState.colourPaletteName = "Tableau20";
-  }
-  sharedState.labelFontSize = setLabelSize + "pt";
-  sharedState.valueFontSize = intersectionLabelSize + "pt";
-  if (startingDiagram === "random") {
-    generateInitialRandomLayout(sharedState, 2, 2);
-  } else {
-    generateInitialLayout(sharedState);
-  }
-  const labelSizes = findTextSizes(sharedState, "ellipseLabel");
-  sharedState.labelWidths = labelSizes.lengths;
-  sharedState.labelHeights = labelSizes.heights;
-  const valueSizes = findTextSizes(sharedState, "originalProportions");
-  sharedState.valueWidths = valueSizes.lengths;
-  sharedState.valueHeights = valueSizes.heights;
+  const sharedState: State = initialState({
+    overlaps: parse(areaSpecification),
+    colourPaletteName: palette,
+    setLabelSize,
+    intersectionLabelSize,
+    startingDiagram,
+  });
 
   // reproducability logging
   // logMessage(

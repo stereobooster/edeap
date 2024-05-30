@@ -2,7 +2,7 @@
 // Author:  Fadi Dib <deeb.f@gust.edu.kw>
 //
 
-import { EdeapAreas } from "./ellipses";
+import { EdeapAreas } from "./EdeapAreas";
 import { logMessage, logOptimizerStep, logOptimizerChoice } from "./logMessage";
 import { State } from "./types";
 
