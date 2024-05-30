@@ -4,17 +4,21 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] write one "big" function to get result
-- [ ] untangle mutable state
-  - [ ] save each step for optimization, so it would be possible to "time travel"
-- [ ] check if it is possible to implement server side version of `findTextSizes`
-  - pass it as param so it would be possible to have versions for server and client
+- [ ] monorepo (turbo)
 - [ ] npm package
-- [ ] new demo
+  - export main class
+  - export function sync/async
+  - config types
+  - constants
+  - update `textDimentsions` to be independent of DOM id
+- [ ] check if it is possible to implement server side version of `textDimentsions`
+  - pass it as param so it would be possible to have versions for server and client
+- [ ] callback for color
+- [ ] demo (host online)
 
 ## Ideas
 
-Alternatives to clientside `findTextSizes`:
+Alternatives to clientside `textDimentsions`:
 
 - [resvg-js](https://github.com/yisibl/resvg-js)?
 - [canvas](https://github.com/Brooooooklyn/canvas)
@@ -26,13 +30,3 @@ npm packages:
 - https://github.com/Evgenus/js-server-text-width
 - https://www.npmjs.com/package/text-width
 - https://github.com/adambisek/string-pixel-width
-
-## Desired API
-
-```ts
-generate(options); // returns SVG string
-// or
-generate(options); // returns Promise<SVG string>
-```
-
-`options` should be JS object. Code about saving state to URL or about parsing is the separate thing.
