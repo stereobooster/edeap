@@ -6,15 +6,128 @@ import {
 } from "./other";
 import { colourPalettes } from "./colors";
 import { generateRandomZones } from "./generateRandomZones";
-import { logMessage, logReproducability } from "./logMessage";
+// import { logMessage, logReproducability } from "./logMessage";
 import { HILL_CLIMBING, SIMULATED_ANNEALING, Optimizer } from "./optimizer";
 import { initialState } from "./parse";
-
 import { State } from "./types";
-
-// new URLSearchParams
-import qs from "qs";
+import qs from "qs"; // new URLSearchParams
 import { z } from "zod";
+
+function init() {
+  const params = getParams();
+  initUI(params);
+
+  const {
+    areaSpecification,
+    setLabelSize,
+    intersectionLabelSize,
+    startingDiagram,
+    optimizationMethod,
+    palette,
+  } = params;
+  const sharedState: State = initialState(areaSpecification);
+
+  sharedState.colourPaletteName = palette;
+  if (sharedState.contours.length > colourPalettes[palette].length) {
+    console.log(
+      `More ellipses than supported by ${palette} colour palette. Using Tableau20 palette.`
+    );
+    sharedState.colourPaletteName = "Tableau20";
+  }
+  sharedState.labelFontSize = setLabelSize + "pt";
+  sharedState.valueFontSize = intersectionLabelSize + "pt";
+  if (startingDiagram === "random") {
+    generateInitialRandomLayout(sharedState, 2, 2);
+  } else {
+    generateInitialLayout(sharedState);
+  }
+  const labelSizes = findTextSizes(sharedState, "ellipseLabel");
+  sharedState.labelWidths = labelSizes.lengths;
+  sharedState.labelHeights = labelSizes.heights;
+  const valueSizes = findTextSizes(sharedState, "originalProportions");
+  sharedState.valueWidths = valueSizes.lengths;
+  sharedState.valueHeights = valueSizes.heights;
+
+  // reproducability logging
+  // logMessage(
+  //   logReproducability,
+  //   "// paste this into the abstract description:"
+  // );
+  // logMessage(logReproducability, areaSpecification);
+  // logMessage(
+  //   logReproducability,
+  //   "// paste this in index.html just before the reproducability logging:"
+  // );
+  // for (let i = 0; i < sharedState.ellipseParams.length; i++) {
+  //   logMessage(logReproducability, `ellipseParams[${i}] = {};`);
+  //   logMessage(
+  //     logReproducability,
+  //     "ellipseParams[" + i + "].X = " + sharedState.ellipseParams[i].X + ";"
+  //   );
+  //   logMessage(
+  //     logReproducability,
+  //     "ellipseParams[" + i + "].Y = " + sharedState.ellipseParams[i].Y + ";"
+  //   );
+  //   logMessage(
+  //     logReproducability,
+  //     "ellipseParams[" + i + "].A = " + sharedState.ellipseParams[i].A + ";"
+  //   );
+  //   logMessage(
+  //     logReproducability,
+  //     "ellipseParams[" + i + "].B = " + sharedState.ellipseParams[i].B + ";"
+  //   );
+  //   logMessage(
+  //     logReproducability,
+  //     "ellipseParams[" + i + "].R = " + sharedState.ellipseParams[i].R + ";"
+  //   );
+  //   logMessage(
+  //     logReproducability,
+  //     "ellipseLabel[" + i + "] = '" + sharedState.ellipseLabel[i] + "';"
+  //   );
+  // }
+
+  const width = canvasWidth();
+  const height = canvasHeight();
+  const opt = new Optimizer({
+    strategy: optimizationMethod,
+    width,
+    height,
+    state: sharedState,
+    onStep: (final) => {
+      document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
+        sharedState,
+        width,
+        height,
+        final,
+        final
+      );
+
+      const tbody = opt.areas.zoneAreaTableBody();
+      document.getElementById("areaTableBody")!.innerHTML = tbody;
+
+      if (final) {
+        const progress = document.getElementById(
+          "optimizerProgress"
+        ) as HTMLProgressElement;
+        progress.value = progress.max;
+      }
+    },
+  });
+
+  opt.optimize(false);
+
+  document.getElementById("svgDownload")?.addEventListener("click", () => {
+    const svgString = generateSVG(
+      sharedState,
+      canvasWidth(),
+      canvasHeight(),
+      true,
+      true,
+      true //forDownload
+    );
+    downloadFileFromText(getDownloadName() + ".svg", svgString);
+  });
+}
 
 const qsNumber = (def: any = undefined) =>
   z.preprocess(
@@ -78,12 +191,6 @@ function getParams() {
     ...parsed,
   };
 }
-
-function decodeAbstractDescription(abstractDescriptionField: string) {
-  return decodeURIComponent(abstractDescriptionField).replaceAll("+", " ");
-}
-
-let sharedState: State;
 
 const canvasWidth = () => document.getElementById("ellipsesSVG")!.offsetWidth;
 const canvasHeight = () => document.getElementById("ellipsesSVG")!.offsetHeight;
@@ -156,7 +263,6 @@ function initUI({
   setLabelSize,
   intersectionLabelSize,
 }: QueryParams) {
-  document.getElementById("svgDownload")?.addEventListener("click", saveSVG);
   document
     .getElementById("areaSpecDownload")
     ?.addEventListener("click", saveAreaSpecification);
@@ -235,127 +341,6 @@ function initUI({
     optimizationMethod === HILL_CLIMBING;
   (document.getElementById("optimizationSE") as HTMLInputElement).checked =
     optimizationMethod !== HILL_CLIMBING;
-}
-
-function init() {
-  const params = getParams();
-  initUI(params);
-  const {
-    areaSpecification,
-    setLabelSize,
-    intersectionLabelSize,
-    startingDiagram,
-    optimizationMethod,
-    palette,
-  } = params;
-
-  sharedState = initialState(areaSpecification);
-
-  sharedState.colourPaletteName = palette;
-  sharedState.labelFontSize = setLabelSize + "pt";
-  sharedState.valueFontSize = intersectionLabelSize + "pt";
-  if (startingDiagram === "random") {
-    generateInitialRandomLayout(sharedState, 2, 2);
-  } else {
-    generateInitialLayout(sharedState);
-  }
-  const labelSizes = findTextSizes(sharedState, "ellipseLabel");
-  sharedState.labelWidths = labelSizes.lengths;
-  sharedState.labelHeights = labelSizes.heights;
-  const valueSizes = findTextSizes(sharedState, "originalProportions");
-  sharedState.valueWidths = valueSizes.lengths;
-  sharedState.valueHeights = valueSizes.heights;
-
-  if (
-    sharedState.ellipseLabel.length >
-    colourPalettes[sharedState.colourPaletteName].length
-  ) {
-    console.log(
-      `More ellipses than supported by ${sharedState.colourPaletteName} colour palette. Using Tableau20 palette.`
-    );
-    sharedState.colourPaletteName = "Tableau20";
-  }
-
-  // reproducability logging
-  logMessage(
-    logReproducability,
-    "// paste this into the abstract description:"
-  );
-  logMessage(logReproducability, decodeAbstractDescription(areaSpecification));
-  logMessage(
-    logReproducability,
-    "// paste this in index.html just before the reproducability logging:"
-  );
-  for (let i = 0; i < sharedState.ellipseParams.length; i++) {
-    logMessage(logReproducability, `ellipseParams[${i}] = {};`);
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].X = " + sharedState.ellipseParams[i].X + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].Y = " + sharedState.ellipseParams[i].Y + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].A = " + sharedState.ellipseParams[i].A + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].B = " + sharedState.ellipseParams[i].B + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseParams[" + i + "].R = " + sharedState.ellipseParams[i].R + ";"
-    );
-    logMessage(
-      logReproducability,
-      "ellipseLabel[" + i + "] = '" + sharedState.ellipseLabel[i] + "';"
-    );
-  }
-
-  const width = canvasWidth();
-  const height = canvasHeight();
-  const opt = new Optimizer({
-    strategy: optimizationMethod,
-    width,
-    height,
-    state: sharedState,
-    onStep: (final) => {
-      document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-        sharedState,
-        width,
-        height,
-        final,
-        final
-      );
-
-      const tbody = opt.areas.zoneAreaTableBody();
-      document.getElementById("areaTableBody")!.innerHTML = tbody;
-
-      if (final) {
-        const progress = document.getElementById(
-          "optimizerProgress"
-        ) as HTMLProgressElement;
-        progress.value = progress.max;
-      }
-    },
-  });
-
-  opt.optimize(false);
-}
-
-function saveSVG() {
-  const forDownload = true;
-  const svgString = generateSVG(
-    sharedState,
-    canvasWidth(),
-    canvasHeight(),
-    true,
-    true,
-    forDownload
-  );
-  downloadFileFromText(getDownloadName() + ".svg", svgString);
 }
 
 init();
