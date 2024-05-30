@@ -12,8 +12,8 @@ import { check, transform, calculateInitial } from "./parse";
 
 const defaultState: State = {
   palette: "Tableau10",
-  labelFontSize: "12pt",
-  valueFontSize: "12pt",
+  labelSize: "12pt",
+  valueSize: "12pt",
 
   // if set fo an index, indicates the number of this ellipse as a duplicate.
   ellipseDuplication: [],
@@ -39,17 +39,17 @@ const defaultState: State = {
 type Config = {
   overlaps: SetOverlaps;
   palette?: ColourPalettes;
-  setLabelSize?: number;
-  intersectionLabelSize?: number;
-  startingDiagram?: "default" | "random";
+  labelSize?: number;
+  valueSize?: number;
+  initialLayout?: "default" | "random";
 };
 
 export function initialState({
   overlaps,
   palette,
-  setLabelSize,
-  intersectionLabelSize,
-  startingDiagram,
+  labelSize,
+  valueSize,
+  initialLayout,
 }: Config) {
   const parsed = transform(check(overlaps));
   const state: State = {
@@ -66,14 +66,13 @@ export function initialState({
     state.palette = "Tableau20";
   }
 
-  if (setLabelSize !== undefined) state.labelFontSize = setLabelSize + "pt";
-  if (intersectionLabelSize !== undefined)
-    state.valueFontSize = intersectionLabelSize + "pt";
+  if (labelSize !== undefined) state.labelSize = labelSize + "pt";
+  if (valueSize !== undefined) state.valueSize = valueSize + "pt";
 
-  if (startingDiagram === "random") {
-    generateInitialRandomLayout(state, 2, 2);
+  if (initialLayout === "random") {
+    generateRandomLayout(state, 2, 2);
   } else {
-    generateInitialLayout(state);
+    generateDefaultLayout(state);
   }
 
   const labelSizes = findTextSizes(state, "ellipseLabel");
@@ -86,7 +85,7 @@ export function initialState({
   return state;
 }
 
-function generateInitialLayout(state: State) {
+function generateDefaultLayout(state: State) {
   let x = 1;
   let y = 1;
   // let increment = 0.3;
@@ -151,7 +150,7 @@ function generateInitialLayout(state: State) {
   }
 }
 
-function generateInitialRandomLayout(state: State, maxX: number, maxY: number) {
+function generateRandomLayout(state: State, maxX: number, maxY: number) {
   for (let i = 0; i < state.contourAreas.length; i++) {
     const area = state.contourAreas[i];
     const radius = Math.sqrt(area / Math.PI); // start as a circle
@@ -419,7 +418,7 @@ export function generateSVG(
 
       const color = findColor(i, colourPalettes[state.palette]);
       nextSVG = `<text style="font-family: Helvetica; font-size: ${
-        state.labelFontSize
+        state.labelSize
       };" x="${x + eX - textWidth / 2}" y="${y + eY}" fill="${color}">
           ${areas.ellipseLabel[i]}
         </text>\n`;
@@ -440,7 +439,7 @@ export function generateSVG(
         const labelX = (labelPosition.x + translateX) * scaling;
         const labelY = (labelPosition.y + translateY) * scaling;
         if (!isNaN(labelX)) {
-          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${state.valueFontSize};" fill="black">
+          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${state.valueSize};" fill="black">
               ${areas.originalProportions[i]}
             </text>\n`;
           svgString += nextSVG;
@@ -496,7 +495,7 @@ export function findTextSizes(
   const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
   text.setAttribute(
     "style",
-    `font-family: Helvetica; font-size: ${state.labelFontSize};`
+    `font-family: Helvetica; font-size: ${state.labelSize};`
   );
   svg.appendChild(text);
   const textLengthMeasure = document.getElementById("textLengthMeasure")!;

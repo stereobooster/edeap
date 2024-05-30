@@ -12,20 +12,20 @@ function init() {
   initUI();
 
   const {
-    areaSpecification,
-    setLabelSize,
-    intersectionLabelSize,
-    startingDiagram,
+    overlaps,
+    labelSize,
+    valueSize,
+    initialLayout,
     optimizationMethod,
     palette,
   } = getParams();
 
   const sharedState: State = initialState({
-    overlaps: parse(areaSpecification),
+    overlaps: parse(overlaps),
     palette,
-    setLabelSize,
-    intersectionLabelSize,
-    startingDiagram,
+    labelSize,
+    valueSize,
+    initialLayout,
   });
 
   // reproducability logging
@@ -33,7 +33,7 @@ function init() {
   //   logReproducability,
   //   "// paste this into the abstract description:"
   // );
-  // logMessage(logReproducability, areaSpecification);
+  // logMessage(logReproducability, overlaps);
   // logMessage(
   //   logReproducability,
   //   "// paste this in index.html just before the reproducability logging:"
@@ -78,8 +78,8 @@ function init() {
         sharedState,
         width,
         height,
-        final && setLabelSize > 0,
-        final && intersectionLabelSize > 0
+        final && labelSize > 0,
+        final && valueSize > 0
       );
 
       const tbody = opt.areas.zoneAreaTableBody();
@@ -102,8 +102,8 @@ function init() {
       sharedState,
       width || canvasWidth(),
       height || canvasHeight(),
-      true && setLabelSize > 0,
-      true && intersectionLabelSize > 0,
+      true && labelSize > 0,
+      true && valueSize > 0,
       true //forDownload
     );
     downloadFileFromText(getDownloadName("svg"), svgString);
@@ -124,11 +124,11 @@ const qsString = (def: any = undefined) =>
   );
 
 const qsSchema = z.object({
-  areaSpecification: qsString(),
+  overlaps: qsString(),
   height: qsNumber(),
   width: qsNumber(),
-  setLabelSize: qsNumber(),
-  intersectionLabelSize: qsNumber(),
+  labelSize: qsNumber(),
+  valueSize: qsNumber(),
   palette: qsString().pipe(
     z
       .union([
@@ -144,7 +144,7 @@ const qsSchema = z.object({
       .union([z.literal(HILL_CLIMBING), z.literal(SIMULATED_ANNEALING)])
       .optional()
   ),
-  startingDiagram: qsString().pipe(
+  initialLayout: qsString().pipe(
     z.union([z.literal("default"), z.literal("random")]).optional()
   ),
 });
@@ -161,13 +161,13 @@ function getParamsWithoutDefaults() {
 }
 
 const defaultParams = {
-  areaSpecification:
+  overlaps:
     "pet 5\r\nmammal 32.7\r\npet mammal 12.1\r\nmammal dog 21.7\r\ndog mammal pet 12.8",
-  intersectionLabelSize: 12,
+  valueSize: 12,
   optimizationMethod: HILL_CLIMBING,
   palette: "Tableau10",
-  setLabelSize: 12,
-  startingDiagram: "default",
+  labelSize: 12,
+  initialLayout: "default",
 } satisfies QueryParams;
 
 function getParams() {
@@ -212,7 +212,7 @@ function generateRandomDiagram() {
     adString += Math.floor(Math.random() * maxSize + 1) + "\n";
   }
   const areaSpecificationEl = document.getElementById(
-    "areaSpecification"
+    "overlaps"
   ) as HTMLInputElement;
   areaSpecificationEl.value = adString;
 }
@@ -224,30 +224,30 @@ function getDownloadName(ext: string = "svg") {
 
 function saveAreaSpecification() {
   const areaSpecificationString = (
-    document.getElementById("areaSpecification") as HTMLTextAreaElement
+    document.getElementById("overlaps") as HTMLTextAreaElement
   ).value;
   downloadFileFromText(getDownloadName("txt"), areaSpecificationString);
 }
 
 function initUI() {
-  const { palette, startingDiagram, areaSpecification, optimizationMethod } =
+  const { palette, initialLayout, overlaps, optimizationMethod } =
     getParams();
-  const { setLabelSize, intersectionLabelSize, width, height } =
+  const { labelSize, valueSize, width, height } =
     getParamsWithoutDefaults();
 
   const labelSizeEntry = document.getElementById(
     "setLabelSizeEntry"
   ) as HTMLInputElement;
-  labelSizeEntry.value = setLabelSize === undefined ? "" : String(setLabelSize);
-  labelSizeEntry.placeholder = String(defaultParams["setLabelSize"]);
+  labelSizeEntry.value = labelSize === undefined ? "" : String(labelSize);
+  labelSizeEntry.placeholder = String(defaultParams["labelSize"]);
 
   const intersectionLabelSizeEntry = document.getElementById(
     "intersectionLabelSizeEntry"
   ) as HTMLInputElement;
   intersectionLabelSizeEntry.value =
-    intersectionLabelSize === undefined ? "" : String(intersectionLabelSize);
+    valueSize === undefined ? "" : String(valueSize);
   intersectionLabelSizeEntry.placeholder = String(
-    defaultParams["intersectionLabelSize"]
+    defaultParams["valueSize"]
   );
 
   const widthEntry = document.getElementById("widthEntry") as HTMLInputElement;
@@ -276,13 +276,13 @@ function initUI() {
 
   document.getElementById("downloadName")!.innerHTML = getDownloadName();
 
-  document.getElementById("areaSpecification")!.innerHTML =
-    areaSpecification === undefined ? "" : areaSpecification;
+  document.getElementById("overlaps")!.innerHTML =
+    overlaps === undefined ? "" : overlaps;
 
   (document.getElementById("startingDefault") as HTMLInputElement).checked =
-    startingDiagram !== "random";
+    initialLayout !== "random";
   (document.getElementById("startingRandom") as HTMLInputElement).checked =
-    startingDiagram === "random";
+    initialLayout === "random";
 
   (document.getElementById("optimizationHill") as HTMLInputElement).checked =
     optimizationMethod === HILL_CLIMBING;
@@ -309,7 +309,7 @@ function initUI() {
     reader.onload = function (event) {
       // Get the text from the file and show it in the outputArea div.
       const fileText = event.target?.result;
-      (document.getElementById("areaSpecification") as HTMLInputElement).value =
+      (document.getElementById("overlaps") as HTMLInputElement).value =
         fileText?.toString() || "";
     };
 

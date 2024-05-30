@@ -80,9 +80,10 @@ export type ColourPalettes =
 
 export type State = {
   palette: ColourPalettes;
-  // TODO: remove sizes from shared state
-  labelFontSize: string;
-  valueFontSize: string;
+  // font size for labels aka name of set
+  labelSize: string;
+  // font size for set volume aka set size
+  valueSize: string;
 
   // if set fo an index, indicates the number of this ellipse as a duplicate.
   ellipseDuplication: number[];
