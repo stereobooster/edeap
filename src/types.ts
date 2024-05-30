@@ -80,6 +80,7 @@ type ColourPalettes =
 
 export type State = {
   colourPaletteName: ColourPalettes;
+  // TODO: remove sizes from shared state
   labelFontSize: string;
   valueFontSize: string;
 
