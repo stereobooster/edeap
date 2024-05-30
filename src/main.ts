@@ -26,6 +26,7 @@ function init() {
   } = getParams();
   const sharedState: State = initialState(areaSpecification);
 
+  // TODO: move this to init function
   sharedState.colourPaletteName = palette;
   if (sharedState.contours.length > colourPalettes[palette].length) {
     console.log(
@@ -97,8 +98,8 @@ function init() {
         sharedState,
         width,
         height,
-        final,
-        final
+        final && setLabelSize > 0,
+        final && intersectionLabelSize > 0
       );
 
       const tbody = opt.areas.zoneAreaTableBody();
@@ -121,8 +122,8 @@ function init() {
       sharedState,
       width || canvasWidth(),
       height || canvasHeight(),
-      true,
-      true,
+      true && setLabelSize > 0,
+      true && intersectionLabelSize > 0,
       true //forDownload
     );
     downloadFileFromText(getDownloadName("svg"), svgString);
