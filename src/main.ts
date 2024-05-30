@@ -14,8 +14,7 @@ import qs from "qs"; // new URLSearchParams
 import { z } from "zod";
 
 function init() {
-  const params = getParams();
-  initUI(params);
+  initUI();
 
   const {
     areaSpecification,
@@ -24,7 +23,7 @@ function init() {
     startingDiagram,
     optimizationMethod,
     palette,
-  } = params;
+  } = getParams();
   const sharedState: State = initialState(areaSpecification);
 
   sharedState.colourPaletteName = palette;
@@ -180,12 +179,17 @@ const defaultParams = {
   startingDiagram: "default",
 } satisfies QueryParams;
 
-function getParams() {
+function getParamsWithoutDefaults() {
   const parsed = qsSchema.parse(qs.parse(window.location.search.substring(1)));
   Object.keys(parsed).forEach(
     // @ts-ignore
     (key) => parsed[key] === undefined && delete parsed[key]
   );
+  return parsed;
+}
+
+function getParams() {
+  const parsed = getParamsWithoutDefaults();
   return {
     ...defaultParams,
     ...parsed,
@@ -253,22 +257,26 @@ function saveAreaSpecification() {
   downloadFileFromText(getDownloadName("txt"), areaSpecificationString);
 }
 
-function initUI({
-  palette,
-  startingDiagram,
-  areaSpecification,
-  optimizationMethod,
-  setLabelSize,
-  intersectionLabelSize,
-  width,
-  height,
-}: QueryParams) {
-  (document.getElementById("setLabelSizeEntry") as HTMLInputElement).value =
-    String(setLabelSize);
+function initUI() {
+  const { palette, startingDiagram, areaSpecification, optimizationMethod } =
+    getParams();
+  const { setLabelSize, intersectionLabelSize, width, height } =
+    getParamsWithoutDefaults();
 
-  (
-    document.getElementById("intersectionLabelSizeEntry") as HTMLInputElement
-  ).value = String(intersectionLabelSize);
+  const labelSizeEntry = document.getElementById(
+    "setLabelSizeEntry"
+  ) as HTMLInputElement;
+  labelSizeEntry.value = setLabelSize === undefined ? "" : String(setLabelSize);
+  labelSizeEntry.placeholder = String(defaultParams["setLabelSize"]);
+
+  const intersectionLabelSizeEntry = document.getElementById(
+    "intersectionLabelSizeEntry"
+  ) as HTMLInputElement;
+  intersectionLabelSizeEntry.value =
+    intersectionLabelSize === undefined ? "" : String(intersectionLabelSize);
+  intersectionLabelSizeEntry.placeholder = String(
+    defaultParams["intersectionLabelSize"]
+  );
 
   const widthEntry = document.getElementById("widthEntry") as HTMLInputElement;
   widthEntry.value = width === undefined ? "" : String(width);
