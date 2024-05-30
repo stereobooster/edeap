@@ -28,6 +28,7 @@ function init() {
 
   diagram.optimizie({
     strategy: optimizationMethod,
+    sync: false,
     onStep: (final) => {
       document.getElementById("ellipsesSVG")!.innerHTML = diagram.svg({
         width,

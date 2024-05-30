@@ -49,10 +49,10 @@ export class Edeap {
     //   );
     // }
   }
-  optimizie(cfg: OptimizerConfig) {
+  optimizie(config: OptimizerConfig & { sync?: boolean } = {}) {
+    const { sync, ...cfg } = config;
     const opt = new Optimizer({ state: this.state, areas: this.areas, ...cfg });
-    // TODO: expose option
-    return opt.optimize(false);
+    return opt.optimize(sync);
   }
   svg(cfg: SVGConfig) {
     return generateSVG({ state: this.state, areas: this.areas, ...cfg });
