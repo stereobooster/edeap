@@ -119,7 +119,7 @@ export class Optimizer {
     this.currentFitness = this.computeFitness();
     for (
       let elp = 0;
-      elp < this.areas.ellipseLabel.length;
+      elp < this.areas.contours.length;
       elp++ // for each ellipse
     ) {
       this.printEllipseInfo(elp);
@@ -147,7 +147,7 @@ export class Optimizer {
       bestMoveEllipse = -1;
       for (
         let elp = 0;
-        elp < this.state.ellipseLabel.length;
+        elp < this.state.contours.length;
         elp++ // for each ellipse
       ) {
         if (this.state.duplicatedEllipseIndexes.includes(elp)) {
@@ -156,7 +156,7 @@ export class Optimizer {
         }
 
         // For each ellipse check for best move.
-        logMessage(logOptimizerStep, this.state.ellipseLabel[elp]);
+        logMessage(logOptimizerStep, this.state.contours[elp]);
         const possibleFitness = this.selectBestCostMove(elp); // select the best move for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
         logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
         if (possibleFitness < bestMoveFitness && possibleFitness >= 0) {
@@ -195,7 +195,7 @@ export class Optimizer {
         let found = false; // if a solution that satisfies the annealing criteria is found
         for (
           let elp = 0;
-          elp < this.state.ellipseLabel.length && !found;
+          elp < this.state.contours.length && !found;
           elp++ // for each ellipse
         ) {
           if (this.state.duplicatedEllipseIndexes.includes(elp)) {
@@ -204,7 +204,7 @@ export class Optimizer {
           }
 
           // For each ellipse check for best move.
-          logMessage(logOptimizerStep, this.state.ellipseLabel[elp]);
+          logMessage(logOptimizerStep, this.state.contours[elp]);
           const possibleFitness = this.selectRandomMove(elp); // select a random move (between 1 and 10) for each ellipse and saves its ID in var selectedMove and it also returns the fitness value at that move
           logMessage(logOptimizerStep, "currentFitness %s", possibleFitness);
           const fitnessDifference = possibleFitness - bestMoveFitness; // difference between the bestFitness so far and the fitness of the selected random move
@@ -245,7 +245,7 @@ export class Optimizer {
     logMessage(
       logOptimizerStep,
       "Label = %s X = %s Y = %s A = %s B = %s R = %s",
-      this.state.ellipseLabel[elp],
+      this.state.contours[elp],
       this.state.ellipseParams[elp].X,
       this.state.ellipseParams[elp].Y,
       this.state.ellipseParams[elp].A,
@@ -473,7 +473,7 @@ export class Optimizer {
 
     this.state.ellipseParams[elp].A += radiusLength;
     this.state.ellipseParams[elp].B =
-      this.state.ellipseArea[elp] / (Math.PI * this.state.ellipseParams[elp].A);
+      this.state.contourAreas[elp] / (Math.PI * this.state.ellipseParams[elp].A);
     const fit = this.computeFitness();
     logMessage(logOptimizerChoice, "fit %s", fit);
 
@@ -505,7 +505,7 @@ export class Optimizer {
 
     this.state.ellipseParams[elp].A += radiusLength;
     this.state.ellipseParams[elp].B =
-      this.state.ellipseArea[elp] / (Math.PI * this.state.ellipseParams[elp].A);
+      this.state.contourAreas[elp] / (Math.PI * this.state.ellipseParams[elp].A);
     this.state.ellipseParams[elp].R += angle;
     this.state.ellipseParams[elp].R =
       (this.state.ellipseParams[elp].R + PI) % PI; // Ensure R is between 0 and PI.
@@ -534,7 +534,7 @@ export class Optimizer {
   changeRadiusA(elp: number, radiusLength: number) {
     this.state.ellipseParams[elp].A += radiusLength;
     this.state.ellipseParams[elp].B =
-      this.state.ellipseArea[elp] / (Math.PI * this.state.ellipseParams[elp].A);
+      this.state.contourAreas[elp] / (Math.PI * this.state.ellipseParams[elp].A);
   }
 
   // apply rotation

@@ -81,11 +81,9 @@ export type ColourPalettes =
 export type State = {
   // if set fo an index, indicates the number of this ellipse as a duplicate.
   ellipseDuplication: number[];
-  ellipseArea: number[];
   ellipseParams: EllipseParams[];
-  ellipseLabel: string[];
   duplicatedEllipseIndexes: number[];
-
+  
   // size of number of ellipses
   contours: string[];
   contourAreas: number[];

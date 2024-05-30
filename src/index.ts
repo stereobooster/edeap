@@ -45,7 +45,7 @@ export class Edeap {
     //   );
     //   logMessage(
     //     logReproducability,
-    //     "ellipseLabel[" + i + "] = '" + sharedState.ellipseLabel[i] + "';"
+    //     "contours[" + i + "] = '" + sharedState.contours[i] + "';"
     //   );
     // }
   }

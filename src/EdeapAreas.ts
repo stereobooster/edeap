@@ -33,7 +33,7 @@ export class EdeapAreas {
   zoneStrings: string[];
   proportions: number[];
 
-  ellipseLabel: string[];
+  contours: string[];
   ellipseParams: EllipseParams[];
   ellipseMap: Map<string, HitInfo>;
 
@@ -47,7 +47,7 @@ export class EdeapAreas {
     this.zoneStrings = state.zoneStrings;
     this.proportions = state.proportions;
 
-    this.ellipseLabel = state.ellipseLabel;
+    this.contours = state.contours;
     this.ellipseParams = state.ellipseParams;
     this.ellipseMap = new Map<string, HitInfo>();
   }
@@ -84,7 +84,7 @@ export class EdeapAreas {
     //            let paramsString = JSON.stringify(this.ellipseParams);
     //            if (paramsString !== lastParams) {
     //                paramsArray.push(this.ellipseParams);
-    //                labelsArray.push(this.ellipseLabel);
+    //                labelsArray.push(this.contours);
     //                lastParams = paramsString;
     //                console.log(JSON.stringify(paramsArray));
     //                console.log(JSON.stringify(labelsArray));
@@ -188,7 +188,6 @@ export class EdeapAreas {
 
     for (let i = 0; i < this.ellipseParams.length; i++) {
       let ellipse = this.ellipseParams[i];
-      // let label = this.ellipseLabel[i];
 
       const ellipseMapKey = [
         ellipse.X,
@@ -323,11 +322,11 @@ export class EdeapAreas {
             if (inside === 1) {
               // For each set the point is inside, add the label
               // for the set to the sets list.
-              let label = this.ellipseLabel[i];
+              let label = this.contours[i];
               sets.push(label);
               expandedSets.push(label);
             } else if (inside === 2) {
-              let label = this.ellipseLabel[i];
+              let label = this.contours[i];
               expandedSets.push(label);
             }
           }
@@ -728,14 +727,14 @@ export class EdeapAreas {
     if (labelsInZoneB.length === 1) {
       // Missing zone with one label.
       // Push this ellipse away from other ellipses.
-      const ellipseIndex = this.ellipseLabel.indexOf(labelsInZoneB[0]);
+      const ellipseIndex = this.contours.indexOf(labelsInZoneB[0]);
       const ellipseC = this.ellipseParams[ellipseIndex];
       const cx = ellipseC.X;
       const cy = ellipseC.Y;
       const ca = ellipseC.A;
       const cb = ellipseC.B;
 
-      for (let e = 0; e < this.ellipseLabel.length; e++) {
+      for (let e = 0; e < this.contours.length; e++) {
         if (e !== ellipseIndex) {
           let ellipseE = this.ellipseParams[e];
           const ex = ellipseE.X;
@@ -815,7 +814,7 @@ export class EdeapAreas {
           );
 
           // Pull the ellipse for that label from B closer to...
-          const jEllipseIndex = this.ellipseLabel.indexOf(labelInZoneB);
+          const jEllipseIndex = this.contours.indexOf(labelInZoneB);
           const jx = this.ellipseParams[jEllipseIndex].X;
           const jy = this.ellipseParams[jEllipseIndex].Y;
 
@@ -854,7 +853,7 @@ export class EdeapAreas {
               );
 
               // Push the ellipse for that label away from...
-              const jEllipseIndex = this.ellipseLabel.indexOf(labelInZoneC);
+              const jEllipseIndex = this.contours.indexOf(labelInZoneC);
               const ellipseJ = this.ellipseParams[jEllipseIndex];
               const jx = ellipseJ.X;
               const jy = ellipseJ.Y;
@@ -862,7 +861,7 @@ export class EdeapAreas {
               const jb = ellipseJ.B;
               const jr = Math.max(ja, jb);
 
-              const ellipseIndex = this.ellipseLabel.indexOf(labelsInZoneB[k]);
+              const ellipseIndex = this.contours.indexOf(labelsInZoneB[k]);
               const ellipseK = this.ellipseParams[ellipseIndex];
               const kx = ellipseK.X;
               const ky = ellipseK.Y;
@@ -956,7 +955,7 @@ export class EdeapAreas {
 
           // Missing zone with one label.
           // Push this ellipse away from other ellipses.
-          let ellipseIndex = this.ellipseLabel.indexOf(zonesArray[i]);
+          let ellipseIndex = this.contours.indexOf(zonesArray[i]);
           const ellipseI = this.ellipseParams[ellipseIndex];
           const ix = ellipseI.X;
           const iy = ellipseI.Y;
@@ -964,7 +963,7 @@ export class EdeapAreas {
           const ib = ellipseI.B;
           const ir = Math.max(ia, ib);
 
-          ellipseIndex = this.ellipseLabel.indexOf(zonesArray[j]);
+          ellipseIndex = this.contours.indexOf(zonesArray[j]);
           const ellipseJ = this.ellipseParams[ellipseIndex];
           const jx = ellipseJ.X;
           const jy = ellipseJ.Y;
@@ -1017,10 +1016,10 @@ export class EdeapAreas {
 
     const nonOverlappingPairs = [];
     // Compute ellipses we don't want to be overlapping or touching.
-    for (let i = 0; i < this.ellipseLabel.length; i++) {
-      const labelI = this.ellipseLabel[i];
-      for (let j = i + 1; j < this.ellipseLabel.length; j++) {
-        const labelJ = this.ellipseLabel[j];
+    for (let i = 0; i < this.contours.length; i++) {
+      const labelI = this.contours[i];
+      for (let j = i + 1; j < this.contours.length; j++) {
+        const labelJ = this.contours[j];
 
         let shouldOverlap = false;
         for (let k = 0; k < this.zoneStrings.length; ++k) {
@@ -1066,15 +1065,15 @@ export class EdeapAreas {
     const fullyContainedPairs: string[] = [];
     // Compute ellipses that are fully contained in other ellipses (which
     // we don't want to have unnecessarily overlapping borders).
-    for (let i = 0; i < this.ellipseLabel.length; i++) {
-      const labelI = this.ellipseLabel[i];
-      for (let j = 0; j < this.ellipseLabel.length; j++) {
+    for (let i = 0; i < this.contours.length; i++) {
+      const labelI = this.contours[i];
+      for (let j = 0; j < this.contours.length; j++) {
         if (i === j) {
           // Don't consider same label.
           continue;
         }
 
-        const labelJ = this.ellipseLabel[j];
+        const labelJ = this.contours[j];
 
         let iIsOnlyContainedInJ = true;
         let jExistsOutsideOfI = false;
@@ -1147,13 +1146,13 @@ export class EdeapAreas {
 
     // Add to the fitness the difference between radiuses --
     // we prefer circles over ellipses.
-    for (let i = 0; i < this.ellipseLabel.length; ++i) {
+    for (let i = 0; i < this.contours.length; ++i) {
       fitness.circleDistortion +=
         1 -
         Math.min(this.ellipseParams[i].A, this.ellipseParams[i].B) /
           Math.max(this.ellipseParams[i].A, this.ellipseParams[i].B);
     }
-    fitness.circleDistortion /= this.ellipseLabel.length;
+    fitness.circleDistortion /= this.contours.length;
 
     logMessage(logFitnessDetails, "Fitness components:");
     for (const fitnessProperty in fitness) {
@@ -1252,7 +1251,7 @@ export class EdeapAreas {
     // For comparison compare against venneuler().
     // if (typeof VennEulerAreas === "function") {
     //   let veAreas = new VennEulerAreas(
-    //     this.ellipseLabel,
+    //     this.contours,
     //     this.globalZoneStrings,
     //     this.globalProportions
     //   );
