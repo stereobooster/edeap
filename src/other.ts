@@ -1,5 +1,5 @@
 import type { RangeType, State } from "./types";
-import { EdeapAreas } from "./ellipses";
+import { EdeapAreas } from "./EdeapAreas";
 import {
   distanceBetween,
   ellipseBoundaryPosition,

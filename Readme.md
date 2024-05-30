@@ -4,11 +4,6 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [x] decopule parser and initializer
-- `main.ts`
-  - [x] query to config (use `qs`)
-  - [x] config to UI
-  - [ ] config to generator
 - [ ] write one "big" function to get result
 - [ ] untangle mutable state
   - [ ] save each step for optimization, so it would be possible to "time travel"

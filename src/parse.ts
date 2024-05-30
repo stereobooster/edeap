@@ -1,4 +1,10 @@
-import { State } from "./types";
+import { colourPalettes } from "./colors";
+import {
+  findTextSizes,
+  generateInitialLayout,
+  generateInitialRandomLayout,
+} from "./other";
+import { SetOverlaps, State, TransformedSets, ColourPalettes } from "./types";
 
 const defaultState: State = {
   colourPaletteName: "Tableau10",
@@ -26,17 +32,55 @@ const defaultState: State = {
   contourAreas: [],
 };
 
-export function initialState(abstractDescription: string) {
-  const parsed = transform(check(parse(abstractDescription)));
+type Config = {
+  overlaps: SetOverlaps;
+  colourPaletteName?: ColourPalettes;
+  setLabelSize?: number;
+  intersectionLabelSize?: number;
+  startingDiagram?: "default" | "random";
+};
+
+export function initialState({
+  overlaps,
+  colourPaletteName,
+  setLabelSize,
+  intersectionLabelSize,
+  startingDiagram,
+}: Config) {
+  const parsed = transform(check(overlaps));
   const state: State = {
     ...defaultState,
     ...parsed,
     ...calculateInitial(parsed),
   };
+
+  state.colourPaletteName = colourPaletteName || state.colourPaletteName;
+  if (state.contours.length > colourPalettes[state.colourPaletteName].length) {
+    console.log(
+      `More ellipses than supported by ${state.colourPaletteName} colour palette. Using Tableau20 palette.`
+    );
+    state.colourPaletteName = "Tableau20";
+  }
+
+  if (setLabelSize !== undefined) state.labelFontSize = setLabelSize + "pt";
+  if (intersectionLabelSize !== undefined)
+    state.valueFontSize = intersectionLabelSize + "pt";
+
+  if (startingDiagram === "random") {
+    generateInitialRandomLayout(state, 2, 2);
+  } else {
+    generateInitialLayout(state);
+  }
+
+  const labelSizes = findTextSizes(state, "ellipseLabel");
+  state.labelWidths = labelSizes.lengths;
+  state.labelHeights = labelSizes.heights;
+  const valueSizes = findTextSizes(state, "originalProportions");
+  state.valueWidths = valueSizes.lengths;
+  state.valueHeights = valueSizes.heights;
+
   return state;
 }
-
-export type SetOverlaps = Array<Array<string | number>>;
 
 export function parse(str: string): SetOverlaps {
   return str
@@ -83,12 +127,6 @@ export function check(sets: SetOverlaps, silent = true): SetOverlaps {
       return test2;
     });
 }
-
-type TransformedSets = {
-  contours: string[];
-  zones: string[][];
-  proportions: number[];
-};
 
 export function transform(sets: SetOverlaps): TransformedSets {
   const contours = new Set<string>();

@@ -72,7 +72,7 @@ export type FitnessData = {
   zoneAveragePositions: Record<string, ZoneInfo["avgPos"]> | undefined;
 };
 
-type ColourPalettes =
+export type ColourPalettes =
   | "Tableau10"
   | "Tableau20"
   | "Tableau ColorBlind"
@@ -102,4 +102,12 @@ export type State = {
   originalProportions: number[];
   zones: string[][];
   zoneStrings: string[];
+};
+
+export type SetOverlaps = Array<Array<string | number>>;
+
+export type TransformedSets = {
+  contours: string[];
+  zones: string[][];
+  proportions: number[];
 };
