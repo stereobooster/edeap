@@ -126,3 +126,11 @@ export type OptimizerConfig = {
   strategy: number;
   onStep?: (final: boolean) => void;
 };
+
+export type SVGConfig = {
+  width: number;
+  height: number;
+  showLabels?: boolean;
+  showValues?: boolean;
+  standalone?: boolean;
+};
