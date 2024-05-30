@@ -1,31 +1,23 @@
-import { generateSVG, initialState } from "./other";
 import { colourPalettes } from "./colors";
 import { generateRandomZones } from "./generateRandomZones";
 // import { logMessage, logReproducability } from "./logMessage";
-import { HILL_CLIMBING, SIMULATED_ANNEALING, Optimizer } from "./optimizer";
+import { HILL_CLIMBING, SIMULATED_ANNEALING } from "./optimizer";
 import { parse } from "./parse";
-import { State } from "./types";
 import qs from "qs"; // new URLSearchParams
 import { z } from "zod";
+import { Edeap } from ".";
 
 function init() {
   initUI();
 
-  const {
-    overlaps,
-    labelSize,
-    valueSize,
-    initialLayout,
-    optimizationMethod,
-    palette,
-  } = getParams();
+  const { overlaps, optimizationMethod, labelSize, valueSize, ...rest } =
+    getParams();
 
-  const sharedState: State = initialState({
+  const diagram = new Edeap({
     overlaps: parse(overlaps),
-    palette,
     labelSize,
     valueSize,
-    initialLayout,
+    ...rest,
   });
 
   // reproducability logging
@@ -68,44 +60,39 @@ function init() {
 
   const width = canvasWidth();
   const height = canvasHeight();
-  const opt = new Optimizer({
+
+  diagram.optimizie({
     strategy: optimizationMethod,
-    width,
-    height,
-    state: sharedState,
     onStep: (final) => {
-      document.getElementById("ellipsesSVG")!.innerHTML = generateSVG(
-        sharedState,
+      document.getElementById("ellipsesSVG")!.innerHTML = diagram.svg({
         width,
         height,
-        final && labelSize > 0,
-        final && valueSize > 0
-      );
+        showLabels: final && labelSize > 0,
+        showValues: final && valueSize > 0,
+      });
 
-      const tbody = opt.areas.zoneAreaTableBody();
-      document.getElementById("areaTableBody")!.innerHTML = tbody;
-
-      if (final) {
-        const progress = document.getElementById(
-          "optimizerProgress"
-        ) as HTMLProgressElement;
-        progress.value = progress.max;
-      }
+      // TODO: restore
+      // const tbody = opt.areas.zoneAreaTableBody();
+      // document.getElementById("areaTableBody")!.innerHTML = tbody;
+      // if (final) {
+      //   const progress = document.getElementById(
+      //     "optimizerProgress"
+      //   ) as HTMLProgressElement;
+      //   progress.value = progress.max;
+      // }
     },
   });
 
-  opt.optimize(false);
-
   document.getElementById("svgDownload")?.addEventListener("click", () => {
     const { width, height } = getParams();
-    const svgString = generateSVG(
-      sharedState,
-      width || canvasWidth(),
-      height || canvasHeight(),
-      true && labelSize > 0,
-      true && valueSize > 0,
-      true //forDownload
-    );
+    const svgString = diagram.svg({
+      width: width || canvasWidth(),
+      height: height || canvasHeight(),
+      showLabels: labelSize > 0,
+      showValues: valueSize > 0,
+      standalone: true,
+    });
+
     downloadFileFromText(getDownloadName("svg"), svgString);
   });
 }
@@ -230,10 +217,8 @@ function saveAreaSpecification() {
 }
 
 function initUI() {
-  const { palette, initialLayout, overlaps, optimizationMethod } =
-    getParams();
-  const { labelSize, valueSize, width, height } =
-    getParamsWithoutDefaults();
+  const { palette, initialLayout, overlaps, optimizationMethod } = getParams();
+  const { labelSize, valueSize, width, height } = getParamsWithoutDefaults();
 
   const labelSizeEntry = document.getElementById(
     "setLabelSizeEntry"
@@ -246,9 +231,7 @@ function initUI() {
   ) as HTMLInputElement;
   intersectionLabelSizeEntry.value =
     valueSize === undefined ? "" : String(valueSize);
-  intersectionLabelSizeEntry.placeholder = String(
-    defaultParams["valueSize"]
-  );
+  intersectionLabelSizeEntry.placeholder = String(defaultParams["valueSize"]);
 
   const widthEntry = document.getElementById("widthEntry") as HTMLInputElement;
   widthEntry.value = width === undefined ? "" : String(width);

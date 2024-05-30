@@ -112,3 +112,16 @@ export type TransformedSets = {
   zones: string[][];
   proportions: number[];
 };
+
+export type Config = {
+  overlaps: SetOverlaps;
+  palette?: ColourPalettes;
+  labelSize?: number;
+  valueSize?: number;
+  initialLayout?: "default" | "random";
+};
+
+export type OptimizerConfig = {
+  strategy: number;
+  onStep?: (final: boolean) => void;
+};
