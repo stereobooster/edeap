@@ -15,12 +15,7 @@ const defaults = {
   valueSize: "12pt",
 };
 
-export function initialState({
-  overlaps,
-  labelSize,
-  valueSize,
-  initialLayout,
-}: Config) {
+export function initialState({ overlaps, initialLayout }: Config) {
   const parsed = transform(check(overlaps));
   const state: State = {
     ...defaults,
@@ -32,28 +27,13 @@ export function initialState({
     ellipseParams: [],
     ellipseLabel: [],
     duplicatedEllipseIndexes: [],
-
-    labelWidths: [],
-    labelHeights: [],
-    valueWidths: [],
-    valueHeights: [],
   };
-
-  if (labelSize !== undefined) state.labelSize = labelSize + "pt";
-  if (valueSize !== undefined) state.valueSize = valueSize + "pt";
 
   if (initialLayout === "random") {
     generateRandomLayout(state, 2, 2);
   } else {
     generateDefaultLayout(state);
   }
-
-  const labelSizes = findTextSizes(state, "ellipseLabel");
-  state.labelWidths = labelSizes.lengths;
-  state.labelHeights = labelSizes.heights;
-  const valueSizes = findTextSizes(state, "originalProportions");
-  state.valueWidths = valueSizes.lengths;
-  state.valueHeights = valueSizes.heights;
 
   return state;
 }
@@ -148,8 +128,12 @@ export function generateSVG({
   showValues,
   standalone,
   palette,
+  labelSize,
+  valueSize,
 }: SVGConfig & { state: State }) {
   palette = palette || "Tableau10";
+  labelSize = labelSize || "12pt";
+  valueSize = valueSize || "12pt";
   // if (state.contours.length > colourPalettes[palette].length) {
   //   console.log(
   //     `More ellipses than supported by ${palette} colour palette. Using Tableau20 palette.`
@@ -157,13 +141,14 @@ export function generateSVG({
   //   palette = "Tableau20";
   // }
 
+  const labelDimensions = textDimentsions(state.ellipseLabel, labelSize);
   const areas = new EdeapAreas(state);
   const { translateX, translateY, scaling } = findTransformationToFit(
     width,
     height,
     areas,
-    Math.max(...state.labelWidths), // labelSizes.maxWidth,
-    Math.max(...state.labelHeights) // labelSizes.maxHeight
+    labelDimensions.maxWidth,
+    labelDimensions.maxHeight
   );
 
   let svgString = "";
@@ -360,8 +345,8 @@ export function generateSVG({
       let angleRad = toRadians(angle);
       let { x, y } = ellipseBoundaryPosition(eA, eB, eR, angleRad);
 
-      const textWidth = areas.labelWidths[i];
-      const textHeight = areas.labelHeights[i];
+      const textWidth = labelDimensions.widths[i];
+      const textHeight = labelDimensions.heights[i];
 
       if (LABEL_DEBUGGING) {
         nextSVG = `<circle cx="${x + eX}" cy="${
@@ -398,9 +383,9 @@ export function generateSVG({
       }
 
       const color = findColor(i, colourPalettes[palette]);
-      nextSVG = `<text style="font-family: Helvetica; font-size: ${
-        state.labelSize
-      };" x="${x + eX - textWidth / 2}" y="${y + eY}" fill="${color}">
+      nextSVG = `<text style="font-family: Helvetica; font-size: ${labelSize};" x="${
+        x + eX - textWidth / 2
+      }" y="${y + eY}" fill="${color}">
           ${areas.ellipseLabel[i]}
         </text>\n`;
       svgString += nextSVG;
@@ -420,8 +405,8 @@ export function generateSVG({
         const labelX = (labelPosition.x + translateX) * scaling;
         const labelY = (labelPosition.y + translateY) * scaling;
         if (!isNaN(labelX)) {
-          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${state.valueSize};" fill="black">
-              ${areas.originalProportions[i]}
+          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${valueSize};" fill="black">
+              ${state.originalProportions[i]}
             </text>\n`;
           svgString += nextSVG;
         }
@@ -468,36 +453,37 @@ function findTransformationToFit(
   return { scaling, translateX, translateY };
 }
 
-export function findTextSizes(
-  state: State,
-  filed: "ellipseLabel" | "originalProportions"
+export function textDimentsions(
+  strings: any[],
+  fontSize: string = "12pt",
+  fontName: string = "Helvetica"
 ) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
   text.setAttribute(
     "style",
-    `font-family: Helvetica; font-size: ${state.labelSize};`
+    `font-family: ${fontName}; font-size: ${fontSize};`
   );
   svg.appendChild(text);
   const textLengthMeasure = document.getElementById("textLengthMeasure")!;
   textLengthMeasure.innerHTML = ""; // clear the div
   textLengthMeasure.appendChild(svg);
 
-  const lengths: number[] = [];
+  const widths: number[] = [];
   const heights: number[] = [];
   let maxHeight = 0;
   let maxWidth = 0;
-  for (let i = 0; i < state[filed].length; i++) {
-    text.textContent = String(state[filed][i]);
-    lengths[i] = text.getComputedTextLength();
+  for (let i = 0; i < strings.length; i++) {
+    text.textContent = String(strings[i]);
+    widths[i] = text.getComputedTextLength();
     heights[i] = text.getBBox().height;
     maxHeight = Math.max(maxHeight, heights[i]);
-    maxWidth = Math.max(maxWidth, lengths[i]);
+    maxWidth = Math.max(maxWidth, widths[i]);
   }
   textLengthMeasure.innerHTML = ""; // clear the div
 
   return {
-    lengths,
+    widths,
     heights,
     maxHeight,
     maxWidth,

@@ -32,11 +32,6 @@ export class EdeapAreas {
   maxTotalAreaDiff: number;
   zoneStrings: string[];
   proportions: number[];
-  valueWidths: number[];
-  valueHeights: number[];
-  labelWidths: number[];
-  labelHeights: number[];
-  originalProportions: number[];
 
   ellipseLabel: string[];
   ellipseParams: EllipseParams[];
@@ -51,11 +46,6 @@ export class EdeapAreas {
 
     this.zoneStrings = state.zoneStrings;
     this.proportions = state.proportions;
-    this.valueWidths = state.valueWidths;
-    this.valueHeights = state.valueHeights;
-    this.labelWidths = state.labelWidths;
-    this.labelHeights = state.labelHeights;
-    this.originalProportions = state.originalProportions;
 
     this.ellipseLabel = state.ellipseLabel;
     this.ellipseParams = state.ellipseParams;

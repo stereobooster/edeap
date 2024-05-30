@@ -79,12 +79,6 @@ export type ColourPalettes =
   | "ColorBrewer";
 
 export type State = {
-  // TODO: move this to SVGConfig
-  // font size for labels aka name of set
-  labelSize: string;
-  // font size for set volume aka set size
-  valueSize: string;
-
   // if set fo an index, indicates the number of this ellipse as a duplicate.
   ellipseDuplication: number[];
   ellipseArea: number[];
@@ -94,10 +88,6 @@ export type State = {
 
   // size of number of ellipses
   contours: string[];
-  labelWidths: number[];
-  labelHeights: number[];
-  valueWidths: number[];
-  valueHeights: number[];
   contourAreas: number[];
   proportions: number[];
   originalProportions: number[];
@@ -133,4 +123,8 @@ export type SVGConfig = {
   showLabels?: boolean;
   showValues?: boolean;
   standalone?: boolean;
+  // font size for labels aka name of set
+  labelSize?: string;
+  // font size for set volume aka set size
+  valueSize?: string;
 };
