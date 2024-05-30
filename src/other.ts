@@ -10,15 +10,9 @@ import {
 import { colourPalettes, findColor } from "./colors";
 import { check, transform, calculateInitial } from "./parse";
 
-const defaults = {
-  labelSize: "12pt",
-  valueSize: "12pt",
-};
-
 export function initialState({ overlaps, initialLayout }: Config) {
   const parsed = transform(check(overlaps));
   const state: State = {
-    ...defaults,
     ...parsed,
     ...calculateInitial(parsed),
     ellipseParams: [],
