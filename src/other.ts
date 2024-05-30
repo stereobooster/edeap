@@ -11,7 +11,7 @@ import { colourPalettes, findColor } from "./colors";
 import { check, transform, calculateInitial } from "./parse";
 
 const defaultState: State = {
-  colourPaletteName: "Tableau10",
+  palette: "Tableau10",
   labelFontSize: "12pt",
   valueFontSize: "12pt",
 
@@ -38,7 +38,7 @@ const defaultState: State = {
 
 type Config = {
   overlaps: SetOverlaps;
-  colourPaletteName?: ColourPalettes;
+  palette?: ColourPalettes;
   setLabelSize?: number;
   intersectionLabelSize?: number;
   startingDiagram?: "default" | "random";
@@ -46,7 +46,7 @@ type Config = {
 
 export function initialState({
   overlaps,
-  colourPaletteName,
+  palette,
   setLabelSize,
   intersectionLabelSize,
   startingDiagram,
@@ -58,12 +58,12 @@ export function initialState({
     ...calculateInitial(parsed),
   };
 
-  state.colourPaletteName = colourPaletteName || state.colourPaletteName;
-  if (state.contours.length > colourPalettes[state.colourPaletteName].length) {
+  state.palette = palette || state.palette;
+  if (state.contours.length > colourPalettes[state.palette].length) {
     console.log(
-      `More ellipses than supported by ${state.colourPaletteName} colour palette. Using Tableau20 palette.`
+      `More ellipses than supported by ${state.palette} colour palette. Using Tableau20 palette.`
     );
-    state.colourPaletteName = "Tableau20";
+    state.palette = "Tableau20";
   }
 
   if (setLabelSize !== undefined) state.labelFontSize = setLabelSize + "pt";
@@ -200,7 +200,7 @@ export function generateSVG(
   let nextSVG = "";
   const N = areas.ellipseLabel.length;
   for (let i = 0; i < N; i++) {
-    const color = findColor(i, colourPalettes[state.colourPaletteName]);
+    const color = findColor(i, colourPalettes[state.palette]);
     const eX = (areas.ellipseParams[i].X + translateX) * scaling;
     const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
     const eA = areas.ellipseParams[i].A * scaling;
@@ -417,7 +417,7 @@ export function generateSVG(
         y -= halfHeight;
       }
 
-      const color = findColor(i, colourPalettes[state.colourPaletteName]);
+      const color = findColor(i, colourPalettes[state.palette]);
       nextSVG = `<text style="font-family: Helvetica; font-size: ${
         state.labelFontSize
       };" x="${x + eX - textWidth / 2}" y="${y + eY}" fill="${color}">
