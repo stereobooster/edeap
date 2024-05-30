@@ -1,4 +1,10 @@
-import type { ColourPalettes, Config, RangeType, State } from "./types";
+import type {
+  ColourPalettes,
+  Config,
+  RangeType,
+  SVGConfig,
+  State,
+} from "./types";
 import { EdeapAreas } from "./EdeapAreas";
 import {
   distanceBetween,
@@ -150,16 +156,15 @@ function generateRandomLayout(state: State, maxX: number, maxY: number) {
 }
 
 // generate svg from ellipses
-export function generateSVG(
-  state: State,
-  width: number,
-  height: number,
-  setLabels: boolean,
-  intersectionValues: boolean,
-  forDownload: boolean = false
-) {
+export function generateSVG({
+  state,
+  width,
+  height,
+  showLabels,
+  showValues,
+  standalone,
+}: SVGConfig & { state: State }) {
   const areas = new EdeapAreas(state);
-  // const labelSizes = findTextSizes(state, "ellipseLabel");
   const { translateX, translateY, scaling } = findTransformationToFit(
     width,
     height,
@@ -170,7 +175,7 @@ export function generateSVG(
 
   let svgString = "";
 
-  if (forDownload) {
+  if (standalone) {
     // Prolog is only needed for when in a standalone file.
     svgString += '<?xml version="1.0" standalone="no"?>';
     svgString +=
@@ -194,7 +199,7 @@ export function generateSVG(
     svgString += nextSVG;
   }
 
-  if (setLabels) {
+  if (showLabels || showLabels === undefined) {
     const LABEL_DEBUGGING = false;
 
     // Find positions for ellipses, one at a time.
@@ -409,7 +414,7 @@ export function generateSVG(
     }
   }
 
-  if (intersectionValues) {
+  if (showValues || showValues === undefined) {
     const generateLabelPositions = true;
     const areaInfo = areas.computeAreasAndBoundingBoxesFromEllipses(
       generateLabelPositions

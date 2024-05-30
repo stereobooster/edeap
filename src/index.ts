@@ -1,16 +1,8 @@
 import { EdeapAreas } from "./EdeapAreas";
 import { Optimizer } from "./optimizer";
 import { generateSVG, initialState } from "./other";
-import { Config, OptimizerConfig, State } from "./types";
+import { Config, OptimizerConfig, SVGConfig, State } from "./types";
 // import { logMessage, logReproducability } from "./logMessage";
-
-type SVGConfig = {
-  width: number;
-  height: number;
-  showLabels?: boolean;
-  showValues?: boolean;
-  standalone?: boolean;
-};
 
 export class Edeap {
   state: State;
@@ -57,23 +49,13 @@ export class Edeap {
     //   );
     // }
   }
-  optimizie(config: OptimizerConfig) {
-    const opt = new Optimizer({
-      state: this.state,
-      ...config,
-    });
+  optimizie(cfg: OptimizerConfig) {
+    const opt = new Optimizer({ state: this.state, ...cfg });
     // TODO: expose option
     return opt.optimize(false);
   }
-  svg({ width, height, showLabels, showValues, standalone }: SVGConfig) {
-    return generateSVG(
-      this.state,
-      width,
-      height,
-      showLabels === undefined ? true : showLabels,
-      showValues === undefined ? true : showValues,
-      standalone === undefined ? false : standalone
-    );
+  svg(cfg: SVGConfig) {
+    return generateSVG({ state: this.state, ...cfg });
   }
   htmlReport() {
     return this.areas.zoneAreaTableBody();
