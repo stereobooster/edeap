@@ -116,10 +116,11 @@ function init() {
   opt.optimize(false);
 
   document.getElementById("svgDownload")?.addEventListener("click", () => {
+    const { width, height } = getParams();
     const svgString = generateSVG(
       sharedState,
-      widthForSvgDownload(),
-      heightForSvgDownload(),
+      width || canvasWidth(),
+      height || canvasHeight(),
       true,
       true,
       true //forDownload
@@ -169,6 +170,15 @@ const qsSchema = z.object({
 
 type QueryParams = z.infer<typeof qsSchema>;
 
+function getParamsWithoutDefaults() {
+  const parsed = qsSchema.parse(qs.parse(window.location.search.substring(1)));
+  Object.keys(parsed).forEach(
+    // @ts-ignore
+    (key) => parsed[key] === undefined && delete parsed[key]
+  );
+  return parsed;
+}
+
 const defaultParams = {
   areaSpecification:
     "pet 5\r\nmammal 32.7\r\npet mammal 12.1\r\nmammal dog 21.7\r\ndog mammal pet 12.8",
@@ -178,15 +188,6 @@ const defaultParams = {
   setLabelSize: 12,
   startingDiagram: "default",
 } satisfies QueryParams;
-
-function getParamsWithoutDefaults() {
-  const parsed = qsSchema.parse(qs.parse(window.location.search.substring(1)));
-  Object.keys(parsed).forEach(
-    // @ts-ignore
-    (key) => parsed[key] === undefined && delete parsed[key]
-  );
-  return parsed;
-}
 
 function getParams() {
   const parsed = getParamsWithoutDefaults();
@@ -198,16 +199,6 @@ function getParams() {
 
 const canvasWidth = () => document.getElementById("ellipsesSVG")!.offsetWidth;
 const canvasHeight = () => document.getElementById("ellipsesSVG")!.offsetHeight;
-
-const widthForSvgDownload = () => {
-  const { width } = getParams();
-  return width === undefined ? canvasWidth() : width;
-};
-
-const heightForSvgDownload = () => {
-  const { height } = getParams();
-  return height === undefined ? canvasHeight() : height;
-};
 
 // downloadFileFromText function from:
 // https://stackoverflow.com/questions/4845215/making-a-chrome-extension-download-a-file
