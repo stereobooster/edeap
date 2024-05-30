@@ -4,7 +4,7 @@
 
 import { EdeapAreas } from "./EdeapAreas";
 import { logMessage, logOptimizerStep, logOptimizerChoice } from "./logMessage";
-import { State } from "./types";
+import { OptimizerConfig, State } from "./types";
 
 function fixNumberPrecision(value: any) {
   return Number(parseFloat(value).toPrecision(13));
@@ -59,8 +59,6 @@ const PI = Math.PI;
 
 export class Optimizer {
   strategy: number;
-  width: number;
-  height: number;
   state: State;
   // a variable which indicates whether the optimizer should change its search space or not
   changeSearchSpace: boolean = false;
@@ -95,22 +93,8 @@ export class Optimizer {
 
   onStep?: (final: boolean) => void;
 
-  constructor({
-    strategy,
-    width,
-    height,
-    state,
-    onStep,
-  }: {
-    strategy: number;
-    width: number;
-    height: number;
-    state: State;
-    onStep?: (final: boolean) => void;
-  }) {
+  constructor({ strategy, state, onStep }: OptimizerConfig & { state: State }) {
     this.strategy = strategy;
-    this.width = width;
-    this.height = height;
     this.state = state;
     this.onStep = onStep;
 

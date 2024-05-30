@@ -1,4 +1,4 @@
-import type { ColourPalettes, RangeType, SetOverlaps, State } from "./types";
+import type { Config, RangeType, State } from "./types";
 import { EdeapAreas } from "./EdeapAreas";
 import {
   distanceBetween,
@@ -34,14 +34,6 @@ const defaultState: State = {
   originalProportions: [],
   zoneStrings: [],
   contourAreas: [],
-};
-
-type Config = {
-  overlaps: SetOverlaps;
-  palette?: ColourPalettes;
-  labelSize?: number;
-  valueSize?: number;
-  initialLayout?: "default" | "random";
 };
 
 export function initialState({
