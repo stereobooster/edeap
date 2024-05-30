@@ -62,6 +62,7 @@ export class Edeap {
       state: this.state,
       ...config,
     });
+    // TODO: expose option
     return opt.optimize(false);
   }
   svg({ width, height, showLabels, showValues, standalone }: SVGConfig) {
