@@ -6,6 +6,8 @@ Fork of https://github.com/mjwybrow/edeap
 
 - restore integration tests
   - https://github.com/mjwybrow/edeap/tree/master/testfiles
+  - playwright
+  - odiff-bin
 - it seems I broke something - need to check aginst first version
 - [ ] monorepo (turbo)
 - [ ] npm package
