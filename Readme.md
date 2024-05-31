@@ -4,6 +4,9 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
+- restore integration tests
+  - https://github.com/mjwybrow/edeap/tree/master/testfiles
+- it seems I broke something - need to check aginst first version
 - [ ] monorepo (turbo)
 - [ ] npm package
   - export main class
