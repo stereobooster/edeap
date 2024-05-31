@@ -116,7 +116,7 @@ export function generateSVG({
   //   palette = "Tableau20";
   // }
 
-  const labelDimensions = textDimentsions(state.contours, labelSize);
+  const labelDimensions = textDimentions(state.contours, labelSize);
   const { translateX, translateY, scaling } = findTransformationToFit(
     width,
     height,
@@ -427,7 +427,7 @@ function findTransformationToFit(
   return { scaling, translateX, translateY };
 }
 
-export function textDimentsions(
+export function textDimentions(
   strings: any[],
   fontSize: string = "12pt",
   fontName: string = "Helvetica"

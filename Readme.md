@@ -8,13 +8,15 @@ Fork of https://github.com/mjwybrow/edeap
 - [ ] npm package
   - export main class
   - export function sync/async
-  - config types
-  - constants
-  - update `textDimentsions` to be independent of DOM id
-- [ ] check if it is possible to implement server side version of `textDimentsions`
+  - export config types
+  - export constants
+  - update `textDimentions` to be independent of DOM id
+- [ ] check if it is possible to implement server side version of `textDimentions`
   - pass it as param so it would be possible to have versions for server and client
 - [ ] callback for color
 - [ ] demo (host online)
+  - add `@upsetjs/venn.js` for comparison
+  - add pan/zoom to SVG
 - [ ] memoization
 - [ ] add test for `generateDefaultLayout`
 
@@ -28,7 +30,7 @@ export interface ISetOverlap {
 
 ## Ideas
 
-Alternatives to clientside `textDimentsions`:
+Alternatives to clientside `textDimentions`:
 
 - [resvg-js](https://github.com/yisibl/resvg-js)?
 - [canvas](https://github.com/Brooooooklyn/canvas)
