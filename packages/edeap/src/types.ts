@@ -83,7 +83,7 @@ export type State = {
   // if set fo an index, indicates the number of this ellipse as a duplicate.
   ellipseDuplication: number[];
   // duplicatedEllipseIndexes: number[];
-  
+
   // size of number of ellipses
   contours: string[];
   contourAreas: number[];
@@ -113,7 +113,7 @@ export type OptimizerConfig = {
   onStep?: (final: boolean) => void;
 };
 
-type ColorGenerator = (index: number, label: string) => string
+type ColorGenerator = (index: number, label: string) => string;
 
 export type SVGConfig = {
   width: number;
@@ -123,7 +123,15 @@ export type SVGConfig = {
   showValues?: boolean;
   standalone?: boolean;
   // font size for labels aka name of set
-  labelSize?: string;
+  labelSize?: number;
+  labelFont?: string;
   // font size for set volume aka set size
-  valueSize?: string;
+  valueSize?: number;
+  dimensions?: ITextDimensions;
 };
+
+export interface ITextDimensions {
+  init(fontSize: number, fontName: string): void;
+  measure(str: string): { width: number; height: number };
+  destroy(): void;
+}

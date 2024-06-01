@@ -1,4 +1,10 @@
-import type { InitConfig, RangeType, SVGConfig, State } from "./types.js";
+import type {
+  InitConfig,
+  RangeType,
+  SVGConfig,
+  State,
+  ITextDimensions,
+} from "./types.js";
 import { EdeapAreas } from "./EdeapAreas.js";
 import {
   distanceBetween,
@@ -8,6 +14,7 @@ import {
   toRadians,
 } from "./geometry.js";
 import { check, transform, calculateInitial } from "./parse.js";
+import { TextDimensions } from "./TextDimensions.js";
 
 export function initialState({ overlaps, initialLayout }: InitConfig) {
   const parsed = transform(check(overlaps));
@@ -102,13 +109,20 @@ export function generateSVG({
   showValues,
   standalone,
   labelSize,
+  labelFont,
   valueSize,
   color: colorGenerator,
+  dimensions,
 }: SVGConfig & { state: State; areas: EdeapAreas }) {
-  labelSize = labelSize || "12pt";
-  valueSize = valueSize || "12pt";
+  labelFont = labelFont || "Helvetica";
+  labelSize = labelSize || 16;
+  valueSize = valueSize || 16;
 
-  const labelDimensions = textDimensions(state.contours, labelSize);
+  dimensions = dimensions || new TextDimensions();
+  dimensions.init(labelSize, labelFont);
+  const labelDimensions = textDimensions(state.contours, dimensions);
+  dimensions.destroy();
+
   const { translateX, translateY, scaling } = findTransformationToFit(
     width,
     height,
@@ -353,7 +367,7 @@ export function generateSVG({
       const color = colorGenerator
         ? colorGenerator(i, areas.contours[i])
         : "#ccc";
-      nextSVG = `<text style="font-family: Helvetica; font-size: ${labelSize};" x="${
+      nextSVG = `<text style="font-family: ${labelFont}; font-size: ${labelSize}px;" x="${
         x + eX - textWidth / 2
       }" y="${y + eY}" fill="${color}">${areas.contours[i]}</text>\n`;
       svgString += nextSVG;
@@ -373,7 +387,7 @@ export function generateSVG({
         const labelX = (labelPosition.x + translateX) * scaling;
         const labelY = (labelPosition.y + translateY) * scaling;
         if (!isNaN(labelX)) {
-          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${valueSize};" fill="black">${state.originalProportions[i]}</text>\n`;
+          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: ${labelFont}; font-size: ${valueSize}px;" fill="black">${state.originalProportions[i]}</text>\n`;
           svgString += nextSVG;
         }
       }
@@ -419,34 +433,18 @@ function findTransformationToFit(
   return { scaling, translateX, translateY };
 }
 
-export function textDimensions(
-  strings: any[],
-  fontSize: string = "12pt",
-  fontName: string = "Helvetica"
-) {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  text.setAttribute(
-    "style",
-    `font-family: ${fontName}; font-size: ${fontSize};`
-  );
-  svg.appendChild(text);
-  const textLengthMeasure = document.createElement("div");
-  textLengthMeasure.appendChild(svg);
-  document.body.appendChild(textLengthMeasure);
-
+export function textDimensions(strings: any[], td: ITextDimensions) {
   const widths: number[] = [];
   const heights: number[] = [];
   let maxHeight = 0;
   let maxWidth = 0;
   for (let i = 0; i < strings.length; i++) {
-    text.textContent = String(strings[i]);
-    widths[i] = text.getComputedTextLength();
-    heights[i] = text.getBBox().height;
+    const { width, height } = td.measure(String(strings[i]));
+    widths[i] = width;
+    heights[i] = height;
     maxHeight = Math.max(maxHeight, heights[i]);
     maxWidth = Math.max(maxWidth, widths[i]);
   }
-  document.body.removeChild(textLengthMeasure);
 
   return {
     widths,

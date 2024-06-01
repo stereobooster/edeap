@@ -34,8 +34,8 @@ function init() {
         showLabels: final && labelSize > 0,
         showValues: final && valueSize > 0,
         color: (i: number) => findColor(i, colourPalettes[palette]),
-        labelSize: labelSize + "pt",
-        valueSize: valueSize + "pt",
+        labelSize: labelSize,
+        valueSize: valueSize,
       });
 
       const tbody = diagram.htmlReport();
@@ -59,8 +59,8 @@ function init() {
       showValues: valueSize > 0,
       standalone: true,
       color: (i: number) => findColor(i, colourPalettes[palette]),
-      labelSize: labelSize + "pt",
-      valueSize: valueSize + "pt",
+      labelSize: labelSize,
+      valueSize: valueSize,
     });
 
     downloadFileFromText(getDownloadName("svg"), svgString);
@@ -120,10 +120,10 @@ function getParamsWithoutDefaults() {
 const defaultParams = {
   overlaps:
     "pet 5\r\nmammal 32.7\r\npet mammal 12.1\r\nmammal dog 21.7\r\ndog mammal pet 12.8",
-  valueSize: 12,
+  valueSize: 16,
   optimizationMethod: HILL_CLIMBING,
   palette: "Tableau10",
-  labelSize: 12,
+  labelSize: 16,
   initialLayout: "default",
 } satisfies QueryParams;
 

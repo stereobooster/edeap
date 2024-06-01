@@ -5,13 +5,13 @@ Fork of https://github.com/mjwybrow/edeap
 ## TODO
 
 - [ ] check if it is possible to implement server side version of `textDimensions`
-  - pass it as param so it would be possible to have versions for server and client
 - [ ] add test for `generateDefaultLayout`
 - [ ] use same format as `venn.js`
 - [ ] demo (host online)
   - add `@upsetjs/venn.js` for comparison
   - add pan/zoom to SVG
 - [ ] memoization
+- [ ] expose other configurations, like weights for Optmizer etc.
 
 ```ts
 // https://github.com/upsetjs/venn.js/blob/main/src/index.d.ts
