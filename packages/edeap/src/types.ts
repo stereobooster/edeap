@@ -72,12 +72,6 @@ export type FitnessData = {
   zoneAveragePositions: Record<string, ZoneInfo["avgPos"]> | undefined;
 };
 
-export type ColourPalettes =
-  | "Tableau10"
-  | "Tableau20"
-  | "Tableau ColorBlind"
-  | "ColorBrewer";
-
 export type State = {
   ellipseParams: EllipseParams[];
   // if set fo an index, indicates the number of this ellipse as a duplicate.
@@ -118,11 +112,11 @@ export type OptimizerConfig = {
   onStep?: (final: boolean) => void;
 };
 
-type ColorGenerator = (index: number, label: string) => string;
+export type ColorGenerator = (index: number, label: string) => string;
 
 export type SVGConfig = {
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   color?: ColorGenerator;
   showLabels?: boolean;
   showValues?: boolean;

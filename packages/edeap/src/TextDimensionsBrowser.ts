@@ -1,6 +1,6 @@
 import { ITextDimensions } from "./types.js";
 
-export class TextDimensions implements ITextDimensions {
+export class TextDimensionsBrowser implements ITextDimensions {
   text?: SVGTextElement;
   textLengthMeasure?: HTMLDivElement;
 

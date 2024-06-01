@@ -14,7 +14,8 @@ import {
   toRadians,
 } from "./geometry.js";
 import { check, transform, calculateInitial } from "./parse.js";
-import { TextDimensions } from "./TextDimensions.js";
+import { TextDimensionsNaive } from "./TextDimensionsNaive.js";
+import { defaultColor } from "./defaults.js";
 
 export function initialState({ overlaps, initialLayout }: InitConfig) {
   const parsed = transform(check(overlaps));
@@ -117,8 +118,13 @@ export function generateSVG({
   labelFont = labelFont || "Helvetica";
   labelSize = labelSize || 16;
   valueSize = valueSize || 16;
+  colorGenerator = colorGenerator || defaultColor;
+  showLabels = showLabels === undefined ? true : showLabels;
+  showValues = showValues === undefined ? true : showValues;
+  width = width || 1000;
+  height = height || 500;
 
-  dimensions = dimensions || new TextDimensions();
+  dimensions = dimensions || new TextDimensionsNaive();
   dimensions.init(labelSize, labelFont);
   const labelDimensions = textDimensions(state.contours, dimensions);
   dimensions.destroy();
@@ -145,9 +151,7 @@ export function generateSVG({
   let nextSVG = "";
   const N = areas.contours.length;
   for (let i = 0; i < N; i++) {
-    const color = colorGenerator
-      ? colorGenerator(i, areas.contours[i])
-      : "#ccc";
+    const color = colorGenerator(i, areas.contours[i]);
     const eX = (areas.ellipseParams[i].X + translateX) * scaling;
     const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
     const eA = areas.ellipseParams[i].A * scaling;
@@ -159,7 +163,7 @@ export function generateSVG({
     svgString += nextSVG;
   }
 
-  if (showLabels || showLabels === undefined) {
+  if (showLabels) {
     const LABEL_DEBUGGING = false;
 
     // Find positions for ellipses, one at a time.
@@ -364,9 +368,7 @@ export function generateSVG({
         y -= halfHeight;
       }
 
-      const color = colorGenerator
-        ? colorGenerator(i, areas.contours[i])
-        : "#ccc";
+      const color = colorGenerator(i, areas.contours[i]);
       nextSVG = `<text style="font-family: ${labelFont}; font-size: ${labelSize}px;" x="${
         x + eX - textWidth / 2
       }" y="${y + eY}" fill="${color}">${areas.contours[i]}</text>\n`;
@@ -374,7 +376,7 @@ export function generateSVG({
     }
   }
 
-  if (showValues || showValues === undefined) {
+  if (showValues) {
     const generateLabelPositions = true;
     const areaInfo = areas.computeAreasAndBoundingBoxesFromEllipses(
       generateLabelPositions

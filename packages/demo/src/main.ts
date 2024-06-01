@@ -1,7 +1,13 @@
 import qs from "qs"; // new URLSearchParams
 import { z } from "zod";
 import { generateRandomZones } from "./generateRandomZones";
-import { Edeap, HILL_CLIMBING, SIMULATED_ANNEALING, parse } from "edeap";
+import {
+  Edeap,
+  HILL_CLIMBING,
+  SIMULATED_ANNEALING,
+  parse,
+  TextDimensionsBrowser,
+} from "edeap";
 import { colourPalettes, findColor } from "./colors";
 
 function init() {
@@ -36,6 +42,7 @@ function init() {
         color: (i: number) => findColor(i, colourPalettes[palette]),
         labelSize: labelSize,
         valueSize: valueSize,
+        dimensions: new TextDimensionsBrowser(),
       });
 
       const tbody = diagram.htmlReport();
@@ -61,6 +68,7 @@ function init() {
       color: (i: number) => findColor(i, colourPalettes[palette]),
       labelSize: labelSize,
       valueSize: valueSize,
+      dimensions: new TextDimensionsBrowser(),
     });
 
     downloadFileFromText(getDownloadName("svg"), svgString);
