@@ -6,7 +6,6 @@ import { InitConfig, OptimizerConfig, SVGConfig, State } from "./types.js";
 
 export { parse } from "./parse.js";
 export { HILL_CLIMBING, SIMULATED_ANNEALING } from "./optimizer.js";
-export { colourPalettes } from "./colors.js";
 export { InitConfig, OptimizerConfig, SVGConfig };
 
 export class Edeap {

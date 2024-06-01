@@ -103,7 +103,6 @@ export type TransformedSets = {
 
 export type InitConfig = {
   overlaps: SetOverlaps;
-  palette?: ColourPalettes;
   labelSize?: number;
   valueSize?: number;
   initialLayout?: "default" | "random";
@@ -114,10 +113,12 @@ export type OptimizerConfig = {
   onStep?: (final: boolean) => void;
 };
 
+type ColorGenerator = (index: number, label: string) => string
+
 export type SVGConfig = {
   width: number;
   height: number;
-  palette?: ColourPalettes;
+  color?: ColorGenerator;
   showLabels?: boolean;
   showValues?: boolean;
   standalone?: boolean;

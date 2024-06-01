@@ -1,13 +1,8 @@
 import qs from "qs"; // new URLSearchParams
 import { z } from "zod";
 import { generateRandomZones } from "./generateRandomZones";
-import {
-  Edeap,
-  colourPalettes,
-  HILL_CLIMBING,
-  SIMULATED_ANNEALING,
-  parse,
-} from "edeap";
+import { Edeap, HILL_CLIMBING, SIMULATED_ANNEALING, parse } from "edeap";
+import { colourPalettes, findColor } from "./colors";
 
 function init() {
   initUI();
@@ -38,7 +33,7 @@ function init() {
         height,
         showLabels: final && labelSize > 0,
         showValues: final && valueSize > 0,
-        palette,
+        color: (i: number) => findColor(i, colourPalettes[palette]),
         labelSize: labelSize + "pt",
         valueSize: valueSize + "pt",
       });
@@ -63,7 +58,7 @@ function init() {
       showLabels: labelSize > 0,
       showValues: valueSize > 0,
       standalone: true,
-      palette,
+      color: (i: number) => findColor(i, colourPalettes[palette]),
       labelSize: labelSize + "pt",
       valueSize: valueSize + "pt",
     });

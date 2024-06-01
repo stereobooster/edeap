@@ -7,7 +7,6 @@ import {
   toDegrees,
   toRadians,
 } from "./geometry.js";
-import { colourPalettes, findColor } from "./colors.js";
 import { check, transform, calculateInitial } from "./parse.js";
 
 export function initialState({ overlaps, initialLayout }: InitConfig) {
@@ -102,19 +101,12 @@ export function generateSVG({
   showLabels,
   showValues,
   standalone,
-  palette,
   labelSize,
   valueSize,
+  color: colorGenerator
 }: SVGConfig & { state: State; areas: EdeapAreas }) {
-  palette = palette || "Tableau10";
   labelSize = labelSize || "12pt";
   valueSize = valueSize || "12pt";
-  // if (state.contours.length > colourPalettes[palette].length) {
-  //   console.log(
-  //     `More ellipses than supported by ${palette} colour palette. Using Tableau20 palette.`
-  //   );
-  //   palette = "Tableau20";
-  // }
 
   const labelDimensions = textDimentions(state.contours, labelSize);
   const { translateX, translateY, scaling } = findTransformationToFit(
@@ -139,7 +131,7 @@ export function generateSVG({
   let nextSVG = "";
   const N = areas.contours.length;
   for (let i = 0; i < N; i++) {
-    const color = findColor(i, colourPalettes[palette]);
+    const color = colorGenerator ? colorGenerator(i, areas.contours[i]) : "#ccc";
     const eX = (areas.ellipseParams[i].X + translateX) * scaling;
     const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
     const eA = areas.ellipseParams[i].A * scaling;
@@ -356,7 +348,7 @@ export function generateSVG({
         y -= halfHeight;
       }
 
-      const color = findColor(i, colourPalettes[palette]);
+      const color = colorGenerator ? colorGenerator(i, areas.contours[i]) : "#ccc";
       nextSVG = `<text style="font-family: Helvetica; font-size: ${labelSize};" x="${
         x + eX - textWidth / 2
       }" y="${y + eY}" fill="${color}">
