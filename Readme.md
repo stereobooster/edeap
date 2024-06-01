@@ -4,7 +4,6 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] use same format as `venn.js`
 - [ ] old demo (host online)
 - [ ] publish npm package
   - update readme (uasgae example)
@@ -18,10 +17,3 @@ Fork of https://github.com/mjwybrow/edeap
 - [ ] memoization?
 - [ ] expose other configurations, like weights for Optmizer etc.
 
-```ts
-// https://github.com/upsetjs/venn.js/blob/main/src/index.d.ts
-export interface ISetOverlap {
-  sets: string[];
-  size: number;
-}
-```

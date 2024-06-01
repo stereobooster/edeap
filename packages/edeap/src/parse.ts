@@ -5,11 +5,9 @@ export function parse(str: string): SetOverlaps {
     .trim()
     .split("\n")
     .map((row) => {
-      const parsedRow: (string | number)[] = row.trim().split(/\s+/);
-      parsedRow[parsedRow.length - 1] = parseFloat(
-        parsedRow[parsedRow.length - 1] as string
-      );
-      return parsedRow;
+      const sets: string[] = row.trim().split(/\s+/);
+      const size = parseFloat(sets.pop()!);
+      return { sets, size };
     });
 }
 
@@ -17,20 +15,20 @@ export function check(sets: SetOverlaps, silent = true): SetOverlaps {
   const seenBefore = new Set<string>();
   return sets
     .filter((row) => {
-      const test = row.length > 1;
+      const test = row.sets.length > 0;
       if (!test && !silent)
         throw new Error("Each row need to contain at least 2 elements");
       return test;
     })
     .filter((row) => {
-      const proportion = row[row.length - 1] as number;
+      const proportion = row.size;
       const test = !isNaN(proportion) && proportion > 0;
       if (!test && !silent)
         throw new Error("Set proportion suppose to be positive");
       return test;
     })
     .filter((row) => {
-      const combination = row.slice(0, -1);
+      const combination = row.sets;
       const combinationUnique = [...new Set(combination)];
       const test1 = combination.length === combinationUnique.length;
       if (!test1 && !silent) throw new Error("Duplicates in combination");
@@ -52,8 +50,8 @@ export function transform(sets: SetOverlaps): TransformedSets {
   const proportions: number[] = [];
 
   sets.forEach((row) => {
-    const zone = [...row];
-    const proportion = zone.pop() as number;
+    const zone = row.sets;
+    const proportion = row.size;
 
     zone.forEach((contour) => contours.add(contour as string));
     zones.push(zone as string[]);

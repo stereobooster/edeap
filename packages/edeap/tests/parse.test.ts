@@ -8,38 +8,38 @@ test("parses basic example", () => {
   c d 2
   `;
   expect(parse(str)).toEqual([
-    ["a", "b", 1],
-    ["c", "d", 2],
+    { sets: ["a", "b"], size: 1 },
+    { sets: ["c", "d"], size: 2 },
   ]);
 });
 
 test("frequency misses", () => {
   const str = `a b`;
-  expect(parse(str)).toEqual([["a", NaN]]);
+  expect(parse(str)).toEqual([{ sets: ["a"], size: NaN }]);
 });
 
 test("filters out rows with less than 2 elements", () => {
-  const str: SetOverlaps = [[], ["a"]];
+  const str: SetOverlaps = [{ sets: [], size: 1 }];
   expect(check(str)).toEqual([]);
 });
 
 test("filters out rows with wrong sizes", () => {
   const str: SetOverlaps = [
-    ["a", NaN],
-    ["b", 0],
-    ["c", -1],
+    { sets: ["a"], size: NaN },
+    { sets: ["b"], size: 0 },
+    { sets: ["c"], size: -1 },
   ];
   expect(check(str)).toEqual([]);
 });
 
 test.skip("filters out duplicate rows", () => {
   const str: SetOverlaps = [
-    ["a", 1],
-    ["a", 2],
-    ["a", "b", 3],
-    ["a", "b", 4],
-    ["b", "a", 5],
-    ["a", "b", "b", 6],
+    { sets: ["a"], size: 1 },
+    { sets: ["a"], size: 2 },
+    { sets: ["a", "b"], size: 3 },
+    { sets: ["a", "b"], size: 4 },
+    { sets: ["b", "a"], size: 5 },
+    { sets: ["a", "b", "b"], size: 6 },
   ];
   expect(check(str)).toEqual([
     ["a", 1],
@@ -50,8 +50,8 @@ test.skip("filters out duplicate rows", () => {
 test("transforms sets", () => {
   expect(
     transform([
-      ["a", "b", 1],
-      ["c", "d", 2],
+      { sets: ["a", "b"], size: 1 },
+      { sets: ["c", "d"], size: 2 },
     ])
   ).toEqual({
     contours: ["a", "b", "c", "d"],
@@ -141,9 +141,9 @@ test("example2", () => {
 
 test("calculateInitial", () => {
   const x = transform([
-    ["a", 1],
-    ["a", "b", 1],
-    ["a", "b", "c", 1],
+    { sets: ["a"], size: 1 },
+    { sets: ["a", "b"], size: 1 },
+    { sets: ["a", "b", "c"], size: 1 },
   ]);
   expect(calculateInitial(x)).toEqual({
     contourAreas: [1, 0.6666666666666666, 0.3333333333333333],

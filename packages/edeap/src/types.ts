@@ -93,7 +93,12 @@ export type State = {
   zoneStrings: string[];
 };
 
-export type SetOverlaps = Array<Array<string | number>>;
+export interface ISetOverlap {
+  sets: string[];
+  size: number;
+}
+
+export type SetOverlaps = ISetOverlap[];
 
 export type TransformedSets = {
   contours: string[];
