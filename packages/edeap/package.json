@@ -1,0 +1,43 @@
+{
+  "name": "edeap",
+  "version": "0.0.1",
+  "description": "Euler Diagrams Drawn with Ellipses Area-Proportionally (Edeap)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stereobooster/edeap-vite",
+    "directory": "packages/edeap"
+  },
+  "author": "stereobooster",
+  "license": "GPLV3",
+  "keywords": [
+    "euler",
+    "venn",
+    "diagram"
+  ],
+  "type": "module",
+  "exports": {
+    "types": "./dist/index.d.js",
+    "default": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "files": [
+    "./dist/*"
+  ],
+  "types": "./dist/index.d.js",
+  "scripts": {
+    "test": "vitest --exclude 'e2e/**'",
+    "e2e": "npx playwright test --ui",
+    "prepublishOnly": "npm run build",
+    "build": "rm -rf dist && tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "tsc": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.13",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {}
+}

@@ -1,25 +1,20 @@
 {
-  "name": "edeap-vite",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "e2e": "npx playwright test --ui",
-    "test": "vitest --exclude 'e2e/**'"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.44.1",
-    "@types/node": "^20.12.13",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.6",
-    "vitest": "^1.6.0"
-  },
-  "dependencies": {
-    "@types/qs": "^6.9.15",
-    "qs": "^6.12.1",
-    "zod": "^3.23.8"
+    "name": "edeap",
+    "type": "module",
+    "private": true,
+    "workspaces": [
+      "packages/*"
+    ],
+    "dependencies": {
+      "turbo": "^1.13.3",
+      "typescript": "^5.4.5"
+    },
+    "scripts": {
+      "test": "turbo run test",
+      "build": "turbo run build",
+      "dev": "turbo run dev",
+      "clean": "turbo run clean",
+      "tsc": "turbo run tsc",
+      "graph": "cyto-nodejs -s tmp/graph.json -d tmp/graph.svg"
+    }
   }
-}

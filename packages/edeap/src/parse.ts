@@ -1,4 +1,4 @@
-import { SetOverlaps, TransformedSets } from "./types";
+import { SetOverlaps, TransformedSets } from "./types.js";
 
 export function parse(str: string): SetOverlaps {
   return str

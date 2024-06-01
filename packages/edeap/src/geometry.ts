@@ -1,4 +1,4 @@
-import { EllipseParams } from "./types";
+import { EllipseParams } from "./types.js";
 
 export function toRadians(x: number) {
   return (x * Math.PI) / 180;

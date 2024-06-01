@@ -10,16 +10,16 @@ import {
   Point,
   ZoneInfo,
   State,
-} from "./types";
-import { distanceBetween, ellipseBoundingBox, isInEllipse } from "./geometry";
-import { logFitnessDetails, logMessage } from "./logMessage";
+} from "./types.js";
+import { distanceBetween, ellipseBoundingBox, isInEllipse } from "./geometry.js";
+import { logFitnessDetails, logMessage } from "./logMessage.js";
 import {
   gridSize,
   nextGridPoint,
   nextGridValue,
   prevGridPoint,
   prevGridValue,
-} from "./grid";
+} from "./grid.js";
 
 // ### AREA TEST DEBUG START
 //let paramsArray = [];

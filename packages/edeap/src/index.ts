@@ -1,8 +1,12 @@
-import { EdeapAreas } from "./EdeapAreas";
-import { Optimizer } from "./optimizer";
-import { generateSVG, initialState } from "./other";
-import { Config, OptimizerConfig, SVGConfig, State } from "./types";
+import { EdeapAreas } from "./EdeapAreas.js";
+import { Optimizer } from "./optimizer.js";
+import { generateSVG, initialState } from "./other.js";
+import { Config, OptimizerConfig, SVGConfig, State } from "./types.js";
 // import { logMessage, logReproducability } from "./logMessage";
+
+export { parse } from "./parse.js";
+export { HILL_CLIMBING, SIMULATED_ANNEALING } from "./optimizer.js";
+export { colourPalettes } from "./colors.js";
 
 export class Edeap {
   state: State;

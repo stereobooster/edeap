@@ -1,14 +1,14 @@
-import type { Config, RangeType, SVGConfig, State } from "./types";
-import { EdeapAreas } from "./EdeapAreas";
+import type { Config, RangeType, SVGConfig, State } from "./types.js";
+import { EdeapAreas } from "./EdeapAreas.js";
 import {
   distanceBetween,
   ellipseBoundaryPosition,
   isInEllipse,
   toDegrees,
   toRadians,
-} from "./geometry";
-import { colourPalettes, findColor } from "./colors";
-import { check, transform, calculateInitial } from "./parse";
+} from "./geometry.js";
+import { colourPalettes, findColor } from "./colors.js";
+import { check, transform, calculateInitial } from "./parse.js";
 
 export function initialState({ overlaps, initialLayout }: Config) {
   const parsed = transform(check(overlaps));

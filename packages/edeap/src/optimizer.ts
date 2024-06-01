@@ -2,9 +2,9 @@
 // Author:  Fadi Dib <deeb.f@gust.edu.kw>
 //
 
-import { EdeapAreas } from "./EdeapAreas";
-import { logMessage, logOptimizerStep, logOptimizerChoice } from "./logMessage";
-import { OptimizerConfig, State } from "./types";
+import { EdeapAreas } from "./EdeapAreas.js";
+import { logMessage, logOptimizerStep, logOptimizerChoice } from "./logMessage.js";
+import { OptimizerConfig, State } from "./types.js";
 
 function fixNumberPrecision(value: any) {
   return Number(parseFloat(value).toPrecision(13));

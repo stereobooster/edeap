@@ -4,12 +4,9 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] monorepo (turbo)
 - [ ] npm package
-  - export main class
   - export function sync/async
   - export config types
-  - export constants
   - update `textDimentions` to be independent of DOM id
 - [ ] check if it is possible to implement server side version of `textDimentions`
   - pass it as param so it would be possible to have versions for server and client
@@ -19,6 +16,7 @@ Fork of https://github.com/mjwybrow/edeap
   - add pan/zoom to SVG
 - [ ] memoization
 - [ ] add test for `generateDefaultLayout`
+- [ ] use same format as `venn.js`
 
 ```ts
 // https://github.com/upsetjs/venn.js/blob/main/src/index.d.ts

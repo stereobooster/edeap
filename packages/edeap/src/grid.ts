@@ -1,4 +1,4 @@
-import { Point } from "./types";
+import { Point } from "./types.js";
 
 export const gridSize = 0.026;
 
