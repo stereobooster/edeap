@@ -101,7 +101,7 @@ export type TransformedSets = {
   proportions: number[];
 };
 
-export type Config = {
+export type InitConfig = {
   overlaps: SetOverlaps;
   palette?: ColourPalettes;
   labelSize?: number;

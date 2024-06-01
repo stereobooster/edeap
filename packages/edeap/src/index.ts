@@ -1,17 +1,18 @@
 import { EdeapAreas } from "./EdeapAreas.js";
 import { Optimizer } from "./optimizer.js";
 import { generateSVG, initialState } from "./other.js";
-import { Config, OptimizerConfig, SVGConfig, State } from "./types.js";
+import { InitConfig, OptimizerConfig, SVGConfig, State } from "./types.js";
 // import { logMessage, logReproducability } from "./logMessage";
 
 export { parse } from "./parse.js";
 export { HILL_CLIMBING, SIMULATED_ANNEALING } from "./optimizer.js";
 export { colourPalettes } from "./colors.js";
+export { InitConfig, OptimizerConfig, SVGConfig };
 
 export class Edeap {
   state: State;
   areas: EdeapAreas;
-  constructor(config: Config) {
+  constructor(config: InitConfig) {
     this.state = initialState(config);
     this.areas = new EdeapAreas(this.state);
 
@@ -64,4 +65,18 @@ export class Edeap {
   htmlReport() {
     return this.areas.zoneAreaTableBody();
   }
+}
+
+export type EdeapConfig = InitConfig & OptimizerConfig & SVGConfig;
+
+export function edeapSvg(config: EdeapConfig) {
+  const instancee = new Edeap(config);
+  instancee.optimizie({ ...config, sync: true });
+  return instancee.svg(config);
+}
+
+export async function edeapSvgAsync(config: EdeapConfig) {
+  const instancee = new Edeap(config);
+  await instancee.optimizie({ ...config, sync: false });
+  return instancee.svg(config);
 }

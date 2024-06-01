@@ -1,4 +1,4 @@
-import type { Config, RangeType, SVGConfig, State } from "./types.js";
+import type { InitConfig, RangeType, SVGConfig, State } from "./types.js";
 import { EdeapAreas } from "./EdeapAreas.js";
 import {
   distanceBetween,
@@ -10,7 +10,7 @@ import {
 import { colourPalettes, findColor } from "./colors.js";
 import { check, transform, calculateInitial } from "./parse.js";
 
-export function initialState({ overlaps, initialLayout }: Config) {
+export function initialState({ overlaps, initialLayout }: InitConfig) {
   const parsed = transform(check(overlaps));
   const state: State = {
     ...parsed,
