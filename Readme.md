@@ -4,7 +4,7 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] check if it is possible to implement server side version of `textDimentions`
+- [ ] check if it is possible to implement server side version of `textDimensions`
   - pass it as param so it would be possible to have versions for server and client
 - [ ] add test for `generateDefaultLayout`
 - [ ] use same format as `venn.js`
@@ -23,7 +23,7 @@ export interface ISetOverlap {
 
 ## Ideas
 
-Alternatives to clientside `textDimentions`:
+Alternatives to clientside `textDimensions`:
 
 - [resvg-js](https://github.com/yisibl/resvg-js)?
 - [canvas](https://github.com/Brooooooklyn/canvas)

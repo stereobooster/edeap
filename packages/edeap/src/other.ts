@@ -108,7 +108,7 @@ export function generateSVG({
   labelSize = labelSize || "12pt";
   valueSize = valueSize || "12pt";
 
-  const labelDimensions = textDimentions(state.contours, labelSize);
+  const labelDimensions = textDimensions(state.contours, labelSize);
   const { translateX, translateY, scaling } = findTransformationToFit(
     width,
     height,
@@ -419,7 +419,7 @@ function findTransformationToFit(
   return { scaling, translateX, translateY };
 }
 
-export function textDimentions(
+export function textDimensions(
   strings: any[],
   fontSize: string = "12pt",
   fontName: string = "Helvetica"
