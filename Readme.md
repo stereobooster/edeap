@@ -4,7 +4,6 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] check if it is possible to implement server side version of `textDimensions`
 - [ ] add test for `generateDefaultLayout`
 - [ ] use same format as `venn.js`
 - [ ] demo (host online)

@@ -48,6 +48,9 @@ importers:
       '@types/node':
         specifier: ^20.12.13
         version: 20.12.13
+      server-text-width:
+        specifier: ^1.0.2
+        version: 1.0.2
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -883,6 +886,10 @@ packages:
       '@rollup/rollup-win32-ia32-msvc': 4.13.2
       '@rollup/rollup-win32-x64-msvc': 4.13.2
       fsevents: 2.3.3
+    dev: true
+
+  /server-text-width@1.0.2:
+    resolution: {integrity: sha512-FRdhfYNUc0eFhelW60dHeD6PjJrBdzZcygki9j7K9TfbDn8tewkuiggHrxTSFDmrxqET991+XOUSovvjmyZCNQ==}
     dev: true
 
   /set-function-length@1.2.2:
