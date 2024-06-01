@@ -4,7 +4,6 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] update `textDimentions` to be independent of DOM id
 - [ ] check if it is possible to implement server side version of `textDimentions`
   - pass it as param so it would be possible to have versions for server and client
 - [ ] callback for color

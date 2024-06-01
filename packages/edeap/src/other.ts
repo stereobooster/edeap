@@ -439,10 +439,9 @@ export function textDimentions(
     `font-family: ${fontName}; font-size: ${fontSize};`
   );
   svg.appendChild(text);
-  // TODO: do not use Id, instead insert directly to body hidden div
-  const textLengthMeasure = document.getElementById("textLengthMeasure")!;
-  textLengthMeasure.innerHTML = ""; // clear the div
+  const textLengthMeasure = document.createElement("div")
   textLengthMeasure.appendChild(svg);
+  document.body.appendChild(textLengthMeasure)
 
   const widths: number[] = [];
   const heights: number[] = [];
@@ -455,7 +454,7 @@ export function textDimentions(
     maxHeight = Math.max(maxHeight, heights[i]);
     maxWidth = Math.max(maxWidth, widths[i]);
   }
-  textLengthMeasure.innerHTML = ""; // clear the div
+  document.body.removeChild(textLengthMeasure)
 
   return {
     widths,
