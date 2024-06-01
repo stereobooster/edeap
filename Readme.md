@@ -4,12 +4,18 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] add test for `generateDefaultLayout`
 - [ ] use same format as `venn.js`
-- [ ] demo (host online)
+- [ ] old demo (host online)
+- [ ] publish npm package
+  - update readme (uasgae example)
+  - link to the demo
+  - check name of package, rename repo
+  - check keywords
+- [ ] add test for `generateDefaultLayout`
+- [ ] new demo (host online)
   - add `@upsetjs/venn.js` for comparison
   - add pan/zoom to SVG
-- [ ] memoization
+- [ ] memoization?
 - [ ] expose other configurations, like weights for Optmizer etc.
 
 ```ts
@@ -19,18 +25,3 @@ export interface ISetOverlap {
   size: number;
 }
 ```
-
-## Ideas
-
-Alternatives to clientside `textDimensions`:
-
-- [resvg-js](https://github.com/yisibl/resvg-js)?
-- [canvas](https://github.com/Brooooooklyn/canvas)
-  - [measureText](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/measureText)
-
-npm packages:
-
-- https://www.npmjs.com/package/get-text-width
-- https://github.com/Evgenus/js-server-text-width
-- https://www.npmjs.com/package/text-width
-- https://github.com/adambisek/string-pixel-width
