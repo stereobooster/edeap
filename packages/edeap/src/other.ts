@@ -103,7 +103,7 @@ export function generateSVG({
   standalone,
   labelSize,
   valueSize,
-  color: colorGenerator
+  color: colorGenerator,
 }: SVGConfig & { state: State; areas: EdeapAreas }) {
   labelSize = labelSize || "12pt";
   valueSize = valueSize || "12pt";
@@ -131,7 +131,9 @@ export function generateSVG({
   let nextSVG = "";
   const N = areas.contours.length;
   for (let i = 0; i < N; i++) {
-    const color = colorGenerator ? colorGenerator(i, areas.contours[i]) : "#ccc";
+    const color = colorGenerator
+      ? colorGenerator(i, areas.contours[i])
+      : "#ccc";
     const eX = (areas.ellipseParams[i].X + translateX) * scaling;
     const eY = (areas.ellipseParams[i].Y + translateY) * scaling;
     const eA = areas.ellipseParams[i].A * scaling;
@@ -348,12 +350,12 @@ export function generateSVG({
         y -= halfHeight;
       }
 
-      const color = colorGenerator ? colorGenerator(i, areas.contours[i]) : "#ccc";
+      const color = colorGenerator
+        ? colorGenerator(i, areas.contours[i])
+        : "#ccc";
       nextSVG = `<text style="font-family: Helvetica; font-size: ${labelSize};" x="${
         x + eX - textWidth / 2
-      }" y="${y + eY}" fill="${color}">
-          ${areas.contours[i]}
-        </text>\n`;
+      }" y="${y + eY}" fill="${color}">${areas.contours[i]}</text>\n`;
       svgString += nextSVG;
     }
   }
@@ -371,9 +373,7 @@ export function generateSVG({
         const labelX = (labelPosition.x + translateX) * scaling;
         const labelY = (labelPosition.y + translateY) * scaling;
         if (!isNaN(labelX)) {
-          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${valueSize};" fill="black">
-              ${state.originalProportions[i]}
-            </text>\n`;
+          nextSVG = `<text dominant-baseline="middle" text-anchor="middle" x="${labelX}" y="${labelY}" style="font-family: Helvetica; font-size: ${valueSize};" fill="black">${state.originalProportions[i]}</text>\n`;
           svgString += nextSVG;
         }
       }
@@ -431,9 +431,9 @@ export function textDimentions(
     `font-family: ${fontName}; font-size: ${fontSize};`
   );
   svg.appendChild(text);
-  const textLengthMeasure = document.createElement("div")
+  const textLengthMeasure = document.createElement("div");
   textLengthMeasure.appendChild(svg);
-  document.body.appendChild(textLengthMeasure)
+  document.body.appendChild(textLengthMeasure);
 
   const widths: number[] = [];
   const heights: number[] = [];
@@ -446,7 +446,7 @@ export function textDimentions(
     maxHeight = Math.max(maxHeight, heights[i]);
     maxWidth = Math.max(maxWidth, widths[i]);
   }
-  document.body.removeChild(textLengthMeasure)
+  document.body.removeChild(textLengthMeasure);
 
   return {
     widths,

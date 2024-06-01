@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 function minify(str: string) {
-  return str.replace(/\n/g, "").replace(/>\s+/g, ">").replace(/\s+</g, "<");
+  return str.replace(/\n/g, ""); //.replace(/>\s+/g, ">").replace(/\s+</g, "<");
 }
 
 test("basic example", async ({ page }) => {
