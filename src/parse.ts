@@ -1,98 +1,49 @@
 import { State } from "./types";
 
+const defaultState: State = {
+  translateX: 0,
+  translateY: 0,
+  scaling: 100,
+  showSetLabels: true,
+  showIntersectionValues: true,
+  colourPaletteName: "Tableau10",
+  labelFontSize: "12pt",
+  valueFontSize: "12pt",
+
+  // if set fo an index, indicates the number of this ellipse as a duplicate.
+  ellipseDuplication: [],
+  ellipseArea: [],
+  ellipseParams: [],
+  ellipseLabel: [],
+  duplicatedEllipseIndexes: [],
+
+  labelWidths: [],
+  labelHeights: [],
+  valueWidths: [],
+  valueHeights: [],
+
+  // this come from initialState
+  contours: [],
+  proportions: [],
+  zones: [],
+  originalProportions: [],
+  zoneStrings: [],
+  contourAreas: [],
+};
+
 export function initialState(areaSpecificationText: string) {
-  const state: State = {
-    translateX: 0,
-    translateY: 0,
-    scaling: 100,
-    showSetLabels: true,
-    showIntersectionValues: true,
-    colourPaletteName: "Tableau10",
-    labelFontSize: "12pt",
-    valueFontSize: "12pt",
-
-    // if set fo an index, indicates the number of this ellipse as a duplicate.
-    ellipseDuplication: [],
-    ellipseArea: [],
-    ellipseParams: [],
-    ellipseLabel: [],
-    duplicatedEllipseIndexes: [],
-
-    // size of number of ellipses
-    contours: [],
-    proportions: [],
-    zones: [],
-    originalProportions: [],
-
-    labelWidths: [],
-    labelHeights: [],
-    valueWidths: [],
-    valueHeights: [],
-    contourAreas: [],
-
-    zoneStrings: [],
-  };
-
   const abstractDescription = decodeAbstractDescription(areaSpecificationText);
-
-  const result = transform(check(parse(abstractDescription)));
-  state.contours = result.contours;
-  state.zones = result.zones;
-  state.originalProportions = [...result.proportions];
-
-  const totalArea = result.proportions.reduce((acc, x) => acc + x, 0);
-  const scalingValue = 1 / totalArea;
-  state.proportions = result.proportions.map((x) => x * scalingValue);
-
-  // called again to get values after scaling
-  state.contourAreas = findContourAreas(
-    state.contours,
-    state.zones,
-    state.proportions
-  );
-
-  console.log(state.contourAreas)
-
-  // sort zone into order of ellipses as in the global ellipse list
-  state.zoneStrings = [];
-  for (let j = 0; j < state.zones.length; j++) {
-    const zone = state.zones[j];
-    const sortedZone = [];
-    let zonePosition = 0;
-    for (let i = 0; i < state.contours.length; i++) {
-      const contour = state.contours[i];
-      if (zone.indexOf(contour) != -1) {
-        sortedZone[zonePosition] = contour;
-        zonePosition++;
-      }
-    }
-    const sortedZoneString = sortedZone.toString();
-    state.zoneStrings[j] = sortedZoneString;
-  }
-
+  const parsed = transform(check(parse(abstractDescription)));
+  const state: State = {
+    ...defaultState,
+    ...parsed,
+    ...calculateInitial(parsed),
+  };
   return state;
 }
 
 export function decodeAbstractDescription(abstractDescriptionField: string) {
   return decodeURIComponent(abstractDescriptionField).replaceAll("+", " ");
-}
-
-function findContourAreas(
-  contours: string[],
-  zones: string[][],
-  proportions: number[]
-) {
-  const contourAreas: number[] = [];
-  for (let i = 0; i < contours.length; i++) {
-    let sum = 0;
-    for (let j = 0; j < zones.length; j++) {
-      if (zones[j].indexOf(contours[i]) != -1) {
-        sum = sum + proportions[j];
-      }
-    }
-    contourAreas[i] = sum;
-  }
-  return contourAreas;
 }
 
 export type SetOverlaps = Array<Array<string | number>>;
@@ -143,7 +94,13 @@ export function check(sets: SetOverlaps, silent = true): SetOverlaps {
     });
 }
 
-export function transform(sets: SetOverlaps) {
+type TransformedSets = {
+  contours: string[];
+  zones: string[][];
+  proportions: number[];
+};
+
+export function transform(sets: SetOverlaps): TransformedSets {
   const contours = new Set<string>();
   const zones: string[][] = [];
   const proportions: number[] = [];
@@ -161,5 +118,29 @@ export function transform(sets: SetOverlaps) {
     contours: [...contours].sort(),
     zones,
     proportions,
+  };
+}
+
+export function calculateInitial(sets: TransformedSets) {
+  const totalArea = sets.proportions.reduce((acc, x) => acc + x, 0);
+  const scalingValue = 1 / totalArea;
+  const proportions = sets.proportions.map((x) => x * scalingValue);
+
+  const contoursIndex = Object.fromEntries(
+    sets.contours.map((value, index) => [value, index])
+  );
+  const contourAreas = sets.contours.map(() => 0);
+  sets.zones.forEach((zone, i) =>
+    zone.forEach((contour) => {
+      const j = contoursIndex[contour];
+      contourAreas[j] += proportions[i];
+    })
+  );
+
+  return {
+    originalProportions: [...sets.proportions],
+    proportions,
+    contourAreas,
+    zoneStrings: sets.zones.map((zone) => [...zone].sort().toString()),
   };
 }
