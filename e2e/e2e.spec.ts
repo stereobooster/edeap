@@ -35,7 +35,7 @@ EmphysemAsthma Asthma Asthmairflow_Obstruction 7
 Chronic_Bronchitis EmphysemAsthma Asthma Asthmairflow_Obstruction 8
 Chronic_Bronchitis EmphysemAsthma Asthmairflow_Obstruction 5`;
 
-  await page.locator("#areaSpecification").fill(overlaps);
+  await page.locator("#overlaps").fill(overlaps);
   await page.locator("input[type=submit]").click();
 
   await expect(page.locator("#optimizerProgress")).toHaveAttribute(
@@ -65,7 +65,7 @@ EMPH PP MGH 3
 EMPH MGH nPPnBB 9
 EMPH MGH BB 10`;
 
-  await page.locator("#areaSpecification").fill(overlaps);
+  await page.locator("#overlaps").fill(overlaps);
   await page.locator("input[type=submit]").click();
 
   await expect(page.locator("#optimizerProgress")).toHaveAttribute(
@@ -100,7 +100,7 @@ Carditis Chorea Arthralgia 2
 Arthritis Carditis Chorea Severe_Carditis 3
 Carditis Chorea Severe_Carditis Arthralgia 1`;
 
-  await page.locator("#areaSpecification").fill(overlaps);
+  await page.locator("#overlaps").fill(overlaps);
   await page.locator("input[type=submit]").click();
 
   await expect(page.locator("#optimizerProgress")).toHaveAttribute(
