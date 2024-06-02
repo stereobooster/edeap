@@ -11,7 +11,7 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## Monorepo
 
-- [edeap](packages/edeap/) core package
+- [edeap](packages/edeap/) core package ![NPM Version](https://img.shields.io/npm/v/edeap)
 - [demo](packages/demo/) demo website
 
 ## Similar projects
