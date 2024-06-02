@@ -4,7 +4,6 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## TODO
 
-- [ ] old demo (host online)
 - [ ] publish npm package
 - [ ] github CI
 - [ ] add test for `generateDefaultLayout`
