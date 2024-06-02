@@ -16,12 +16,11 @@ Fork of https://github.com/mjwybrow/edeap
 
 ## Similar projects
 
-- https://github.com/upsetjs/venn.js
-- https://github.com/stereobooster/venn-isomorphic
+- [upsetjs/venn.js](https://github.com/upsetjs/venn.js)
+- [venn-isomorphic](https://github.com/stereobooster/venn-isomorphic)
 
 ## TODO
 
-- [ ] publish npm package
 - [ ] add test for `generateDefaultLayout`
 - [ ] new demo (host online)
   - add `@upsetjs/venn.js` for comparison
