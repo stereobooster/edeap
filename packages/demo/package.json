@@ -4,7 +4,7 @@
   "description": "Euler Diagrams Drawn with Ellipses Area-Proportionally (Edeap)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stereobooster/edeap",
+    "url": "git+https://github.com/stereobooster/edeap.git",
     "directory": "packages/demo"
   },
   "author": "stereobooster",

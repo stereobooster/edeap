@@ -24,6 +24,6 @@ Fork of https://github.com/mjwybrow/edeap
 - [ ] add test for `generateDefaultLayout`
 - [ ] new demo (host online)
   - add `@upsetjs/venn.js` for comparison
-  - add pan/zoom to SVG
+  - add [pan/zoom to SVG](https://github.com/stereobooster/beoe/tree/main/packages/pan-zoom)
 - [ ] memoization?
 - [ ] expose other configurations, like weights for Optmizer etc.
