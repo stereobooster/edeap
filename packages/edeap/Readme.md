@@ -1,5 +1,12 @@
 # Euler Diagrams Drawn with Ellipses Area-Proportionally (Edeap)
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="example-dark.svg">
+    <img alt="" src="example.svg" width="890" height="486">
+  </picture>
+</p>
+
 Fork of https://github.com/mjwybrow/edeap
 
 ## Installation
