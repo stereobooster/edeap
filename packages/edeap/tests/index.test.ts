@@ -1,10 +1,15 @@
 import { expect, test } from "vitest";
-import { TextDimensionsServer, edeapSvg, parse } from "../src/index";
+import {
+  TextDimensionsServer,
+  edeapSvg,
+  edeapSvgAsync,
+  parse,
+} from "../src/index";
 
 const width = 890;
 const height = 486;
 
-test("svg server side: basic", () => {
+test("basic", () => {
   const overlaps = parse(`pet 5
 mammal 32.7
 pet mammal 12.1
@@ -83,4 +88,34 @@ Carditis Chorea Severe_Carditis Arthralgia 1`);
     dimensions: new TextDimensionsServer(),
   }).replace(/\n/g, "");
   expect(svg).toMatchFileSnapshot("./svg/fig2a-marshall2005scaled.svg");
+});
+
+test("basic-naive", () => {
+  const overlaps = parse(`pet 5
+mammal 32.7
+pet mammal 12.1
+mammal dog 21.7
+dog mammal pet 12.8`);
+  const svg = edeapSvg({
+    overlaps,
+    width,
+    height,
+  }).replace(/\n/g, "");
+  expect(svg).toMatchFileSnapshot("./svg/basic-naive.svg");
+});
+
+test("basic-async", async () => {
+  const overlaps = parse(`pet 5
+mammal 32.7
+pet mammal 12.1
+mammal dog 21.7
+dog mammal pet 12.8`);
+  const svg = (
+    await edeapSvgAsync({
+      overlaps,
+      width,
+      height,
+    })
+  ).replace(/\n/g, "");
+  expect(svg).toMatchFileSnapshot("./svg/basic-naive.svg");
 });

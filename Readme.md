@@ -6,10 +6,7 @@ Fork of https://github.com/mjwybrow/edeap
 
 - [ ] old demo (host online)
 - [ ] publish npm package
-  - update readme (uasgae example)
-  - link to the demo
-  - check name of package, rename repo
-  - check keywords
+- [ ] github CI
 - [ ] add test for `generateDefaultLayout`
 - [ ] new demo (host online)
   - add `@upsetjs/venn.js` for comparison

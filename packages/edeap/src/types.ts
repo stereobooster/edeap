@@ -100,37 +100,89 @@ export type TransformedSets = {
   proportions: number[];
 };
 
-export type InitConfig = {
-  overlaps: SetOverlaps;
-  labelSize?: number;
-  valueSize?: number;
-  initialLayout?: "default" | "random";
-};
-
-export type OptimizerConfig = {
-  strategy?: 1 | 2;
-  onStep?: (final: boolean) => void;
-};
-
 export type ColorGenerator = (index: number, label: string) => string;
-
-export type SVGConfig = {
-  width?: number;
-  height?: number;
-  color?: ColorGenerator;
-  showLabels?: boolean;
-  showValues?: boolean;
-  standalone?: boolean;
-  // font size for labels aka name of set
-  labelSize?: number;
-  labelFont?: string;
-  // font size for set volume aka set size
-  valueSize?: number;
-  dimensions?: ITextDimensions;
-};
 
 export interface ITextDimensions {
   init(fontSize: number, fontName: string): void;
   measure(str: string): { width: number; height: number };
   destroy(): void;
 }
+
+export type InitConfig = {
+  /**
+   * Definition of overlapping sets. Uses the same format as [venn.js](https://github.com/upsetjs/venn.js).
+   */
+  overlaps: SetOverlaps;
+  /**
+   * @default "default"
+   */
+  initialLayout?: "default" | "random";
+};
+
+export type OptimizerConfig = {
+  /**
+   * optmization strategy: HILL_CLIMBING | SIMULATED_ANNEALING
+   * @default HILL_CLIMBING
+   */
+  strategy?: 1 | 2;
+  /**
+   * callback to vizualize progress
+   * @default undefined
+   */
+  onStep?: (final: boolean) => void;
+};
+
+export type SVGConfig = {
+  /**
+   * width of SVG
+   * @default 1000
+   */
+  width?: number;
+  /**
+   * height of SVG
+   * @default 500
+   */
+  height?: number;
+  /**
+   * show labels or not
+   * @default true
+   */
+  showLabels?: boolean;
+  /**
+   * show size of set or not
+   * @default true
+   */
+  showValues?: boolean;
+  /**
+   * If `true` generates standalone SVG (with doctype)
+   * if `false` generates SVG for embeding in HTML (without doctype)
+   * @default false
+   */
+  standalone?: boolean;
+  /**
+   * font size for labels
+   * @default 16px
+   */
+  labelSize?: number;
+  /**
+   * font name for labels
+   * @default Helvetica
+   */
+  labelFont?: string;
+  /**
+   * font size for values (set sizes)
+   * @default 16px
+   */
+  valueSize?: number;
+  /**
+   * function for generating colors for labels and ellipses
+   * @default Tableau10
+   */
+  color?: ColorGenerator;
+  /**
+   * instance of a class to calculate text dimensions.
+   * Otions: TextDimensionsBrowser, TextDimensionsServer or you can provide your own implementation
+   * @default TextDimensionsNaive
+   */
+  dimensions?: ITextDimensions;
+};
