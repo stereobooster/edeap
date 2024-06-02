@@ -106,3 +106,27 @@ export type EdeapConfig = {
   dimensions?: ITextDimensions;
 };
 ```
+
+## Difference from venn.js
+
+Even so both libraries has similar format for overlaps - interpretation is different. For example, let's say we have 2 sets $A$, $B$ such that: $|A| = 5$, $|B| = 5$, $|A \cap B| = 2$.
+
+For **venn.js** overlaps would be:
+
+```js
+[
+  { sets: ["A"], size: 5 },
+  { sets: ["B"], size: 5 },
+  { sets: ["A", "B"], size: 2 },
+];
+```
+
+For **edeap** overlaps would be:
+
+```js
+[
+  { sets: ["A"], size: 3 },
+  { sets: ["B"], size: 3 },
+  { sets: ["A", "B"], size: 2 },
+];
+```

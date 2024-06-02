@@ -87,7 +87,7 @@ export type State = {
   zoneStrings: string[];
 };
 
-export interface ISetOverlap {
+export type ISetOverlap = {
   sets: string[];
   size: number;
 }

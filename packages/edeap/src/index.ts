@@ -1,20 +1,15 @@
 import { EdeapAreas } from "./EdeapAreas.js";
 import { Optimizer } from "./optimizer.js";
 import { generateSVG, initialState } from "./other.js";
-import {
-  InitConfig,
-  OptimizerConfig,
-  SVGConfig,
-  State,
-  ITextDimensions,
-} from "./types.js";
+import { InitConfig, OptimizerConfig, SVGConfig, State } from "./types.js";
 // import { logMessage, logReproducability } from "./logMessage";
 
 export { parse } from "./parse.js";
 export { HILL_CLIMBING, SIMULATED_ANNEALING } from "./optimizer.js";
 export { TextDimensionsBrowser } from "./TextDimensionsBrowser.js";
 export { TextDimensionsServer } from "./TextDimensionsServer.js";
-export { InitConfig, OptimizerConfig, SVGConfig, ITextDimensions };
+export { InitConfig, OptimizerConfig, SVGConfig };
+export { ITextDimensions, ISetOverlap } from "./types.js";
 export type EdeapConfig = InitConfig & OptimizerConfig & SVGConfig;
 
 export class Edeap {

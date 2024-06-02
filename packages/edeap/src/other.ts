@@ -146,7 +146,9 @@ export function generateSVG({
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
   }
 
-  svgString += `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">\n`;
+  svgString += `<svg viewBox="0 0 ${width} ${height}" ${
+    standalone ? `width="${width}" height="${height} "` : ""
+  }xmlns="http://www.w3.org/2000/svg">\n`;
 
   let nextSVG = "";
   const N = areas.contours.length;
